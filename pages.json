@@ -1,0 +1,105 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "玩咖约局",
+        "enablePullDownRefresh": true,
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/user/user",
+      "style": {
+        "navigationBarTitleText": "个人中心",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/create/create",
+      "style": {
+        "navigationBarTitleText": "创建组局",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/detail/detail",
+      "style": {
+        "navigationBarTitleText": "组局详情",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/game/list",
+      "style": {
+        "navigationBarTitleText": "我的组局",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/user/tags",
+      "style": {
+        "navigationBarTitleText": "标签管理",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/user/games",
+      "style": {
+        "navigationBarTitleText": "游戏管理",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/user/settings",
+      "style": {
+        "navigationBarTitleText": "设置",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "玩咖约局",
+    "navigationBarBackgroundColor": "#07c160",
+    "backgroundColor": "#f8f8f8",
+    "app-plus": {
+      "background": "#f8f8f8"
+    }
+  },
+  "tabBar": {
+    "color": "#7a7e83",
+    "selectedColor": "#07c160",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "组局大厅",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/user/user",
+        "text": "我的",
+        "iconPath": "static/tabbar/user.png",
+        "selectedIconPath": "static/tabbar/user-active.png"
+      }
+    ],
+    "position": "bottom"
+  },
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^u-(.*)": "@/uni_modules/uview-ui/components/u-$1/u-$1.vue"
+    }
+  }
+}
