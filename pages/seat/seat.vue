@@ -14,29 +14,7 @@
           </view>
         </view>
 
-        <!-- 二楼布局 -->
-        <view class="floor-card">
-          <view class="floor-tag">二楼</view>
-          <view class="floor2-layout">
-            <view class="left-stack">
-              <view v-for="seat in floor2Left" :key="seat.id" class="seat-item" :class="getSeatStatusClass(seat.status)" @tap="onSeatTap(seat)">
-                <text class="seat-name">{{ seat.name }}</text>
-                <text class="seat-status">{{ getSeatStatusText(seat.status) }}</text>
-              </view>
-            </view>
-
-            <view class="middle-corridor">走廊</view>
-          </view>
-
-          <view class="floor2-bottom-row">
-            <view v-for="seat in floor2Bottom" :key="seat.id" class="seat-item" :class="getSeatStatusClass(seat.status)" @tap="onSeatTap(seat)">
-              <text class="seat-name">{{ seat.name }}</text>
-              <text class="seat-status">{{ getSeatStatusText(seat.status) }}</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 一楼布局 -->
+        <!-- 一楼布局（放在上方） -->
         <view class="floor-card">
           <view class="floor-tag">一楼</view>
 
@@ -79,6 +57,28 @@
             </view>
           </view>
         </view>
+
+        <!-- 二楼布局（放在下方） -->
+        <view class="floor-card">
+          <view class="floor-tag">二楼</view>
+          <view class="floor2-layout">
+            <view class="left-stack">
+              <view v-for="seat in floor2Left" :key="seat.id" class="seat-item" :class="getSeatStatusClass(seat.status)" @tap="onSeatTap(seat)">
+                <text class="seat-name">{{ seat.name }}</text>
+                <text class="seat-status">{{ getSeatStatusText(seat.status) }}</text>
+              </view>
+            </view>
+
+            <view class="disabled-room">不可用房间</view>
+          </view>
+
+          <view class="floor2-bottom-row">
+            <view v-for="seat in floor2Bottom" :key="seat.id" class="seat-item" :class="getSeatStatusClass(seat.status)" @tap="onSeatTap(seat)">
+              <text class="seat-name">{{ seat.name }}</text>
+              <text class="seat-status">{{ getSeatStatusText(seat.status) }}</text>
+            </view>
+          </view>
+        </view>
       </view>
     </scroll-view>
   </view>
@@ -86,6 +86,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import UserService from '@/utils/user.js'
 
 const seatLegend = ref([
@@ -96,35 +97,35 @@ const seatLegend = ref([
 
 const floor2Left = ref([
   { id: 'f2-bg-1', name: '桌游房1', type: 'boardgame', status: 'available', capacity: 8, device: '桌游桌 + 置物架' },
-  { id: 'f2-mj-1', name: '日麻房1', type: 'mahjong', status: 'occupied', capacity: 4, device: '自动麻将机' },
+  { id: 'f2-mj-1', name: '日麻房1', type: 'mahjong', status: 'available', capacity: 4, device: '自动麻将机' },
   { id: 'f2-mj-2', name: '日麻房2', type: 'mahjong', status: 'available', capacity: 4, device: '自动麻将机' },
-  { id: 'f2-mj-3', name: '日麻房3', type: 'mahjong', status: 'reserved', capacity: 4, device: '自动麻将机' }
+  { id: 'f2-mj-3', name: '日麻房3', type: 'mahjong', status: 'available', capacity: 4, device: '自动麻将机' }
 ])
 
 const floor2Bottom = ref([
   { id: 'f2-bg-2', name: '桌游房2', type: 'boardgame', status: 'available', capacity: 8, device: '桌游桌 + 展示柜' },
-  { id: 'f2-mj-4', name: '日麻房4', type: 'mahjong', status: 'reserved', capacity: 4, device: '自动麻将机' }
+  { id: 'f2-mj-4', name: '日麻房4', type: 'mahjong', status: 'available', capacity: 4, device: '自动麻将机' }
 ])
 
 const hallDeskRows = ref([
   [
     { id: 'f1-desk-1', name: '大厅桌游1', type: 'boardgame', status: 'available', capacity: 6, device: '桌游桌' },
-    { id: 'f1-desk-2', name: '大厅桌游2', type: 'boardgame', status: 'reserved', capacity: 6, device: '桌游桌' }
+    { id: 'f1-desk-2', name: '大厅桌游2', type: 'boardgame', status: 'available', capacity: 6, device: '桌游桌' }
   ],
   [
-    { id: 'f1-desk-3', name: '大厅桌游3', type: 'boardgame', status: 'occupied', capacity: 6, device: '桌游桌' },
+    { id: 'f1-desk-3', name: '大厅桌游3', type: 'boardgame', status: 'available', capacity: 6, device: '桌游桌' },
     { id: 'f1-desk-4', name: '大厅桌游4', type: 'boardgame', status: 'available', capacity: 6, device: '桌游桌' }
   ],
   [
-    { id: 'f1-desk-5', name: '大厅桌游5', type: 'boardgame', status: 'reserved', capacity: 6, device: '桌游桌' },
+    { id: 'f1-desk-5', name: '大厅桌游5', type: 'boardgame', status: 'available', capacity: 6, device: '桌游桌' },
     { id: 'f1-desk-6', name: '大厅桌游6', type: 'boardgame', status: 'available', capacity: 6, device: '桌游桌' }
   ]
 ])
 
-const arcadeHall = ref({ id: 'f1-arcade-hall', name: '电玩大厅', type: 'videogame', status: 'occupied', capacity: 8, device: '多台主机 + 大屏显示器' })
+const arcadeHall = ref({ id: 'f1-arcade-hall', name: '电玩大厅', type: 'videogame', status: 'available', capacity: 8, device: '多台主机 + 大屏显示器' })
 const interDesk = ref({ id: 'f1-inter-desk', name: '间层桌游', type: 'boardgame', status: 'available', capacity: 8, device: '桌游桌' })
-const interArcade1 = ref({ id: 'f1-inter-arcade-1', name: '间层电玩1', type: 'videogame', status: 'reserved', capacity: 2, device: 'PS5 + 电视' })
-const interArcade2 = ref({ id: 'f1-inter-arcade-2', name: '间层电玩2', type: 'videogame', status: 'occupied', capacity: 2, device: 'Switch + 显示器' })
+const interArcade1 = ref({ id: 'f1-inter-arcade-1', name: '间层电玩1', type: 'videogame', status: 'available', capacity: 2, device: 'PS5 + 电视' })
+const interArcade2 = ref({ id: 'f1-inter-arcade-2', name: '间层电玩2', type: 'videogame', status: 'available', capacity: 2, device: 'Switch + 显示器' })
 const arcadeRoom = ref({ id: 'f1-arcade-room', name: '电玩房', type: 'videogame', status: 'available', capacity: 4, device: 'PS5 + Xbox + 4K电视' })
 
 const getSeatStatusClass = (status) => {
@@ -144,6 +145,52 @@ const getSeatStatusText = (status) => {
   }
   return map[status] || '空闲中'
 }
+
+const setSeatStatusByName = (name, statusMap) => {
+  return statusMap[name] || 'available'
+}
+
+const refreshSeatStatus = async () => {
+  try {
+    const res = await wx.cloud.callFunction({
+      name: 'game-service',
+      data: {
+        action: 'getSeatStatus',
+        data: {}
+      }
+    })
+
+    const statusMap = res?.result?.data?.statusByLocation || {}
+
+    floor2Left.value = floor2Left.value.map(item => ({
+      ...item,
+      status: setSeatStatusByName(item.name, statusMap)
+    }))
+
+    floor2Bottom.value = floor2Bottom.value.map(item => ({
+      ...item,
+      status: setSeatStatusByName(item.name, statusMap)
+    }))
+
+    hallDeskRows.value = hallDeskRows.value.map(row => row.map(item => ({
+      ...item,
+      status: setSeatStatusByName(item.name, statusMap)
+    })))
+
+    arcadeHall.value = { ...arcadeHall.value, status: setSeatStatusByName(arcadeHall.value.name, statusMap) }
+    interDesk.value = { ...interDesk.value, status: setSeatStatusByName(interDesk.value.name, statusMap) }
+    interArcade1.value = { ...interArcade1.value, status: setSeatStatusByName(interArcade1.value.name, statusMap) }
+    interArcade2.value = { ...interArcade2.value, status: setSeatStatusByName(interArcade2.value.name, statusMap) }
+    arcadeRoom.value = { ...arcadeRoom.value, status: setSeatStatusByName(arcadeRoom.value.name, statusMap) }
+
+  } catch (error) {
+    console.error('获取座位状态失败:', error)
+  }
+}
+
+onShow(() => {
+  refreshSeatStatus()
+})
 
 const goToCreateWithPreset = (seat) => {
   const currentUser = UserService.getCurrentUser()
@@ -279,39 +326,6 @@ const onSeatTap = (seat) => {
   color: #6b7280;
 }
 
-.floor2-layout {
-  display: flex;
-  gap: 16rpx;
-  margin-top: 30rpx;
-}
-
-.left-stack {
-  width: 48%;
-  display: flex;
-  flex-direction: column;
-  gap: 10rpx;
-}
-
-.middle-corridor {
-  width: 40%;
-  border-radius: 12rpx;
-  border: 2rpx solid #adb5bd;
-  background: #dee2e6;
-  color: #374151;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 30rpx;
-  min-height: 380rpx;
-}
-
-.floor2-bottom-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12rpx;
-  margin-top: 12rpx;
-}
-
 .first-row {
   display: flex;
   gap: 14rpx;
@@ -345,12 +359,12 @@ const onSeatTap = (seat) => {
 
 .third-row {
   margin-top: 12rpx;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 10rpx;
 }
 
 .corridor-box {
+  flex: 1.4;
   border-radius: 12rpx;
   border: 2rpx solid #adb5bd;
   background: #dee2e6;
@@ -363,7 +377,41 @@ const onSeatTap = (seat) => {
 }
 
 .arcade-room {
+  flex: 1;
   min-height: 150rpx;
+}
+
+.floor2-layout {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 30rpx;
+}
+
+.left-stack {
+  width: 48%;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.disabled-room {
+  width: 40%;
+  border-radius: 12rpx;
+  border: 2rpx solid #adb5bd;
+  background: #dee2e6;
+  color: #6b7280;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 30rpx;
+  min-height: 380rpx;
+}
+
+.floor2-bottom-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12rpx;
+  margin-top: 12rpx;
 }
 
 .seat-item {
@@ -404,7 +452,6 @@ const onSeatTap = (seat) => {
   color: #374151;
 }
 
-/* 按状态配色（不再按类型配色） */
 .status-available {
   background: rgba(64, 192, 87, 0.2);
   border-color: #40c057;
@@ -427,6 +474,6 @@ const onSeatTap = (seat) => {
   .layout-subtitle, .legend-text, .seat-status { color: #d1d5db; }
   .floor-card { background: #252a33; border-color: #3b4048; }
   .floor-tag { color: #d1d5db; }
-  .middle-corridor, .corridor-box { background: #4b5563; color: #f3f4f6; border-color: #6b7280; }
+  .disabled-room, .corridor-box { background: #4b5563; color: #f3f4f6; border-color: #6b7280; }
 }
 </style>

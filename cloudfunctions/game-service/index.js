@@ -36,6 +36,8 @@ exports.main = async (event, context) => {
         return await getJoinedGames(data, wxContext)
       case 'searchGames':
         return await searchGames(data, wxContext)
+      case 'getSeatStatus':
+        return await getSeatStatus(data, wxContext)
       default:
         return { 
           code: 400, 
@@ -921,6 +923,70 @@ async function quitGame(data, wxContext) {
       code: 500,
       message: '服务器内部错误: ' + error.message,
       data: null
+    }
+  }
+}
+
+// 获取座位状态（根据云端组局实时计算）
+async function getSeatStatus(data, wxContext) {
+  try {
+    const now = new Date()
+
+    // 仅统计未取消/未结束的组局（分页查询，避免漏数据）
+    const baseWhere = {
+      status: _.nin(['cancelled', 'finished', 'completed'])
+    }
+
+    const totalRes = await db.collection('games').where(baseWhere).count()
+    const total = totalRes.total || 0
+    const pageSize = 100
+    const games = []
+
+    for (let offset = 0; offset < total; offset += pageSize) {
+      const pageRes = await db.collection('games')
+        .where(baseWhere)
+        .skip(offset)
+        .limit(pageSize)
+        .get()
+      games.push(...(pageRes.data || []))
+    }
+
+    const priority = { available: 0, reserved: 1, occupied: 2 }
+    const statusByLocation = {}
+
+    for (const game of games) {
+      if (!game || !game.location) continue
+
+      let calculatedStatus = 'reserved'
+      const gameTime = game.time ? new Date(game.time) : null
+
+      // 若已开局时间或标记进行中，判定为使用中
+      if (game.status === 'ongoing' || (gameTime && gameTime <= now)) {
+        calculatedStatus = 'occupied'
+      }
+
+      const current = statusByLocation[game.location] || 'available'
+      if (priority[calculatedStatus] > priority[current]) {
+        statusByLocation[game.location] = calculatedStatus
+      }
+    }
+
+    return {
+      code: 0,
+      message: '获取座位状态成功',
+      data: {
+        statusByLocation,
+        totalActiveGames: games.length
+      }
+    }
+  } catch (error) {
+    console.error('获取座位状态失败:', error)
+    return {
+      code: 500,
+      message: '获取座位状态失败: ' + error.message,
+      data: {
+        statusByLocation: {}
+      }
     }
   }
 }

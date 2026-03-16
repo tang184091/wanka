@@ -1,0 +1,294 @@
+
+/* 样式部分保持不变 */
+.user-container.data-v-0f7520f0 {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+  padding-bottom: 100rpx;
+}
+
+/* ... 其余样式代码保持不变 ... */
+
+
+.user-container.data-v-0f7520f0 {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+  padding-bottom: 100rpx;
+}
+
+/* 用户卡片样式 */
+.user-card.data-v-0f7520f0 {
+  margin: 20rpx;
+  padding: 40rpx 30rpx;
+}
+.user-header.data-v-0f7520f0 {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40rpx;
+  padding-bottom: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.avatar-section.data-v-0f7520f0 {
+  position: relative;
+  margin-right: 30rpx;
+}
+.user-avatar.data-v-0f7520f0 {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  border: 4rpx solid #07c160;
+}
+.avatar-edit.data-v-0f7520f0 {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: #07c160;
+  color: white;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+}
+.user-base-info.data-v-0f7520f0 {
+  flex: 1;
+}
+.nickname-section.data-v-0f7520f0 {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+.nickname.data-v-0f7520f0 {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  margin-right: 20rpx;
+}
+.edit-icon.data-v-0f7520f0 {
+  background-color: #f0f0f0;
+  color: #666;
+  font-size: 24rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 4rpx;
+}
+.user-id.data-v-0f7520f0 {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 分区样式 */
+.section.data-v-0f7520f0 {
+  margin-bottom: 40rpx;
+}
+.section-header.data-v-0f7520f0 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.section-title.data-v-0f7520f0 {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 标签样式 */
+.tags-container.data-v-0f7520f0,
+.games-container.data-v-0f7520f0 {
+  min-height: 60rpx;
+}
+.no-tags.data-v-0f7520f0,
+.no-games.data-v-0f7520f0 {
+  padding: 20rpx;
+  background-color: #f8f8f8;
+  border-radius: 8rpx;
+  text-align: center;
+  color: #999;
+  font-size: 28rpx;
+}
+.tags-list.data-v-0f7520f0 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+.tag-item.data-v-0f7520f0 {
+  background-color: #e6f7ff;
+  color: #1890ff;
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+}
+
+/* 游戏/装备样式 */
+.games-list.data-v-0f7520f0 {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+.game-item.data-v-0f7520f0 {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #f8f8f8;
+  border-radius: 8rpx
+}
+.game-type-tag.data-v-0f7520f0 {
+  width: 80rpx;
+  text-align: center;
+  padding: 6rpx 12rpx;
+  border-radius: 4rpx;
+  font-size: 24rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+.game-tag-mahjong.data-v-0f7520f0 {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+.game-tag-boardgame.data-v-0f7520f0 {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+.game-tag-videogame.data-v-0f7520f0 {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+.game-name.data-v-0f7520f0 {
+  font-size: 28rpx;
+  color: #333;
+  flex: 1;
+  word-break: break-all;
+}
+
+/* 统计数据样式 */
+.stats-section.data-v-0f7520f0 {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 30rpx 0;
+  border-top: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid #f0f0f0;
+  margin-top: 20rpx;
+}
+.stat-item.data-v-0f7520f0 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+.stat-value.data-v-0f7520f0 {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #07c160;
+  margin-bottom: 10rpx;
+}
+.stat-label.data-v-0f7520f0 {
+  font-size: 24rpx;
+  color: #666;
+}
+.stat-divider.data-v-0f7520f0 {
+  width: 1rpx;
+  height: 40rpx;
+  background-color: #e0e0e0;
+}
+
+/* 菜单列表样式 */
+.menu-list.data-v-0f7520f0 {
+  background-color: white;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+.menu-item.data-v-0f7520f0 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  background-color: white;
+}
+.menu-item.data-v-0f7520f0:active {
+  background-color: #f8f8f8;
+}
+.menu-left.data-v-0f7520f0 {
+  display: flex;
+  align-items: center;
+}
+.menu-icon.data-v-0f7520f0 {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 20rpx;
+}
+.menu-text.data-v-0f7520f0 {
+  font-size: 32rpx;
+  color: #333;
+}
+.menu-right.data-v-0f7520f0 {
+  display: flex;
+  align-items: center;
+}
+.menu-count.data-v-0f7520f0 {
+  font-size: 28rpx;
+  color: #999;
+  margin-right: 20rpx;
+}
+.arrow-icon.data-v-0f7520f0 {
+  width: 24rpx;
+  height: 24rpx;
+  opacity: 0.5;
+}
+.menu-divider.data-v-0f7520f0 {
+  height: 1rpx;
+  background-color: #f0f0f0;
+  margin: 0 30rpx;
+}
+
+/* 登录按钮样式 */
+.login-btn-container.data-v-0f7520f0 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 100rpx;
+  padding: 0 60rpx;
+}
+.login-btn.data-v-0f7520f0 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background-color: #07c160;
+  color: white;
+  padding: 25rpx 0;
+  border-radius: 10rpx;
+  font-size: 32rpx;
+  margin-bottom: 20rpx;
+}
+.login-btn.data-v-0f7520f0:active {
+  background-color: #06ad56;
+}
+.wechat-icon.data-v-0f7520f0 {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 15rpx;
+}
+.login-text.data-v-0f7520f0 {
+  font-size: 32rpx;
+}
+.login-tip.data-v-0f7520f0 {
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+}
+
+/* 退出登录按钮 */
+.logout-container.data-v-0f7520f0 {
+  padding: 40rpx 30rpx;
+}
+.logout-btn.data-v-0f7520f0 {
+  width: 100%;
+  background-color: #ff4d4f;
+  color: white;
+  text-align: center;
+  padding: 25rpx 0;
+  border-radius: 10rpx;
+  font-size: 32rpx;
+}
+.logout-btn.data-v-0f7520f0:active {
+  background-color: #ff7875;
+}

@@ -43,15 +43,6 @@ export default {
   
   // 组局可选地点（统一下拉选择，避免自由输入导致地点不规范）
   GAME_LOCATIONS: [
-<<<<<<< ours
-    { id: 'wanka-1f-hall', name: '玩咖一楼大厅' },
-    { id: 'wanka-2f-room-a', name: '玩咖二楼A房' },
-    { id: 'wanka-2f-room-b', name: '玩咖二楼B房' },
-    { id: 'wanka-2f-room-c', name: '玩咖二楼C房' },
-    { id: 'wanka-vr-zone', name: '玩咖电玩区' }
-  ]
-
-=======
     { id: 'f2-bg-1', name: '桌游房1' },
     { id: 'f2-mj-1', name: '日麻房1' },
     { id: 'f2-mj-2', name: '日麻房2' },
@@ -70,5 +61,4 @@ export default {
     { id: 'f1-inter-arcade-2', name: '间层电玩2' },
     { id: 'f1-arcade-room', name: '电玩房' }
   ]
->>>>>>> theirs
 }

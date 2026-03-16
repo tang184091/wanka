@@ -97,7 +97,7 @@
       },
       {
         "pagePath": "pages/seat/seat",
-        "text": "作为详情",
+        "text": "座位详情",
         "iconPath": "static/tabbar/home.png",
         "selectedIconPath": "static/tabbar/home-active.png"
       },
