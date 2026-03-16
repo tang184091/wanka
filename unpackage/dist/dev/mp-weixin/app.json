@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/seat/seat",
     "pages/user/user",
     "pages/create/create",
     "pages/detail/detail",
@@ -24,6 +25,12 @@
       {
         "pagePath": "pages/index/index",
         "text": "组局大厅",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/seat/seat",
+        "text": "作为详情",
         "iconPath": "static/tabbar/home.png",
         "selectedIconPath": "static/tabbar/home-active.png"
       },

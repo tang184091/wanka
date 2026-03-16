@@ -149,6 +149,14 @@
   font-size: 28rpx;
   color: #333;
 }
+.placeholder-text.data-v-98f0e4ec {
+  color: #999;
+}
+.location-hint.data-v-98f0e4ec {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #999;
+}
 .arrow-right.data-v-98f0e4ec {
   width: 24rpx;
   height: 24rpx;

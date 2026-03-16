@@ -134,8 +134,8 @@ const _sfc_main = {
     return (_ctx, _cache) => {
       return common_vendor.e({
         a: common_assets._imports_0$3,
-        b: common_vendor.o(goBack),
-        c: common_vendor.o(saveGames),
+        b: common_vendor.o(goBack, "50"),
+        c: common_vendor.o(saveGames, "82"),
         d: common_vendor.t(myGames.value.length),
         e: myGames.value.length === 0
       }, myGames.value.length === 0 ? {
@@ -159,13 +159,13 @@ const _sfc_main = {
         j: common_assets._imports_2$1,
         k: gameTypes.value,
         l: newGame.value.typeIndex,
-        m: common_vendor.o(onNewGameTypeChange),
-        n: common_vendor.o(addNewGame),
+        m: common_vendor.o(onNewGameTypeChange, "55"),
+        n: common_vendor.o(addNewGame, "7d"),
         o: newGame.value.name,
-        p: common_vendor.o(($event) => newGame.value.name = $event.detail.value),
+        p: common_vendor.o(($event) => newGame.value.name = $event.detail.value, "31"),
         q: common_vendor.t(myGames.value.length >= 10 ? "已达上限" : "添加到我的列表"),
         r: myGames.value.length >= 10 ? 1 : "",
-        s: common_vendor.o(addNewGame)
+        s: common_vendor.o(addNewGame, "86")
       });
     };
   }

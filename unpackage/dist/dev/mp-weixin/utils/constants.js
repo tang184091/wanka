@@ -35,7 +35,15 @@ const constants = {
     "ongoing": { name: "进行中", color: "#52c41a" },
     "cancelled": { name: "已取消", color: "#999999" },
     "finished": { name: "已结束", color: "#666666" }
-  }
+  },
+  // 组局可选地点（统一下拉选择，避免自由输入导致地点不规范）
+  GAME_LOCATIONS: [
+    { id: "wanka-1f-hall", name: "玩咖一楼大厅" },
+    { id: "wanka-2f-room-a", name: "玩咖二楼A房" },
+    { id: "wanka-2f-room-b", name: "玩咖二楼B房" },
+    { id: "wanka-2f-room-c", name: "玩咖二楼C房" },
+    { id: "wanka-vr-zone", name: "玩咖电玩区" }
+  ]
 };
 exports.constants = constants;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/utils/constants.js.map

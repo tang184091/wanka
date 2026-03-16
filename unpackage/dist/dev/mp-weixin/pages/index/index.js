@@ -226,13 +226,13 @@ const _sfc_main = {
             d: common_vendor.o(($event) => switchTab(tab.id), tab.id)
           };
         }),
-        b: common_vendor.o(goToCreate),
+        b: common_vendor.o(goToCreate, "8c"),
         c: refreshing.value
       }, refreshing.value ? {} : {}, {
         d: gameList.value.length === 0 && !loading.value
       }, gameList.value.length === 0 && !loading.value ? {
         e: common_assets._imports_0,
-        f: common_vendor.o(goToCreate)
+        f: common_vendor.o(goToCreate, "22")
       } : {}, {
         g: common_vendor.f(gameList.value, (game, k0, i0) => {
           return common_vendor.e({
@@ -277,13 +277,13 @@ const _sfc_main = {
       }, loading.value ? {} : {}, {
         l: hasMore.value && !loading.value
       }, hasMore.value && !loading.value ? {
-        m: common_vendor.o(onLoadMore)
+        m: common_vendor.o(onLoadMore, "e4")
       } : {}, {
         n: !hasMore.value && gameList.value.length > 0
       }, !hasMore.value && gameList.value.length > 0 ? {} : {}, {
         o: refreshing.value,
-        p: common_vendor.o(onRefresh),
-        q: common_vendor.o(onLoadMore)
+        p: common_vendor.o(onRefresh, "fd"),
+        q: common_vendor.o(onLoadMore, "b9")
       });
     };
   }

@@ -49,6 +49,7 @@ const _sfc_main = {
     const dateDisplay = common_vendor.ref("");
     const timeDisplay = common_vendor.ref("");
     const timeError = common_vendor.ref(false);
+    const locationOptions = common_vendor.ref(utils_constants.constants.GAME_LOCATIONS || []);
     const currentDate = common_vendor.ref("");
     const endDate = common_vendor.ref("");
     const minPlayers = common_vendor.computed(() => {
@@ -62,14 +63,35 @@ const _sfc_main = {
     const canSubmit = common_vendor.computed(() => {
       return formData.value.title && formData.value.project && formData.value.time && formData.value.location && formData.value.maxPlayers >= minPlayers.value && formData.value.maxPlayers <= maxPlayers.value && !timeError.value;
     });
+    const selectedLocationName = common_vendor.computed(() => formData.value.location || "");
+    const locationPickerValue = common_vendor.computed(() => {
+      const index = locationOptions.value.findIndex((item) => item.name === formData.value.location);
+      return index >= 0 ? index : 0;
+    });
+    const applyPrefill = (options = {}) => {
+      if (options.type) {
+        const allowedType = gameTypes.value.find((t) => t.id === options.type);
+        if (allowedType) {
+          formData.value.type = allowedType.id;
+          formData.value.maxPlayers = allowedType.minPlayers;
+        }
+      }
+      if (options.project) {
+        formData.value.project = decodeURIComponent(options.project);
+      }
+      if (options.location) {
+        formData.value.location = decodeURIComponent(options.location);
+      }
+    };
     common_vendor.onLoad((options) => {
-      common_vendor.index.__f__("log", "at pages/create/create.vue:249", "页面参数:", options);
+      common_vendor.index.__f__("log", "at pages/create/create.vue:285", "页面参数:", options);
       if (options.edit && options.id) {
         isEditMode.value = true;
         gameId.value = options.id;
         loadGameDetail(options.id);
       } else {
         initDates();
+        applyPrefill(options);
       }
     });
     const loadGameDetail = async (id) => {
@@ -85,7 +107,7 @@ const _sfc_main = {
             data: { gameId: id }
           }
         });
-        common_vendor.index.__f__("log", "at pages/create/create.vue:278", "加载对局详情结果:", result);
+        common_vendor.index.__f__("log", "at pages/create/create.vue:315", "加载对局详情结果:", result);
         if (result.result && result.result.code === 0 && result.result.data) {
           const game = result.result.data;
           originalData.value = { ...game };
@@ -111,7 +133,7 @@ const _sfc_main = {
           throw new Error("加载对局详情失败");
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/create/create.vue:313", "加载对局详情失败:", error);
+        common_vendor.index.__f__("error", "at pages/create/create.vue:350", "加载对局详情失败:", error);
         common_vendor.index.showToast({
           title: "加载失败",
           icon: "none",
@@ -188,17 +210,12 @@ const _sfc_main = {
         formData.value.time = "";
       }
     };
-    const chooseLocation = () => {
-      common_vendor.index.chooseLocation({
-        success: (res) => {
-          if (res.address) {
-            formData.value.location = res.address;
-          }
-        },
-        fail: () => {
-          common_vendor.index.__f__("log", "at pages/create/create.vue:465", "用户取消选择位置或选择失败");
-        }
-      });
+    const bindLocationChange = (e) => {
+      const index = Number(e.detail.value);
+      const selected = locationOptions.value[index];
+      if (selected && selected.name) {
+        formData.value.location = selected.name;
+      }
     };
     const getPlayerRangeText = () => {
       if (minPlayers.value === maxPlayers.value) {
@@ -272,10 +289,10 @@ const _sfc_main = {
           maxPlayers: formData.value.maxPlayers,
           description: formData.value.description || ""
         };
-        common_vendor.index.__f__("log", "at pages/create/create.vue:557", "✅ 准备提交的 gameData:", gameData);
-        common_vendor.index.__f__("log", "at pages/create/create.vue:558", "📝 当前模式:", isEditMode.value ? "编辑模式" : "创建模式");
+        common_vendor.index.__f__("log", "at pages/create/create.vue:589", "✅ 准备提交的 gameData:", gameData);
+        common_vendor.index.__f__("log", "at pages/create/create.vue:590", "📝 当前模式:", isEditMode.value ? "编辑模式" : "创建模式");
         if (isEditMode.value) {
-          common_vendor.index.__f__("log", "at pages/create/create.vue:562", "🔄 调用 updateGame，gameId:", gameId.value);
+          common_vendor.index.__f__("log", "at pages/create/create.vue:594", "🔄 调用 updateGame，gameId:", gameId.value);
           const result = await common_vendor.wx$1.cloud.callFunction({
             name: "game-service",
             data: {
@@ -286,7 +303,7 @@ const _sfc_main = {
               }
             }
           });
-          common_vendor.index.__f__("log", "at pages/create/create.vue:575", "✅ updateGame 返回结果:", result);
+          common_vendor.index.__f__("log", "at pages/create/create.vue:607", "✅ updateGame 返回结果:", result);
           if (result.result && result.result.code === 0) {
             common_vendor.index.hideLoading();
             common_vendor.index.showToast({
@@ -321,7 +338,7 @@ const _sfc_main = {
             tags: currentUser.tags || [],
             gender: currentUser.gender || 0
           };
-          common_vendor.index.__f__("log", "at pages/create/create.vue:624", "✅ 当前用户信息:", userInfo);
+          common_vendor.index.__f__("log", "at pages/create/create.vue:656", "✅ 当前用户信息:", userInfo);
           const result = await common_vendor.wx$1.cloud.callFunction({
             name: "game-service",
             data: {
@@ -332,7 +349,7 @@ const _sfc_main = {
               }
             }
           });
-          common_vendor.index.__f__("log", "at pages/create/create.vue:637", "✅ createGame 返回结果:", result);
+          common_vendor.index.__f__("log", "at pages/create/create.vue:669", "✅ createGame 返回结果:", result);
           if (result.result && result.result.code === 0) {
             common_vendor.index.hideLoading();
             common_vendor.index.showToast({
@@ -350,7 +367,7 @@ const _sfc_main = {
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/create/create.vue:660", "❌ 操作失败:", error);
+        common_vendor.index.__f__("error", "at pages/create/create.vue:692", "❌ 操作失败:", error);
         let errorMessage = error.message || (isEditMode.value ? "更新失败，请重试" : "创建失败，请重试");
         if (errorMessage.includes("Cannot destructure")) {
           errorMessage = "参数格式错误，请检查调用方式";
@@ -393,39 +410,41 @@ const _sfc_main = {
           };
         }),
         b: formData.value.title,
-        c: common_vendor.o(($event) => formData.value.title = $event.detail.value),
+        c: common_vendor.o(($event) => formData.value.title = $event.detail.value, "b2"),
         d: common_vendor.t(formData.value.title.length),
         e: getProjectPlaceholder(),
         f: formData.value.project,
-        g: common_vendor.o(($event) => formData.value.project = $event.detail.value),
+        g: common_vendor.o(($event) => formData.value.project = $event.detail.value, "5a"),
         h: common_vendor.t(formData.value.project.length),
         i: common_vendor.t(dateDisplay.value || "选择日期"),
         j: common_assets._imports_2$1,
         k: dateValue.value,
         l: currentDate.value,
         m: endDate.value,
-        n: common_vendor.o(bindDateChange),
+        n: common_vendor.o(bindDateChange, "90"),
         o: common_vendor.t(timeDisplay.value || "选择时间"),
         p: common_assets._imports_2$1,
         q: timeValue.value,
-        r: common_vendor.o(bindTimeChange),
+        r: common_vendor.o(bindTimeChange, "22"),
         s: timeError.value
       }, timeError.value ? {} : {}, {
-        t: common_vendor.o(chooseLocation),
-        v: formData.value.location,
-        w: common_vendor.o(($event) => formData.value.location = $event.detail.value),
-        x: common_vendor.t(formData.value.location.length),
-        y: formData.value.maxPlayers <= minPlayers.value ? 1 : "",
-        z: common_vendor.o(decreaseNumber),
-        A: common_vendor.t(formData.value.maxPlayers),
-        B: formData.value.maxPlayers >= maxPlayers.value ? 1 : "",
-        C: common_vendor.o(increaseNumber),
-        D: common_vendor.t(getPlayerRangeText()),
-        E: formData.value.description,
-        F: common_vendor.o(($event) => formData.value.description = $event.detail.value),
-        G: common_vendor.t(formData.value.description.length),
-        H: !canSubmit.value ? 1 : "",
-        I: common_vendor.o(handleSubmit)
+        t: common_vendor.t(selectedLocationName.value || "请选择活动地点"),
+        v: !selectedLocationName.value ? 1 : "",
+        w: common_assets._imports_2$1,
+        x: locationOptions.value,
+        y: locationPickerValue.value,
+        z: common_vendor.o(bindLocationChange, "b0"),
+        A: formData.value.maxPlayers <= minPlayers.value ? 1 : "",
+        B: common_vendor.o(decreaseNumber, "eb"),
+        C: common_vendor.t(formData.value.maxPlayers),
+        D: formData.value.maxPlayers >= maxPlayers.value ? 1 : "",
+        E: common_vendor.o(increaseNumber, "cc"),
+        F: common_vendor.t(getPlayerRangeText()),
+        G: formData.value.description,
+        H: common_vendor.o(($event) => formData.value.description = $event.detail.value, "3a"),
+        I: common_vendor.t(formData.value.description.length),
+        J: !canSubmit.value ? 1 : "",
+        K: common_vendor.o(handleSubmit, "0f")
       });
     };
   }

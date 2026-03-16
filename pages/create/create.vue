@@ -89,15 +89,22 @@
         <!-- 活动地点 -->
         <view class="form-item">
           <view class="form-label">活动地点 *</view>
-          <input 
-            v-model="formData.location"
-            class="form-input"
-            placeholder="请输入具体位置，如：玩咖二楼第五间房"
-            placeholder-class="placeholder"
-            maxlength="50"
-            @focus="chooseLocation"
-          />
-          <view class="form-tips">{{ formData.location.length }}/50</view>
+          <picker
+            mode="selector"
+            :range="locationOptions"
+            range-key="name"
+            :value="locationPickerValue"
+            @change="bindLocationChange"
+            class="picker-item"
+          >
+            <view class="picker-input">
+              <text class="time-text" :class="{ 'placeholder-text': !selectedLocationName }">
+                {{ selectedLocationName || '请选择活动地点' }}
+              </text>
+              <image src="/static/icons/arrow-right.png" class="arrow-right" />
+            </view>
+          </picker>
+          <view class="location-hint">地点由门店统一维护</view>
         </view>
 
         <!-- 人数设置 -->
@@ -165,7 +172,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch,  } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { gameActions } from '@/utils/store.js'
 import UserService from '@/utils/user.js'
@@ -219,6 +226,9 @@ const dateDisplay = ref('')
 const timeDisplay = ref('')
 const timeError = ref(false)
 
+// 可选地点
+const locationOptions = ref(constants.GAME_LOCATIONS || [])
+
 // 当前时间和结束日期
 const currentDate = ref('')
 const endDate = ref('')
@@ -244,6 +254,32 @@ const canSubmit = computed(() => {
          !timeError.value
 })
 
+const selectedLocationName = computed(() => formData.value.location || '')
+
+const locationPickerValue = computed(() => {
+  const index = locationOptions.value.findIndex(item => item.name === formData.value.location)
+  return index >= 0 ? index : 0
+})
+
+// 应用快捷创建预填参数
+const applyPrefill = (options = {}) => {
+  if (options.type) {
+    const allowedType = gameTypes.value.find(t => t.id === options.type)
+    if (allowedType) {
+      formData.value.type = allowedType.id
+      formData.value.maxPlayers = allowedType.minPlayers
+    }
+  }
+
+  if (options.project) {
+    formData.value.project = decodeURIComponent(options.project)
+  }
+
+  if (options.location) {
+    formData.value.location = decodeURIComponent(options.location)
+  }
+}
+
 // 页面加载
 onLoad((options) => {
   console.log('页面参数:', options)
@@ -256,6 +292,7 @@ onLoad((options) => {
   } else {
     // 创建模式：初始化默认值
     initDates()
+    applyPrefill(options)
   }
 })
 
@@ -453,18 +490,13 @@ const updateFormDateTime = () => {
   }
 }
 
-// 选择地点
-const chooseLocation = () => {
-  uni.chooseLocation({
-    success: (res) => {
-      if (res.address) {
-        formData.value.location = res.address
-      }
-    },
-    fail: () => {
-      console.log('用户取消选择位置或选择失败')
-    }
-  })
+// 选择地点（从门店维护列表中选择）
+const bindLocationChange = (e) => {
+  const index = Number(e.detail.value)
+  const selected = locationOptions.value[index]
+  if (selected && selected.name) {
+    formData.value.location = selected.name
+  }
 }
 
 // 获取人数范围文本
@@ -866,6 +898,16 @@ watch(() => formData.value.time, (newTime) => {
 .time-text {
   font-size: 28rpx;
   color: #333;
+}
+
+.placeholder-text {
+  color: #999;
+}
+
+.location-hint {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #999;
 }
 
 .arrow-right {

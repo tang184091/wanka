@@ -135,8 +135,8 @@ const _sfc_main = {
     return (_ctx, _cache) => {
       return {
         a: common_assets._imports_0$3,
-        b: common_vendor.o(goBack),
-        c: common_vendor.o(saveTags),
+        b: common_vendor.o(goBack, "fa"),
+        c: common_vendor.o(saveTags, "ad"),
         d: common_vendor.f(systemTags.value, (tag, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(tag.name),
@@ -165,7 +165,7 @@ const _sfc_main = {
             d: index
           };
         }),
-        g: common_vendor.o(addCustomTag)
+        g: common_vendor.o(addCustomTag, "05")
       };
     };
   }

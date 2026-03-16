@@ -490,8 +490,8 @@ const _sfc_main = {
       }, loading.value ? {} : error.value ? {
         c: common_assets._imports_0$2,
         d: common_vendor.t(error.value),
-        e: common_vendor.o(loadGameDetail),
-        f: common_vendor.o(handleBack)
+        e: common_vendor.o(loadGameDetail, "51"),
+        f: common_vendor.o(handleBack, "57")
       } : common_vendor.e({
         g: common_vendor.t(getTypeText(gameDetail.value.type)),
         h: common_vendor.n(getTypeClass(gameDetail.value.type)),
@@ -522,7 +522,7 @@ const _sfc_main = {
         B: gameDetail.value.creatorInfo
       }, gameDetail.value.creatorInfo ? common_vendor.e({
         C: gameDetail.value.creatorInfo.avatar || "/static/images/default-avatar.png",
-        D: common_vendor.o(handleAvatarError),
+        D: common_vendor.o(handleAvatarError, "cb"),
         E: common_vendor.t(gameDetail.value.creatorInfo.nickname || "未知用户"),
         F: gameDetail.value.creatorInfo.gender
       }, gameDetail.value.creatorInfo.gender ? {
@@ -551,7 +551,7 @@ const _sfc_main = {
       } : {}) : {}, {
         Q: common_vendor.t((gameDetail.value.participants || []).length + 1),
         R: ((_a = gameDetail.value.creatorInfo) == null ? void 0 : _a.avatar) || "/static/images/default-avatar.png",
-        S: common_vendor.o(handleAvatarError),
+        S: common_vendor.o(handleAvatarError, "5e"),
         T: common_vendor.t(((_b = gameDetail.value.creatorInfo) == null ? void 0 : _b.nickname) || "未知用户"),
         U: common_assets._imports_6$1,
         V: common_vendor.f(gameDetail.value.participants, (player, index, i0) => {
@@ -587,30 +587,30 @@ const _sfc_main = {
         })
       } : {}, {
         ab: refreshing.value,
-        ac: common_vendor.o(onRefresh),
-        ad: common_vendor.o(onLoadMore)
+        ac: common_vendor.o(onRefresh, "ea"),
+        ad: common_vendor.o(onLoadMore, "d2")
       }), {
         b: error.value,
         ae: !loading.value && !error.value && gameDetail.value.status === "pending"
       }, !loading.value && !error.value && gameDetail.value.status === "pending" ? common_vendor.e({
         af: common_assets._imports_8,
-        ag: common_vendor.o(handleShare),
+        ag: common_vendor.o(handleShare, "36"),
         ah: !gameDetail.value.isJoined
       }, !gameDetail.value.isJoined ? common_vendor.e({
         ai: !gameDetail.value.isFull
       }, !gameDetail.value.isFull ? {
         aj: common_assets._imports_9,
-        ak: common_vendor.o(handleJoin)
+        ak: common_vendor.o(handleJoin, "47")
       } : {
         al: common_assets._imports_10
       }) : !gameDetail.value.isCreator ? {
         an: common_assets._imports_11,
-        ao: common_vendor.o(handleQuit)
+        ao: common_vendor.o(handleQuit, "64")
       } : {
         ap: common_assets._imports_12$1,
-        aq: common_vendor.o(handleEdit),
+        aq: common_vendor.o(handleEdit, "eb"),
         ar: common_assets._imports_13,
-        as: common_vendor.o(handleCancel)
+        as: common_vendor.o(handleCancel, "52")
       }, {
         am: !gameDetail.value.isCreator
       }) : {}, {

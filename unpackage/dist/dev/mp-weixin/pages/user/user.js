@@ -420,12 +420,12 @@ const _sfc_main = {
         a: userInfo.value
       }, userInfo.value ? common_vendor.e({
         b: userInfo.value.avatar,
-        c: common_vendor.o(chooseAvatar),
-        d: common_vendor.o(chooseAvatar),
+        c: common_vendor.o(chooseAvatar, "07"),
+        d: common_vendor.o(chooseAvatar, "1f"),
         e: common_vendor.t(userInfo.value.nickname),
-        f: common_vendor.o(editNickname),
+        f: common_vendor.o(editNickname, "bb"),
         g: common_vendor.t(userInfo.value.id),
-        h: common_vendor.o(editTags),
+        h: common_vendor.o(editTags, "66"),
         i: userInfo.value.tags && userInfo.value.tags.length === 0
       }, userInfo.value.tags && userInfo.value.tags.length === 0 ? {} : {
         j: common_vendor.f(userInfo.value.tags, (tag, k0, i0) => {
@@ -435,7 +435,7 @@ const _sfc_main = {
           };
         })
       }, {
-        k: common_vendor.o(editGames),
+        k: common_vendor.o(editGames, "29"),
         l: userInfo.value.games && userInfo.value.games.length === 0
       }, userInfo.value.games && userInfo.value.games.length === 0 ? {} : {
         m: common_vendor.f(userInfo.value.games, (game, k0, i0) => {
@@ -459,29 +459,29 @@ const _sfc_main = {
         t: common_vendor.t(userStats.value.createdGames || 0)
       } : {}, {
         v: common_assets._imports_2$1,
-        w: common_vendor.o(($event) => goToMyGames("created")),
+        w: common_vendor.o(($event) => goToMyGames("created"), "6c"),
         x: common_assets._imports_2$2,
         y: userStats.value
       }, userStats.value ? {
         z: common_vendor.t(userStats.value.joinedGames || 0)
       } : {}, {
         A: common_assets._imports_2$1,
-        B: common_vendor.o(($event) => goToMyGames("joined")),
+        B: common_vendor.o(($event) => goToMyGames("joined"), "c3"),
         C: common_assets._imports_3$2,
         D: common_assets._imports_2$1,
-        E: common_vendor.o(($event) => goToMyGames("history")),
+        E: common_vendor.o(($event) => goToMyGames("history"), "21"),
         F: common_assets._imports_4,
         G: common_assets._imports_2$1,
-        H: common_vendor.o(goToSettings),
+        H: common_vendor.o(goToSettings, "d1"),
         I: common_assets._imports_12,
         J: common_assets._imports_2$1,
-        K: common_vendor.o(goToAbout),
+        K: common_vendor.o(goToAbout, "bc"),
         L: !userInfo.value
       }, !userInfo.value ? {
         M: common_assets._imports_6,
-        N: common_vendor.o(handleLogin)
+        N: common_vendor.o(handleLogin, "22")
       } : {
-        O: common_vendor.o(handleLogout)
+        O: common_vendor.o(handleLogout, "2a")
       });
     };
   }

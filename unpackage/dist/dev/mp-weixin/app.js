@@ -4,6 +4,7 @@ const common_vendor = require("./common/vendor.js");
 const utils_store = require("./utils/store.js");
 if (!Math) {
   "./pages/index/index.js";
+  "./pages/seat/seat.js";
   "./pages/user/user.js";
   "./pages/create/create.js";
   "./pages/detail/detail.js";
