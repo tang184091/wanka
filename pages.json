@@ -12,7 +12,7 @@
     {
       "path": "pages/seat/seat",
       "style": {
-        "navigationBarTitleText": "作为详情",
+        "navigationBarTitleText": "座位详情",
         "navigationBarBackgroundColor": "#07c160",
         "navigationBarTextStyle": "white"
       }

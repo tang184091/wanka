@@ -14,6 +14,11 @@ const callCloudFunction = async (functionName, action, data = {}) => {
     const result = await wx.cloud.callFunction({
       name: functionName,
 <<<<<<< ours
+<<<<<<< ours
+=======
+      // 云函数统一约定 event = { action, data }
+      // 这里必须把业务参数包在 data 字段里，否则云函数拿不到参数
+>>>>>>> theirs
 =======
       // 云函数统一约定 event = { action, data }
       // 这里必须把业务参数包在 data 字段里，否则云函数拿不到参数
