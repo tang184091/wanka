@@ -1,0 +1,140 @@
+
+.settings-container.data-v-ce914230 {
+  height: 100vh;
+  background-color: #f8f8f8;
+}
+
+/* 导航栏 */
+.nav-bar.data-v-ce914230 {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  background-color: white;
+  border-bottom: 1rpx solid #f0f0f0;
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.nav-left.data-v-ce914230 {
+  width: 80rpx;
+}
+.back-icon.data-v-ce914230 {
+  width: 40rpx;
+  height: 40rpx;
+}
+.nav-title.data-v-ce914230 {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+  text-align: center;
+  margin-right: 80rpx;
+}
+
+/* 滚动区域 */
+.settings-scroll.data-v-ce914230 {
+  height: calc(100vh - 120rpx);
+  padding: 20rpx 30rpx;
+}
+
+/* 分区样式 */
+.section.data-v-ce914230 {
+  margin-bottom: 40rpx;
+  background-color: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+.section-title.data-v-ce914230 {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #666;
+  padding: 20rpx 30rpx;
+  background-color: #f8f8f8;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+/* 菜单列表 */
+.menu-list.data-v-ce914230 {
+  display: flex;
+  flex-direction: column;
+}
+.menu-item.data-v-ce914230 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx;
+  background-color: white;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.menu-item.data-v-ce914230:active {
+  background-color: #f8f8f8;
+}
+.menu-item.data-v-ce914230:last-child {
+  border-bottom: none;
+}
+.menu-left.data-v-ce914230 {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+.menu-icon.data-v-ce914230 {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 20rpx;
+}
+.menu-text.data-v-ce914230 {
+  font-size: 32rpx;
+  color: #333;
+}
+.menu-right.data-v-ce914230 {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.arrow-icon.data-v-ce914230 {
+  width: 24rpx;
+  height: 24rpx;
+  opacity: 0.5;
+}
+.cache-size.data-v-ce914230 {
+  font-size: 28rpx;
+  color: #999;
+}
+.version-text.data-v-ce914230 {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 开关样式 */
+switch.data-v-ce914230 {
+  transform: scale(0.8);
+  transform-origin: right center;
+}
+
+/* 退出登录 */
+.logout-section.data-v-ce914230 {
+  margin-top: 40rpx;
+  padding: 0 30rpx;
+}
+.logout-btn.data-v-ce914230 {
+  width: 100%;
+  background-color: #ff4d4f;
+  color: white;
+  text-align: center;
+  padding: 25rpx 0;
+  border-radius: 10rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+.logout-btn.data-v-ce914230:active {
+  background-color: #ff7875;
+}
+
+/* 安全区域 */
+.safe-area.data-v-ce914230 {
+  height: env(safe-area-inset-bottom);
+  min-height: 20rpx;
+  padding-bottom: 100rpx;
+}
