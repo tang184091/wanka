@@ -1,9 +1,41 @@
 
-.admin-page.data-v-dbc77958 { min-height: 100vh; background:#f5f6f8; padding:20rpx;
+.admin-page.data-v-dbc77958 { min-height: 100vh; background: #f5f6f8; padding: 20rpx;
 }
-.card.data-v-dbc77958 { background:#fff; border-radius:16rpx; padding:24rpx;
+.admin-card.data-v-dbc77958 { background: #fff; border-radius: 16rpx; padding: 24rpx; box-shadow: 0 8rpx 20rpx rgba(0,0,0,.06);
 }
-.title.data-v-dbc77958 { font-size: 32rpx; font-weight:700; color:#111827;
+.card-title.data-v-dbc77958 { font-size: 34rpx; font-weight: 700; color: #111827;
 }
-.desc.data-v-dbc77958 { margin-top:12rpx; color:#6b7280; font-size:24rpx; line-height:1.6;
+.card-subtitle.data-v-dbc77958 { margin-top: 10rpx; color: #6b7280; font-size: 24rpx; line-height: 1.6;
+}
+.empty-box.data-v-dbc77958 { margin-top: 24rpx; border: 1rpx dashed #d1d5db; border-radius: 12rpx; padding: 28rpx; text-align: center;
+}
+.empty-text.data-v-dbc77958 { font-size: 24rpx; color: #6b7280;
+}
+.toolbar.data-v-dbc77958 { margin-top: 22rpx; display: flex; gap: 12rpx;
+}
+.toolbar-btn.data-v-dbc77958 { flex: 1; height: 68rpx; border-radius: 10rpx; background: #e5e7eb; color: #111827; display: flex; align-items: center; justify-content: center; font-size: 24rpx;
+}
+.toolbar-btn.save.data-v-dbc77958 { background: #16a34a; color: #fff;
+}
+.toolbar-btn.disabled.data-v-dbc77958 { opacity: .55;
+}
+.status-list.data-v-dbc77958 { margin-top: 18rpx; display: flex; flex-direction: column; gap: 12rpx;
+}
+.status-row.data-v-dbc77958 { background: #f9fafb; border: 1rpx solid #e5e7eb; border-radius: 12rpx; padding: 16rpx; display: flex; align-items: center; justify-content: space-between; gap: 12rpx;
+}
+.row-left.data-v-dbc77958 { display: flex; flex-direction: column; gap: 8rpx;
+}
+.seat-name.data-v-dbc77958 { font-size: 26rpx; color: #111827; font-weight: 600;
+}
+.seat-current.data-v-dbc77958 { font-size: 22rpx;
+}
+.current-available.data-v-dbc77958 { color: #16a34a;
+}
+.current-reserved.data-v-dbc77958 { color: #0284c7;
+}
+.current-occupied.data-v-dbc77958 { color: #dc2626;
+}
+.row-picker.data-v-dbc77958 { width: 180rpx;
+}
+.picker-box.data-v-dbc77958 { text-align: center; background: #fff; border: 1rpx solid #d1d5db; border-radius: 8rpx; padding: 12rpx 8rpx; font-size: 22rpx; color: #111827;
 }

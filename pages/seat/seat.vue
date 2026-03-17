@@ -17,19 +17,6 @@
           </view>
         </view>
 
-        <view v-if="isAdmin" class="admin-panel">
-          <view class="admin-title">管理员：座位状态调整</view>
-          <view class="admin-grid">
-            <view v-for="seatName in adminSeatNames" :key="seatName" class="admin-cell">
-              <text class="admin-seat">{{ seatName }}</text>
-              <picker :range="statusOptions" :value="statusIndex(adminOverrides[seatName])" @change="(e) => changeAdminStatus(seatName, e)">
-                <view class="admin-picker">{{ statusText(adminOverrides[seatName] || 'available') }}</view>
-              </picker>
-            </view>
-          </view>
-          <view class="save-btn" @tap="saveAdminOverrides">保存</view>
-        </view>
-
         <view class="floor-card">
           <view class="floor-tag">一楼</view>
           <view class="first-floor-grid">
@@ -87,33 +74,35 @@
 
         <view class="floor-card">
           <view class="floor-tag">二楼</view>
-          <view class="floor2-grid">
-            <view class="seat-item floor2-top-left" :class="getSeatStatusClass(floor2Bottom[1].status)" @tap="onSeatTap(floor2Bottom[1])">
-              <text class="seat-name">{{ floor2Bottom[1].name }}</text>
-              <text class="seat-status">{{ getSeatStatusText(floor2Bottom[1].status) }}</text>
-            </view>
-            <view class="seat-item floor2-top-right" :class="getSeatStatusClass(floor2Bottom[0].status)" @tap="onSeatTap(floor2Bottom[0])">
-              <text class="seat-name">{{ floor2Bottom[0].name }}</text>
-              <text class="seat-status">{{ getSeatStatusText(floor2Bottom[0].status) }}</text>
-            </view>
+          <view class="second-floor-grid">
+            <view class="second-floor-main">
+              <view class="seat-item floor2-top-left" :class="getSeatStatusClass(floor2Bottom[1].status)" @tap="onSeatTap(floor2Bottom[1])">
+                <text class="seat-name">{{ floor2Bottom[1].name }}</text>
+                <text class="seat-status">{{ getSeatStatusText(floor2Bottom[1].status) }}</text>
+              </view>
+              <view class="seat-item floor2-top-right" :class="getSeatStatusClass(floor2Bottom[0].status)" @tap="onSeatTap(floor2Bottom[0])">
+                <text class="seat-name">{{ floor2Bottom[0].name }}</text>
+                <text class="seat-status">{{ getSeatStatusText(floor2Bottom[0].status) }}</text>
+              </view>
 
-            <view class="disabled-room">走廊</view>
+              <view class="disabled-room">包间暂停使用</view>
 
-            <view class="seat-item floor2-r1" :class="getSeatStatusClass(floor2Left[3].status)" @tap="onSeatTap(floor2Left[3])">
-              <text class="seat-name">{{ floor2Left[3].name }}</text>
-              <text class="seat-status">{{ getSeatStatusText(floor2Left[3].status) }}</text>
-            </view>
-            <view class="seat-item floor2-r2" :class="getSeatStatusClass(floor2Left[2].status)" @tap="onSeatTap(floor2Left[2])">
-              <text class="seat-name">{{ floor2Left[2].name }}</text>
-              <text class="seat-status">{{ getSeatStatusText(floor2Left[2].status) }}</text>
-            </view>
-            <view class="seat-item floor2-r3" :class="getSeatStatusClass(floor2Left[1].status)" @tap="onSeatTap(floor2Left[1])">
-              <text class="seat-name">{{ floor2Left[1].name }}</text>
-              <text class="seat-status">{{ getSeatStatusText(floor2Left[1].status) }}</text>
-            </view>
-            <view class="seat-item floor2-r4" :class="getSeatStatusClass(floor2Left[0].status)" @tap="onSeatTap(floor2Left[0])">
-              <text class="seat-name">{{ floor2Left[0].name }}</text>
-              <text class="seat-status">{{ getSeatStatusText(floor2Left[0].status) }}</text>
+              <view class="seat-item floor2-r1" :class="getSeatStatusClass(floor2Left[3].status)" @tap="onSeatTap(floor2Left[3])">
+                <text class="seat-name">{{ floor2Left[3].name }}</text>
+                <text class="seat-status">{{ getSeatStatusText(floor2Left[3].status) }}</text>
+              </view>
+              <view class="seat-item floor2-r2" :class="getSeatStatusClass(floor2Left[2].status)" @tap="onSeatTap(floor2Left[2])">
+                <text class="seat-name">{{ floor2Left[2].name }}</text>
+                <text class="seat-status">{{ getSeatStatusText(floor2Left[2].status) }}</text>
+              </view>
+              <view class="seat-item floor2-r3" :class="getSeatStatusClass(floor2Left[1].status)" @tap="onSeatTap(floor2Left[1])">
+                <text class="seat-name">{{ floor2Left[1].name }}</text>
+                <text class="seat-status">{{ getSeatStatusText(floor2Left[1].status) }}</text>
+              </view>
+              <view class="seat-item floor2-r4" :class="getSeatStatusClass(floor2Left[0].status)" @tap="onSeatTap(floor2Left[0])">
+                <text class="seat-name">{{ floor2Left[0].name }}</text>
+                <text class="seat-status">{{ getSeatStatusText(floor2Left[0].status) }}</text>
+              </view>
             </view>
           </view>
         </view>
@@ -126,14 +115,8 @@
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import UserService from '@/utils/user.js'
-import constants from '@/utils/constants.js'
 
 const refreshing = ref(false)
-const isAdmin = ref(false)
-const adminOverrides = ref({})
-const adminSeatNames = constants.GAME_LOCATIONS.map(item => item.name)
-const statusOptions = ['空闲中', '预约中', '使用中']
-const statusValues = ['available', 'reserved', 'occupied']
 
 const seatLegend = ref([
   { status: 'available', label: '空闲中' },
@@ -176,26 +159,13 @@ const arcadeRoom = ref({ id: 'f1-arcade-room', name: '电玩房', type: 'videoga
 
 const getSeatStatusClass = (status) => ({ available: 'status-available', reserved: 'status-reserved', occupied: 'status-occupied' }[status] || 'status-available')
 const getSeatStatusText = (status) => ({ available: '空闲中', reserved: '预约中', occupied: '使用中' }[status] || '空闲中')
-const statusIndex = (value) => {
-  const i = statusValues.indexOf(value || 'available')
-  return i >= 0 ? i : 0
-}
-const statusText = (value) => statusOptions[statusIndex(value)]
 
 const setSeatStatusByName = (name, statusMap) => statusMap[name] || 'available'
-
-const checkAdmin = async () => {
-  const res = await wx.cloud.callFunction({ name: 'user-service', data: { action: 'getMe', data: {} } })
-  if (res?.result?.code === 0) {
-    isAdmin.value = !!res.result.data.isAdmin
-  }
-}
 
 const refreshSeatStatus = async () => {
   try {
     const res = await wx.cloud.callFunction({ name: 'game-service', data: { action: 'getSeatStatus', data: {} } })
     const statusMap = res?.result?.data?.statusByLocation || {}
-    adminOverrides.value = { ...statusMap }
 
     floor2Left.value = floor2Left.value.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }))
     floor2Bottom.value = floor2Bottom.value.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }))
@@ -211,30 +181,10 @@ const refreshSeatStatus = async () => {
   }
 }
 
-const changeAdminStatus = (seatName, e) => {
-  const index = Number(e.detail.value)
-  adminOverrides.value = { ...adminOverrides.value, [seatName]: statusValues[index] }
-}
-
-const saveAdminOverrides = async () => {
-  if (!isAdmin.value) return
-  const res = await wx.cloud.callFunction({
-    name: 'game-service',
-    data: { action: 'setSeatStatusOverrides', data: { overrides: adminOverrides.value } }
-  })
-  if (res.result?.code === 0) {
-    uni.showToast({ title: '保存成功', icon: 'success' })
-    await refreshSeatStatus()
-  } else {
-    uni.showToast({ title: res.result?.message || '保存失败', icon: 'none' })
-  }
-}
-
 const handleRefresh = async () => {
   if (refreshing.value) return
   refreshing.value = true
   try {
-    await checkAdmin()
     await refreshSeatStatus()
     uni.showToast({ title: '已刷新', icon: 'success', duration: 1200 })
   } finally {
@@ -303,14 +253,6 @@ const onSeatTap = (seat) => {
 .dot-occupied { background: #ff6b6b; }
 .legend-text { font-size: 22rpx; color: #374151; }
 
-.admin-panel { margin-bottom: 20rpx; padding: 16rpx; border-radius: 12rpx; border: 1rpx solid #d1fae5; background: #f0fdf4; }
-.admin-title { font-size: 24rpx; font-weight: 600; color: #065f46; margin-bottom: 12rpx; }
-.admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10rpx; }
-.admin-cell { background: #fff; border: 1rpx solid #e5e7eb; border-radius: 10rpx; padding: 10rpx; }
-.admin-seat { display:block; font-size: 22rpx; margin-bottom: 6rpx; color:#1f2937; }
-.admin-picker { text-align: center; padding: 8rpx; border-radius: 8rpx; background: #f3f4f6; font-size: 22rpx; }
-.save-btn { margin-top: 12rpx; height: 64rpx; border-radius: 10rpx; background: #16a34a; color:#fff; display:flex; align-items:center; justify-content:center; }
-
 .floor-card { background: #f8f9fa; border: 2rpx solid #e5e7eb; border-radius: 14rpx; padding: 16rpx; margin-bottom: 18rpx; position: relative; }
 .floor-tag { position: absolute; right: 16rpx; top: 10rpx; font-size: 24rpx; color: #6b7280; }
 
@@ -320,16 +262,17 @@ const onSeatTap = (seat) => {
 .floor1-arcade-1 { grid-column: 1 / span 3; grid-row: 2; }
 .floor1-arcade-2 { grid-column: 4 / span 3; grid-row: 2; }
 .floor1-inter-desk { grid-column: 7 / span 6; grid-row: 2; }
-.floor1-corridor { grid-column: 1 / span 4; grid-row: 3; }
-.floor1-desk5 { grid-column: 5 / span 4; grid-row: 3; }
-.floor1-desk6 { grid-column: 9 / span 4; grid-row: 3; }
-.floor1-arcade-hall { grid-column: 1 / span 4; grid-row: 4 / span 2; }
-.floor1-desk1 { grid-column: 5 / span 4; grid-row: 4; }
-.floor1-desk2 { grid-column: 9 / span 4; grid-row: 4; }
-.floor1-desk3 { grid-column: 5 / span 4; grid-row: 5; }
-.floor1-desk4 { grid-column: 9 / span 4; grid-row: 5; }
+.floor1-corridor { grid-column: 1 / span 4; grid-row: 3 / span 3; }
+.floor1-desk5 { grid-column: 5 / span 2; grid-row: 3; }
+.floor1-desk6 { grid-column: 5 / span 2; grid-row: 4; }
+.floor1-arcade-hall { grid-column: 7 / span 6; grid-row: 3; }
+.floor1-desk1 { grid-column: 7 / span 3; grid-row: 4; }
+.floor1-desk2 { grid-column: 10 / span 3; grid-row: 4; }
+.floor1-desk3 { grid-column: 7 / span 3; grid-row: 5; }
+.floor1-desk4 { grid-column: 10 / span 3; grid-row: 5; }
 
-.floor2-grid { margin-top: 30rpx; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, 108rpx); gap: 10rpx; }
+.second-floor-grid { margin-top: 30rpx; }
+.second-floor-main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, 108rpx); gap: 10rpx; }
 .floor2-top-left { grid-column: 1; grid-row: 1; }
 .floor2-top-right { grid-column: 2; grid-row: 1; }
 .disabled-room { grid-column: 1; grid-row: 2 / span 4; border-radius: 12rpx; border: 2rpx solid #adb5bd; background: #dee2e6; color: #6b7280; display: flex; justify-content: center; align-items: center; font-size: 30rpx; }

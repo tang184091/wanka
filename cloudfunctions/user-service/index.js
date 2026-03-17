@@ -36,19 +36,11 @@ exports.main = async (event) => {
       case 'updateUserAvatar':
         return await updateUserAvatar(data, wxContext)
       case 'getUserStats':
-<<<<<<< ours
-        return await getUserStats(data, wxContext)
-      case 'searchUsers':
-        return await searchUsers(data, wxContext)
-      case 'getMe':
-        return await getMe(data, wxContext)
-=======
         return await getUserStats(data)
       case 'searchUsers':
         return await searchUsers(data)
       case 'getMe':
         return await getMe(wxContext)
->>>>>>> theirs
       default:
         return fail(400, '未知操作')
     }
@@ -74,109 +66,6 @@ function toUserDto(user) {
   }
 }
 
-<<<<<<< ours
-// 用户登录/注册 - 修复版，不再覆盖用户已修改的信息
-async function handleLogin(data, wxContext) {
-  const { userInfo } = data
-  
-  if (!userInfo) {
-    return { code: 400, message: '缺少用户信息' }
-  }
-  
-  try {
-    // 检查用户是否已存在
-    const queryResult = await db.collection('users')
-      .where({ openid: wxContext.OPENID })
-      .get()
-    
-    let userData = null
-    let isNewUser = false
-    
-    if (queryResult.data.length === 0) {
-      // 新用户注册
-      isNewUser = true
-      
-      // 为新用户创建默认标签
-      const defaultTags = [
-        { id: 1, name: '立直麻将初心玩家' }
-      ]
-      
-      // 为新用户创建默认游戏/装备
-      const defaultGames = [
-        { id: Date.now(), name: 'root', type: 'mahjong' }
-      ]
-      
-      const newUser = {
-        openid: wxContext.OPENID,
-        ...userInfo,
-        tags: defaultTags,
-        games: defaultGames,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        lastLoginAt: new Date()
-      }
-      
-      const addResult = await db.collection('users').add({
-        data: newUser
-      })
-      
-      userData = { ...newUser, _id: addResult._id }
-      
-    } else {
-      // 已存在用户 - 重要修复：不再覆盖用户已修改的信息
-      const existingUser = queryResult.data[0]
-      const userId = existingUser._id
-      
-      // 只更新最后登录时间，不覆盖用户已修改的昵称和头像
-      await db.collection('users').doc(userId).update({
-        data: {
-          lastLoginAt: new Date()
-        }
-      })
-      
-      // 使用数据库中的用户信息，而不是微信返回的信息
-      userData = { ...existingUser, _id: userId }
-      
-      console.log('✅ 使用数据库中的用户信息，不覆盖微信返回的信息')
-      console.log('数据库中的昵称:', userData.nickname)
-      console.log('数据库中的头像:', userData.avatar)
-      console.log('微信返回的昵称:', userInfo.nickname)
-      console.log('微信返回的头像:', userInfo.avatarUrl)
-    }
-    
-    
-
-
-
-// 获取用户统计信息
-    const stats = await getUserStats({ userId: userData._id }, wxContext)
-    
-    return {
-      code: 0,
-      message: isNewUser ? '注册成功' : '登录成功',
-      data: {
-        userInfo: {
-          id: userData._id,
-          nickname: userData.nickname,
-          avatar: userData.avatar,
-          tags: userData.tags || [],
-          games: userData.games || [],
-          isAdmin: !!userData.isAdmin
-        },
-        token: wxContext.OPENID,
-        stats: stats.data
-      }
-    }
-    
-  } catch (error) {
-    console.error('登录处理错误:', error)
-    return {
-      code: 500,
-      message: '服务器内部错误',
-      error: error.message
-    }
-  }
-=======
 function sanitizeUserUpdates(updates = {}) {
   const allowed = ['nickname', 'gender', 'province', 'city', 'country']
   const next = {}
@@ -184,7 +73,6 @@ function sanitizeUserUpdates(updates = {}) {
     if (Object.prototype.hasOwnProperty.call(updates, key)) next[key] = updates[key]
   })
   return next
->>>>>>> theirs
 }
 
 function ensureOwner(currentUser, targetUserId) {
@@ -232,16 +120,7 @@ async function handleLogin(data, wxContext) {
     userData = queryResult.data[0]
     await db.collection('users').doc(userData._id).update({
       data: {
-<<<<<<< ours
-        id: userData._id,
-        nickname: userData.nickname,
-        avatar: userData.avatar,
-        tags: userData.tags || [],
-        games: userData.games || [],
-        isAdmin: !!userData.isAdmin
-=======
         lastLoginAt: now
->>>>>>> theirs
       }
     })
   }
@@ -348,64 +227,6 @@ async function updateUserAvatar(data, wxContext) {
   return success({ avatar: avatarUrl }, '头像更新成功')
 }
 
-<<<<<<< ours
-
-
-async function getMe(data, wxContext) {
-  try {
-    const res = await db.collection('users').where({ openid: wxContext.OPENID }).limit(1).get()
-    if (!res.data.length) return { code: 404, message: '用户不存在' }
-    const user = res.data[0]
-    return {
-      code: 0,
-      message: '获取成功',
-      data: {
-        id: user._id,
-        nickname: user.nickname || '',
-        avatar: user.avatar || '',
-        isAdmin: !!user.isAdmin
-      }
-    }
-  } catch (error) {
-    return { code: 500, message: '获取用户失败: ' + error.message }
-  }
-}
-
-async function searchUsers(data, wxContext) {
-  try {
-    const keyword = (data && data.keyword ? String(data.keyword) : '').trim()
-    if (!keyword) return { code: 0, message: 'ok', data: { list: [] } }
-
-    const byNick = await db.collection('users')
-      .where({ nickname: db.RegExp({ regexp: keyword, options: 'i' }) })
-      .limit(20)
-      .get()
-
-    const byId = await db.collection('users')
-      .where({ _id: db.RegExp({ regexp: keyword, options: 'i' }) })
-      .limit(20)
-      .get()
-
-    const map = new Map()
-    ;[...(byNick.data || []), ...(byId.data || [])].forEach(u => {
-      if (u && u._id) map.set(u._id, { id: u._id, nickname: u.nickname || '未命名用户', avatar: u.avatar || '' })
-    })
-
-    return { code: 0, message: '获取成功', data: { list: Array.from(map.values()).slice(0, 20) } }
-  } catch (error) {
-    return { code: 500, message: '搜索用户失败: ' + error.message, data: { list: [] } }
-  }
-}
-
-// 获取用户统计
-async function getUserStats(data, wxContext) {
-  const { userId } = data
-  
-  if (!userId) {
-    return { code: 400, message: '缺少用户ID' }
-  }
-  
-=======
 async function getMe(wxContext) {
   const user = await getCurrentUser(wxContext)
   if (!user) return fail(404, '用户不存在')
@@ -442,7 +263,6 @@ async function getUserStats(data) {
   const { userId } = payload
   if (!userId) return fail(400, '缺少用户ID')
 
->>>>>>> theirs
   try {
     const [createdGamesRes, joinedGamesRes, completedCreatedRes, completedJoinedRes] = await Promise.all([
       db.collection('games').where({ creatorId: userId, status: 'pending' }).count(),
