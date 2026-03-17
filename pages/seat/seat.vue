@@ -30,7 +30,7 @@
               <text class="seat-name">{{ hallDeskRows[0][1].name }}</text>
               <text class="seat-status">{{ getSeatStatusText(hallDeskRows[0][1].status) }}</text>
             </view>
-            <view class="seat-item floor1-cell" :class="getSeatStatusClass(arcadeHall.status)" @tap="onSeatTap(arcadeHall)">
+            <view class="seat-item floor1-cell floor1-arcade-hall" :class="getSeatStatusClass(arcadeHall.status)" @tap="onSeatTap(arcadeHall)">
               <text class="seat-name">{{ arcadeHall.name }}</text>
               <text class="seat-status">{{ getSeatStatusText(arcadeHall.status) }}</text>
             </view>
@@ -43,11 +43,8 @@
               <text class="seat-name">{{ hallDeskRows[1][1].name }}</text>
               <text class="seat-status">{{ getSeatStatusText(hallDeskRows[1][1].status) }}</text>
             </view>
-            <view class="seat-item floor1-cell" :class="getSeatStatusClass(interDesk.status)" @tap="onSeatTap(interDesk)">
-              <text class="seat-name">{{ interDesk.name }}</text>
-              <text class="seat-status">{{ getSeatStatusText(interDesk.status) }}</text>
-            </view>
 
+            <view class="corridor-box floor1-cell">走廊</view>
             <view class="seat-item floor1-cell" :class="getSeatStatusClass(hallDeskRows[2][0].status)" @tap="onSeatTap(hallDeskRows[2][0])">
               <text class="seat-name">{{ hallDeskRows[2][0].name }}</text>
               <text class="seat-status">{{ getSeatStatusText(hallDeskRows[2][0].status) }}</text>
@@ -56,11 +53,16 @@
               <text class="seat-name">{{ hallDeskRows[2][1].name }}</text>
               <text class="seat-status">{{ getSeatStatusText(hallDeskRows[2][1].status) }}</text>
             </view>
-            <view class="seat-item floor1-cell half-cell" :class="getSeatStatusClass(interArcade1.status)" @tap="onSeatTap(interArcade1)">
+
+            <view class="seat-item floor1-inter-desk" :class="getSeatStatusClass(interDesk.status)" @tap="onSeatTap(interDesk)">
+              <text class="seat-name">{{ interDesk.name }}</text>
+              <text class="seat-status">{{ getSeatStatusText(interDesk.status) }}</text>
+            </view>
+            <view class="seat-item floor1-half" :class="getSeatStatusClass(interArcade1.status)" @tap="onSeatTap(interArcade1)">
               <text class="seat-name">{{ interArcade1.name }}</text>
               <text class="seat-status">{{ getSeatStatusText(interArcade1.status) }}</text>
             </view>
-            <view class="seat-item floor1-cell half-cell" :class="getSeatStatusClass(interArcade2.status)" @tap="onSeatTap(interArcade2)">
+            <view class="seat-item floor1-half" :class="getSeatStatusClass(interArcade2.status)" @tap="onSeatTap(interArcade2)">
               <text class="seat-name">{{ interArcade2.name }}</text>
               <text class="seat-status">{{ getSeatStatusText(interArcade2.status) }}</text>
             </view>
@@ -396,7 +398,7 @@ const onSeatTap = (seat) => {
   margin-top: 30rpx;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  grid-template-rows: repeat(4, 108rpx);
+  grid-template-rows: repeat(5, 108rpx);
   gap: 10rpx;
 }
 
@@ -405,8 +407,18 @@ const onSeatTap = (seat) => {
   grid-column: span 2;
 }
 
-.floor1-cell.half-cell {
+.floor1-arcade-hall {
+  grid-row: span 2;
+}
+
+.floor1-inter-desk {
+  grid-column: span 4;
+  min-height: 108rpx;
+}
+
+.floor1-half {
   grid-column: span 1;
+  min-height: 108rpx;
 }
 
 .floor1-wide {

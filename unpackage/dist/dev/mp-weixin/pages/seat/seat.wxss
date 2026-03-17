@@ -93,15 +93,23 @@
   margin-top: 30rpx;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  grid-template-rows: repeat(4, 108rpx);
+  grid-template-rows: repeat(5, 108rpx);
   gap: 10rpx;
 }
 .floor1-cell.data-v-f89a1d25 {
   min-height: 108rpx;
   grid-column: span 2;
 }
-.floor1-cell.half-cell.data-v-f89a1d25 {
+.floor1-arcade-hall.data-v-f89a1d25 {
+  grid-row: span 2;
+}
+.floor1-inter-desk.data-v-f89a1d25 {
+  grid-column: span 4;
+  min-height: 108rpx;
+}
+.floor1-half.data-v-f89a1d25 {
   grid-column: span 1;
+  min-height: 108rpx;
 }
 .floor1-wide.data-v-f89a1d25 {
   grid-column: span 3;

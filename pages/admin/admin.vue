@@ -4,14 +4,18 @@
     <scroll-view v-else scroll-y class="admin-scroll">
       <view class="card">
         <view class="title">座位状态管理</view>
-        <view class="tip">可将座位状态设置为空闲中/预约中/使用中，保存后座位详情页将按云端配置显示。</view>
-        <view v-for="seat in seats" :key="seat" class="seat-row">
-          <text class="seat-name">{{ seat }}</text>
-          <picker :range="statusOptions" :value="statusIndex(overrides[seat])" @change="(e) => changeStatus(seat, e)">
-            <view class="picker">{{ statusText(overrides[seat] || 'available') }}</view>
-          </picker>
+        <view class="tip">每个房间/座位都可单独设置为空闲中、预约中、使用中。</view>
+
+        <view class="seat-grid">
+          <view v-for="seat in seats" :key="seat" class="seat-cell">
+            <text class="seat-name">{{ seat }}</text>
+            <picker :range="statusOptions" :value="statusIndex(overrides[seat])" @change="(e) => changeStatus(seat, e)">
+              <view class="picker">{{ statusText(overrides[seat] || 'available') }}</view>
+            </picker>
+          </view>
         </view>
-        <view class="btn" @tap="save">保存配置</view>
+
+        <view class="btn" @tap="save">保存</view>
       </view>
     </scroll-view>
   </view>
@@ -74,9 +78,10 @@ onShow(async () => {
 .card { margin: 20rpx; background:#fff; border-radius:16rpx; padding:20rpx; }
 .title { font-size:30rpx; font-weight:700; }
 .tip { margin-top:8rpx; color:#6b7280; font-size:22rpx; }
-.seat-row { display:flex; justify-content:space-between; align-items:center; border-bottom:1rpx solid #eef2f7; padding:16rpx 0; }
-.seat-name { max-width: 65%; font-size: 26rpx; }
-.picker { min-width:170rpx; text-align:center; background:#f3f4f6; padding:10rpx 14rpx; border-radius: 10rpx; }
+.seat-grid { margin-top: 16rpx; display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12rpx; }
+.seat-cell { background:#f8fafc; border:1rpx solid #e5e7eb; border-radius:10rpx; padding:12rpx; }
+.seat-name { display:block; font-size:24rpx; color:#111827; margin-bottom:8rpx; }
+.picker { text-align:center; background:#f3f4f6; padding:10rpx 14rpx; border-radius: 10rpx; font-size:22rpx; }
 .btn { margin-top:20rpx; background:#07c160; color:#fff; height:72rpx; border-radius:12rpx; display:flex; align-items:center; justify-content:center; }
 .forbidden { padding: 30rpx; color: #ef4444; }
 </style>

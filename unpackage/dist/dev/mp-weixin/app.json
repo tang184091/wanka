@@ -8,7 +8,10 @@
     "pages/game/list",
     "pages/user/tags",
     "pages/user/games",
-    "pages/user/settings"
+    "pages/user/settings",
+    "pages/record/record",
+    "pages/record/detail",
+    "pages/admin/admin"
   ],
   "window": {
     "navigationBarTextStyle": "white",
@@ -33,6 +36,12 @@
         "text": "座位详情",
         "iconPath": "/static/tabbar/seat.png",
         "selectedIconPath": "/static/tabbar/seat-active.png"
+      },
+      {
+        "pagePath": "pages/record/record",
+        "text": "战绩",
+        "iconPath": "static/tabbar/record.png",
+        "selectedIconPath": "static/tabbar/record-active.png"
       },
       {
         "pagePath": "pages/user/user",

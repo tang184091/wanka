@@ -1,0 +1,71 @@
+<template>
+  <view class="detail-page">
+    <view class="card" v-if="record">
+      <view class="title">战绩详情</view>
+      <view class="time">{{ formatTime(record.createdAt) }}</view>
+
+      <view class="row" v-for="(player, index) in record.players" :key="index">
+        <text class="name">{{ player.nickname || '未知玩家' }}</text>
+        <text class="score">{{ player.score }}</text>
+      </view>
+
+      <view class="export-title">导出文本</view>
+      <view class="export-box">{{ exportText }}</view>
+      <view class="btn" @tap="copyExport">复制</view>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+
+const record = ref(null)
+
+const formatTime = (t) => {
+  if (!t) return '-'
+  const d = new Date(t)
+  const pad = (n) => `${n}`.padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+const exportText = computed(() => {
+  if (!record.value) return ''
+  const names = record.value.players.map(p => p.nickname || p.userId || '-').join(' ')
+  const scores = record.value.players.map(p => p.score ?? 0).join(' ')
+  return `${names}\n${scores}`
+})
+
+const copyExport = () => {
+  uni.setClipboardData({ data: exportText.value })
+}
+
+onLoad(async (options) => {
+  const id = options?.id
+  if (!id) return
+
+  const res = await wx.cloud.callFunction({
+    name: 'game-service',
+    data: { action: 'getMahjongRecordDetail', data: { recordId: id } }
+  })
+
+  if (res.result?.code === 0) {
+    record.value = res.result.data
+  } else {
+    uni.showToast({ title: res.result?.message || '加载失败', icon: 'none' })
+  }
+})
+</script>
+
+<style scoped>
+.detail-page { min-height: 100vh; background:#f5f6f8; padding:20rpx; }
+.card { background:#fff; border-radius:16rpx; padding:20rpx; }
+.title { font-size:30rpx; font-weight:700; }
+.time { color:#6b7280; margin-top:8rpx; font-size:22rpx; }
+.row { display:flex; justify-content:space-between; margin-top:14rpx; padding:10rpx 0; border-bottom:1rpx solid #eef2f7; }
+.name { color:#111827; }
+.score { color:#0f766e; }
+.export-title { margin-top:18rpx; font-size:26rpx; font-weight:600; }
+.export-box { margin-top:10rpx; white-space:pre-line; background:#f8fafc; border-radius:10rpx; padding:14rpx; }
+.btn { margin-top:16rpx; background:#2563eb; color:#fff; height:72rpx; border-radius:12rpx; display:flex; align-items:center; justify-content:center; }
+</style>

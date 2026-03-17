@@ -1,0 +1,146 @@
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+const _sfc_main = {
+  __name: "record",
+  setup(__props) {
+    const records = common_vendor.ref([]);
+    const form = common_vendor.ref({
+      players: [
+        { userId: "", nickname: "", score: "" },
+        { userId: "", nickname: "", score: "" },
+        { userId: "", nickname: "", score: "" },
+        { userId: "", nickname: "", score: "" }
+      ]
+    });
+    const searchResults = common_vendor.ref([]);
+    const searchingIndex = common_vendor.ref(-1);
+    let timer = null;
+    const toNumber = (v) => Number(v || 0);
+    const totalScore = common_vendor.computed(() => form.value.players.reduce((sum, p) => sum + toNumber(p.score), 0));
+    const scoreValid = common_vendor.computed(() => totalScore.value === 1e5 || totalScore.value === 1e3);
+    const formatTime = (t) => {
+      if (!t)
+        return "-";
+      const d = new Date(t);
+      const pad = (n) => `${n}`.padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    const loadRecords = async () => {
+      var _a;
+      const res = await common_vendor.wx$1.cloud.callFunction({
+        name: "game-service",
+        data: { action: "getMahjongRecords", data: {} }
+      });
+      if (((_a = res.result) == null ? void 0 : _a.code) === 0) {
+        records.value = res.result.data.list || [];
+      }
+    };
+    const onSearch = (index) => {
+      searchingIndex.value = index;
+      const keyword = form.value.players[index].userId;
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        var _a;
+        if (!keyword) {
+          searchResults.value = [];
+          return;
+        }
+        const res = await common_vendor.wx$1.cloud.callFunction({
+          name: "user-service",
+          data: { action: "searchUsers", data: { keyword } }
+        });
+        if (((_a = res.result) == null ? void 0 : _a.code) === 0) {
+          searchResults.value = res.result.data.list || [];
+        }
+      }, 250);
+    };
+    const pickUser = (index, user) => {
+      form.value.players[index].userId = user.id;
+      form.value.players[index].nickname = user.nickname;
+      searchResults.value = [];
+    };
+    const submit = async () => {
+      var _a, _b;
+      const players = form.value.players.map((p) => ({
+        userId: (p.userId || "").trim(),
+        nickname: p.nickname,
+        score: Number(p.score || 0)
+      }));
+      if (players.some((p) => !p.userId)) {
+        common_vendor.index.showToast({ title: "请填写4位玩家ID", icon: "none" });
+        return;
+      }
+      if (!scoreValid.value) {
+        common_vendor.index.showToast({ title: "分数总和必须为100000或1000", icon: "none" });
+        return;
+      }
+      const res = await common_vendor.wx$1.cloud.callFunction({
+        name: "game-service",
+        data: { action: "createMahjongRecord", data: { players } }
+      });
+      if (((_a = res.result) == null ? void 0 : _a.code) === 0) {
+        common_vendor.index.showToast({ title: "提交成功", icon: "success" });
+        form.value.players = [
+          { userId: "", nickname: "", score: "" },
+          { userId: "", nickname: "", score: "" },
+          { userId: "", nickname: "", score: "" },
+          { userId: "", nickname: "", score: "" }
+        ];
+        await loadRecords();
+      } else {
+        common_vendor.index.showToast({ title: ((_b = res.result) == null ? void 0 : _b.message) || "提交失败", icon: "none" });
+      }
+    };
+    const openDetail = (item) => {
+      common_vendor.index.navigateTo({ url: `/pages/record/detail?id=${item._id}` });
+    };
+    common_vendor.onShow(loadRecords);
+    return (_ctx, _cache) => {
+      return common_vendor.e({
+        a: records.value.length === 0
+      }, records.value.length === 0 ? {} : {}, {
+        b: common_vendor.f(records.value, (item, k0, i0) => {
+          return {
+            a: common_vendor.t(formatTime(item.createdAt)),
+            b: common_vendor.f(item.players, (player, index, i1) => {
+              return {
+                a: common_vendor.t(player.nickname || "未知玩家"),
+                b: common_vendor.t(player.score),
+                c: index
+              };
+            }),
+            c: item._id,
+            d: common_vendor.o(($event) => openDetail(item), item._id)
+          };
+        }),
+        c: common_vendor.f(form.value.players, (player, index, i0) => {
+          return common_vendor.e({
+            a: `玩家${index + 1} ID`,
+            b: common_vendor.o([($event) => player.userId = $event.detail.value, ($event) => onSearch(index)], index),
+            c: player.userId,
+            d: player.score,
+            e: common_vendor.o(($event) => player.score = $event.detail.value, index),
+            f: searchingIndex.value === index && searchResults.value.length
+          }, searchingIndex.value === index && searchResults.value.length ? {
+            g: common_vendor.f(searchResults.value, (u, k1, i1) => {
+              return {
+                a: common_vendor.t(u.nickname),
+                b: u.id,
+                c: common_vendor.o(($event) => pickUser(index, u), u.id)
+              };
+            })
+          } : {}, {
+            h: index
+          });
+        }),
+        d: `分数`,
+        e: common_vendor.t(totalScore.value),
+        f: scoreValid.value ? 1 : "",
+        g: common_vendor.o(submit, "1d")
+      });
+    };
+  }
+};
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-ef6850c5"]]);
+wx.createPage(MiniProgramPage);
+//# sourceMappingURL=../../../.sourcemap/mp-weixin/pages/record/record.js.map

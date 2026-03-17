@@ -1,0 +1,43 @@
+
+.record-page.data-v-ef6850c5 { min-height: 100vh; background: #f5f6f8;
+}
+.record-scroll.data-v-ef6850c5 { height: 100vh;
+}
+.card.data-v-ef6850c5 { margin: 20rpx; background: #fff; border-radius: 16rpx; padding: 20rpx;
+}
+.card-title.data-v-ef6850c5 { font-size: 30rpx; font-weight: 700;
+}
+.card-sub.data-v-ef6850c5,.hint.data-v-ef6850c5 { color: #6b7280; font-size: 22rpx; margin-top: 8rpx;
+}
+.record-item.data-v-ef6850c5 { margin-top: 14rpx; padding: 14rpx; background: #f8fafc; border-radius: 12rpx;
+}
+.record-head.data-v-ef6850c5 { display:flex; justify-content:space-between; align-items:center;
+}
+.detail-link.data-v-ef6850c5 { color:#2563eb; font-size:22rpx;
+}
+.time.data-v-ef6850c5 { font-size: 22rpx; color: #6b7280;
+}
+.row.data-v-ef6850c5 { display: flex; justify-content: space-between; margin-top: 6rpx;
+}
+.form-row.data-v-ef6850c5 { position: relative; display: flex; gap: 12rpx; margin-top: 14rpx;
+}
+.input.data-v-ef6850c5 { flex: 1; height: 70rpx; border: 1rpx solid #d1d5db; border-radius: 10rpx; padding: 0 16rpx; background:#fff;
+}
+.input.score.data-v-ef6850c5 { flex: 0.8;
+}
+.search-box.data-v-ef6850c5 { position: absolute; top: 74rpx; left: 0; right: 0; z-index: 10; background:#fff; border:1rpx solid #d1d5db; border-radius:10rpx;
+}
+.search-item.data-v-ef6850c5 { padding: 12rpx 14rpx; border-bottom: 1rpx solid #eef2f7;
+}
+.sum.data-v-ef6850c5 { margin-top: 14rpx; color: #ef4444;
+}
+.sum.ok.data-v-ef6850c5 { color: #16a34a;
+}
+.btn.data-v-ef6850c5 { margin-top: 16rpx; background: #07c160; color:#fff; height: 72rpx; border-radius: 12rpx; display:flex; align-items:center; justify-content:center;
+}
+.empty.data-v-ef6850c5 { margin-top: 12rpx; color: #9ca3af;
+}
+.name.data-v-ef6850c5 { color:#111827;
+}
+.score.data-v-ef6850c5 { color:#0f766e;
+}

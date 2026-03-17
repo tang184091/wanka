@@ -12,6 +12,9 @@ if (!Math) {
   "./pages/user/tags.js";
   "./pages/user/games.js";
   "./pages/user/settings.js";
+  "./pages/record/record.js";
+  "./pages/record/detail.js";
+  "./pages/admin/admin.js";
 }
 const _sfc_main = {
   onLaunch: function(options) {
