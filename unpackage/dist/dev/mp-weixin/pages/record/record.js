@@ -4,14 +4,13 @@ const _sfc_main = {
   __name: "record",
   setup(__props) {
     const records = common_vendor.ref([]);
-    const form = common_vendor.ref({
-      players: [
-        { userId: "", nickname: "", score: "" },
-        { userId: "", nickname: "", score: "" },
-        { userId: "", nickname: "", score: "" },
-        { userId: "", nickname: "", score: "" }
-      ]
-    });
+    const emptyPlayers = () => [
+      { keyword: "", userId: "", nickname: "", score: "" },
+      { keyword: "", userId: "", nickname: "", score: "" },
+      { keyword: "", userId: "", nickname: "", score: "" },
+      { keyword: "", userId: "", nickname: "", score: "" }
+    ];
+    const form = common_vendor.ref({ players: emptyPlayers() });
     const searchResults = common_vendor.ref([]);
     const searchingIndex = common_vendor.ref(-1);
     let timer = null;
@@ -37,11 +36,16 @@ const _sfc_main = {
     };
     const onSearch = (index) => {
       searchingIndex.value = index;
-      const keyword = form.value.players[index].userId;
+      const player = form.value.players[index];
+      const keyword = (player.keyword || "").trim();
+      if (player.nickname && keyword !== player.nickname) {
+        player.nickname = "";
+        player.userId = "";
+      }
       clearTimeout(timer);
       timer = setTimeout(async () => {
         var _a;
-        if (!keyword) {
+        if (keyword.length < 2) {
           searchResults.value = [];
           return;
         }
@@ -50,24 +54,30 @@ const _sfc_main = {
           data: { action: "searchUsers", data: { keyword } }
         });
         if (((_a = res.result) == null ? void 0 : _a.code) === 0) {
-          searchResults.value = res.result.data.list || [];
+          searchResults.value = (res.result.data.list || []).slice(0, 5);
         }
-      }, 250);
+      }, 220);
     };
     const pickUser = (index, user) => {
       form.value.players[index].userId = user.id;
       form.value.players[index].nickname = user.nickname;
+      form.value.players[index].keyword = user.nickname;
       searchResults.value = [];
     };
     const submit = async () => {
       var _a, _b;
-      const players = form.value.players.map((p) => ({
-        userId: (p.userId || "").trim(),
-        nickname: p.nickname,
-        score: Number(p.score || 0)
-      }));
+      const players = form.value.players.map((p) => {
+        const typed = (p.keyword || "").trim();
+        const userId = (p.userId || typed).trim();
+        const nickname = p.nickname || "";
+        return {
+          userId,
+          nickname,
+          score: Number(p.score || 0)
+        };
+      });
       if (players.some((p) => !p.userId)) {
-        common_vendor.index.showToast({ title: "请填写4位玩家ID", icon: "none" });
+        common_vendor.index.showToast({ title: "请填写4位玩家ID或昵称", icon: "none" });
         return;
       }
       if (!scoreValid.value) {
@@ -80,12 +90,7 @@ const _sfc_main = {
       });
       if (((_a = res.result) == null ? void 0 : _a.code) === 0) {
         common_vendor.index.showToast({ title: "提交成功", icon: "success" });
-        form.value.players = [
-          { userId: "", nickname: "", score: "" },
-          { userId: "", nickname: "", score: "" },
-          { userId: "", nickname: "", score: "" },
-          { userId: "", nickname: "", score: "" }
-        ];
+        form.value.players = emptyPlayers();
         await loadRecords();
       } else {
         common_vendor.index.showToast({ title: ((_b = res.result) == null ? void 0 : _b.message) || "提交失败", icon: "none" });
@@ -94,30 +99,17 @@ const _sfc_main = {
     const openDetail = (item) => {
       common_vendor.index.navigateTo({ url: `/pages/record/detail?id=${item._id}` });
     };
+    const goToYakuman = () => {
+      common_vendor.index.navigateTo({ url: "/pages/record/yakuman" });
+    };
     common_vendor.onShow(loadRecords);
     return (_ctx, _cache) => {
       return common_vendor.e({
-        a: records.value.length === 0
-      }, records.value.length === 0 ? {} : {}, {
-        b: common_vendor.f(records.value, (item, k0, i0) => {
-          return {
-            a: common_vendor.t(formatTime(item.createdAt)),
-            b: common_vendor.f(item.players, (player, index, i1) => {
-              return {
-                a: common_vendor.t(player.nickname || "未知玩家"),
-                b: common_vendor.t(player.score),
-                c: index
-              };
-            }),
-            c: item._id,
-            d: common_vendor.o(($event) => openDetail(item), item._id)
-          };
-        }),
-        c: common_vendor.f(form.value.players, (player, index, i0) => {
+        a: common_vendor.f(form.value.players, (player, index, i0) => {
           return common_vendor.e({
-            a: `玩家${index + 1} ID`,
-            b: common_vendor.o([($event) => player.userId = $event.detail.value, ($event) => onSearch(index)], index),
-            c: player.userId,
+            a: `玩家${index + 1} 昵称或ID`,
+            b: common_vendor.o([($event) => player.keyword = $event.detail.value, ($event) => onSearch(index)], index),
+            c: player.keyword,
             d: player.score,
             e: common_vendor.o(($event) => player.score = $event.detail.value, index),
             f: searchingIndex.value === index && searchResults.value.length
@@ -133,10 +125,27 @@ const _sfc_main = {
             h: index
           });
         }),
-        d: `分数`,
-        e: common_vendor.t(totalScore.value),
-        f: scoreValid.value ? 1 : "",
-        g: common_vendor.o(submit, "1d")
+        b: `分数`,
+        c: common_vendor.t(totalScore.value),
+        d: scoreValid.value ? 1 : "",
+        e: common_vendor.o(submit, "f4"),
+        f: common_vendor.o(goToYakuman, "85"),
+        g: records.value.length === 0
+      }, records.value.length === 0 ? {} : {}, {
+        h: common_vendor.f(records.value, (item, k0, i0) => {
+          return {
+            a: common_vendor.t(formatTime(item.createdAt)),
+            b: common_vendor.f(item.players, (player, index, i1) => {
+              return {
+                a: common_vendor.t(player.nickname || player.userId || "未知玩家"),
+                b: common_vendor.t(player.score),
+                c: index
+              };
+            }),
+            c: item._id,
+            d: common_vendor.o(($event) => openDetail(item), item._id)
+          };
+        })
       });
     };
   }

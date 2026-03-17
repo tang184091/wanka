@@ -81,18 +81,42 @@
         "navigationBarTextStyle": "white"
       }
     },
-	{
-	  "path": "pages/record/detail",
-	  "style": {
-	    "navigationBarTitleText": "战绩详情",
-	    "navigationBarBackgroundColor": "#07c160",
-	    "navigationBarTextStyle": "white"
-	  }
-	},
+    {
+      "path": "pages/record/detail",
+      "style": {
+        "navigationBarTitleText": "战绩详情",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
     {
       "path": "pages/admin/admin",
       "style": {
         "navigationBarTitleText": "管理员",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/record/yakuman",
+      "style": {
+        "navigationBarTitleText": "役满榜",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/record/yakuman-upload",
+      "style": {
+        "navigationBarTitleText": "役满上传",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/admin/yakuman",
+      "style": {
+        "navigationBarTitleText": "役满管理",
         "navigationBarBackgroundColor": "#07c160",
         "navigationBarTextStyle": "white"
       }
@@ -122,8 +146,8 @@
       {
         "pagePath": "pages/seat/seat",
         "text": "座位详情",
-        "iconPath": "/static/tabbar/seat.png",
-        "selectedIconPath": "/static/tabbar/seat-active.png"
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
       },
       {
         "pagePath": "pages/record/record",

@@ -9,6 +9,12 @@
 }
 .card-sub.data-v-ef6850c5,.hint.data-v-ef6850c5 { color: #6b7280; font-size: 22rpx; margin-top: 8rpx;
 }
+.middle-card.data-v-ef6850c5 { margin: 0 20rpx; background: linear-gradient(135deg,#fef3c7,#fde68a); border-radius: 16rpx; padding: 20rpx;
+}
+.middle-title.data-v-ef6850c5 { display:block; font-size:30rpx; font-weight:700; color:#78350f;
+}
+.middle-sub.data-v-ef6850c5 { display:block; margin-top:6rpx; font-size:22rpx; color:#92400e;
+}
 .record-item.data-v-ef6850c5 { margin-top: 14rpx; padding: 14rpx; background: #f8fafc; border-radius: 12rpx;
 }
 .record-head.data-v-ef6850c5 { display:flex; justify-content:space-between; align-items:center;
@@ -21,23 +27,21 @@
 }
 .form-row.data-v-ef6850c5 { position: relative; display: flex; gap: 12rpx; margin-top: 14rpx;
 }
-.input.data-v-ef6850c5 { flex: 1; height: 70rpx; border: 1rpx solid #d1d5db; border-radius: 10rpx; padding: 0 16rpx; background:#fff;
+.input.data-v-ef6850c5 { flex:1; height: 72rpx; background: #f8fafc; border-radius: 10rpx; padding: 0 16rpx; font-size: 24rpx;
 }
-.input.score.data-v-ef6850c5 { flex: 0.8;
+.score.data-v-ef6850c5 { width: 180rpx; flex: none;
 }
-.search-box.data-v-ef6850c5 { position: absolute; top: 74rpx; left: 0; right: 0; z-index: 10; background:#fff; border:1rpx solid #d1d5db; border-radius:10rpx;
+.search-box.data-v-ef6850c5 { position: absolute; top: 76rpx; left: 0; right: 180rpx; z-index: 10; background: #fff; border: 1rpx solid #e5e7eb; border-radius: 10rpx; overflow: hidden;
 }
-.search-item.data-v-ef6850c5 { padding: 12rpx 14rpx; border-bottom: 1rpx solid #eef2f7;
+.search-item.data-v-ef6850c5 { height: 64rpx; padding: 0 16rpx; display: flex; align-items: center; font-size: 24rpx; border-bottom: 1rpx solid #f1f5f9;
 }
-.sum.data-v-ef6850c5 { margin-top: 14rpx; color: #ef4444;
+.search-item.data-v-ef6850c5:last-child { border-bottom: none;
+}
+.sum.data-v-ef6850c5 { margin-top: 16rpx; font-size: 24rpx; color: #ef4444;
 }
 .sum.ok.data-v-ef6850c5 { color: #16a34a;
 }
-.btn.data-v-ef6850c5 { margin-top: 16rpx; background: #07c160; color:#fff; height: 72rpx; border-radius: 12rpx; display:flex; align-items:center; justify-content:center;
+.btn.data-v-ef6850c5 { margin-top: 16rpx; height: 72rpx; border-radius: 10rpx; background: #07c160; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 26rpx;
 }
-.empty.data-v-ef6850c5 { margin-top: 12rpx; color: #9ca3af;
-}
-.name.data-v-ef6850c5 { color:#111827;
-}
-.score.data-v-ef6850c5 { color:#0f766e;
+.empty.data-v-ef6850c5 { margin-top: 16rpx; color: #9ca3af; font-size: 24rpx;
 }

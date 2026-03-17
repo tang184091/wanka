@@ -63,6 +63,10 @@ exports.main = async (event) => {
         return await recordActions.getMahjongRecordDetail(data)
       case 'createMahjongRecord':
         return await recordActions.createMahjongRecord(data, wxContext)
+      case 'getYakumanList':
+        return await recordActions.getYakumanList()
+      case 'createYakumanRecord':
+        return await recordActions.createYakumanRecord(data, wxContext)
 
       // 管理员
       case 'adminDeleteMahjongRecord':
@@ -71,6 +75,8 @@ exports.main = async (event) => {
         return await adminActions.adminDeleteGame(data, wxContext)
       case 'getAdminManageData':
         return await adminActions.getAdminManageData(wxContext)
+      case 'adminDeleteYakumanRecord':
+        return await adminActions.adminDeleteYakumanRecord(data, wxContext)
 
       default:
         return fail(400, '未知操作')

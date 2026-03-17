@@ -44,8 +44,7 @@ function buildCloudPath(prefix, openid) {
 
 async function uploadImage(data) {
   const payload = data || {}
-  const { filePath } = payload
-  if (!filePath) return fail(400, '缺少文件路径')
+
 
   const cloudPath = buildCloudPath('images')
   const uploadResult = await cloud.uploadFile({ cloudPath, filePath })
@@ -58,8 +57,7 @@ async function uploadImage(data) {
 
 async function uploadAvatar(data, wxContext) {
   const payload = data || {}
-  const { filePath } = payload
-  if (!filePath) return fail(400, '缺少文件路径')
+
 
   const cloudPath = buildCloudPath('avatars', wxContext.OPENID || 'unknown')
   const uploadResult = await cloud.uploadFile({ cloudPath, filePath })
@@ -75,4 +73,4 @@ async function getUploadToken() {
     token: `upload_token_${Date.now()}`,
     expiredAt: new Date(Date.now() + 60 * 60 * 1000)
   }, '获取成功')
-}
+

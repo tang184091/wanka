@@ -7,6 +7,8 @@ const _sfc_main = {
     const refreshing = common_vendor.ref(false);
     const saving = common_vendor.ref(false);
     const statusValues = ["available", "reserved", "occupied"];
+    const adminRecords = common_vendor.ref([]);
+    const adminGames = common_vendor.ref([]);
     const floor2Left = common_vendor.ref([
       { id: "f2-bg-1", name: "桌游房1", status: "available" },
       { id: "f2-mj-1", name: "立直麻将房1", status: "available" },
@@ -38,11 +40,27 @@ const _sfc_main = {
     const arcadeRoom = common_vendor.ref({ id: "f1-arcade-room", name: "电玩房", status: "available" });
     const getSeatStatusClass = (status) => ({ available: "status-available", reserved: "status-reserved", occupied: "status-occupied" })[status] || "status-available";
     const getSeatStatusText = (status) => ({ available: "空闲中", reserved: "预约中", occupied: "使用中" })[status] || "空闲中";
+    const gameStatusText = (status) => ({ pending: "招募中", cancelled: "已取消", completed: "已完成", ongoing: "进行中" })[status] || status || "-";
+    const formatTime = (t) => {
+      if (!t)
+        return "-";
+      const d = new Date(t);
+      const pad = (n) => `${n}`.padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
     const setSeatStatusByName = (name, statusMap) => statusMap[name] || "available";
     const checkAdmin = async () => {
       var _a, _b, _c;
       const res = await common_vendor.wx$1.cloud.callFunction({ name: "user-service", data: { action: "getMe", data: {} } });
       isAdmin.value = !!(((_a = res == null ? void 0 : res.result) == null ? void 0 : _a.code) === 0 && ((_c = (_b = res == null ? void 0 : res.result) == null ? void 0 : _b.data) == null ? void 0 : _c.isAdmin));
+    };
+    const loadManageData = async () => {
+      var _a;
+      const res = await common_vendor.wx$1.cloud.callFunction({ name: "game-service", data: { action: "getAdminManageData", data: {} } });
+      if (((_a = res == null ? void 0 : res.result) == null ? void 0 : _a.code) === 0) {
+        adminRecords.value = res.result.data.records || [];
+        adminGames.value = res.result.data.games || [];
+      }
     };
     const refreshData = async () => {
       var _a, _b;
@@ -63,8 +81,9 @@ const _sfc_main = {
         interArcade1.value = { ...interArcade1.value, status: setSeatStatusByName(interArcade1.value.name, statusMap) };
         interArcade2.value = { ...interArcade2.value, status: setSeatStatusByName(interArcade2.value.name, statusMap) };
         arcadeRoom.value = { ...arcadeRoom.value, status: setSeatStatusByName(arcadeRoom.value.name, statusMap) };
+        await loadManageData();
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/admin/admin.vue:184", "刷新管理员座位状态失败:", error);
+        common_vendor.index.__f__("error", "at pages/admin/admin.vue:235", "刷新管理员数据失败:", error);
         common_vendor.index.showToast({ title: "刷新失败", icon: "none" });
       } finally {
         refreshing.value = false;
@@ -111,11 +130,56 @@ const _sfc_main = {
           common_vendor.index.showToast({ title: ((_b = res == null ? void 0 : res.result) == null ? void 0 : _b.message) || "保存失败", icon: "none" });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/admin/admin.vue:235", "保存管理员座位状态失败:", error);
+        common_vendor.index.__f__("error", "at pages/admin/admin.vue:285", "保存管理员座位状态失败:", error);
         common_vendor.index.showToast({ title: "保存失败", icon: "none" });
       } finally {
         saving.value = false;
       }
+    };
+    const deleteRecord = (item) => {
+      common_vendor.index.showModal({
+        title: "确认删除战绩",
+        content: "删除后不可恢复，确认继续？",
+        success: async (res) => {
+          var _a, _b;
+          if (!res.confirm)
+            return;
+          const r = await common_vendor.wx$1.cloud.callFunction({
+            name: "game-service",
+            data: { action: "adminDeleteMahjongRecord", data: { recordId: item._id } }
+          });
+          if (((_a = r == null ? void 0 : r.result) == null ? void 0 : _a.code) === 0) {
+            common_vendor.index.showToast({ title: "已删除", icon: "success" });
+            await loadManageData();
+          } else {
+            common_vendor.index.showToast({ title: ((_b = r == null ? void 0 : r.result) == null ? void 0 : _b.message) || "删除失败", icon: "none" });
+          }
+        }
+      });
+    };
+    const deleteGame = (item) => {
+      common_vendor.index.showModal({
+        title: "确认删除组局",
+        content: "将同时删除相关参与和活动记录，确认继续？",
+        success: async (res) => {
+          var _a, _b;
+          if (!res.confirm)
+            return;
+          const r = await common_vendor.wx$1.cloud.callFunction({
+            name: "game-service",
+            data: { action: "adminDeleteGame", data: { gameId: item.id } }
+          });
+          if (((_a = r == null ? void 0 : r.result) == null ? void 0 : _a.code) === 0) {
+            common_vendor.index.showToast({ title: "已删除", icon: "success" });
+            await loadManageData();
+          } else {
+            common_vendor.index.showToast({ title: ((_b = r == null ? void 0 : r.result) == null ? void 0 : _b.message) || "删除失败", icon: "none" });
+          }
+        }
+      });
+    };
+    const goYakumanManage = () => {
+      common_vendor.index.navigateTo({ url: "/pages/admin/yakuman" });
     };
     common_vendor.onShow(() => {
       refreshData();
@@ -126,7 +190,7 @@ const _sfc_main = {
         b: refreshing.value ? 1 : "",
         c: common_vendor.o(refreshData, "d6"),
         d: !isAdmin.value
-      }, !isAdmin.value ? {} : {
+      }, !isAdmin.value ? {} : common_vendor.e({
         e: common_vendor.t(arcadeRoom.value.name),
         f: common_vendor.t(getSeatStatusText(arcadeRoom.value.status)),
         g: common_vendor.n(getSeatStatusClass(arcadeRoom.value.status)),
@@ -197,8 +261,31 @@ const _sfc_main = {
         av: common_vendor.o(($event) => onAdminSeatTap(floor2Left.value[0]), "7f"),
         aw: common_vendor.t(saving.value ? "保存中..." : "保存所有修改"),
         ax: saving.value ? 1 : "",
-        ay: common_vendor.o(saveOverrides, "f7")
-      });
+        ay: common_vendor.o(saveOverrides, "f7"),
+        az: common_vendor.o(goYakumanManage, "5f"),
+        aA: !adminRecords.value.length
+      }, !adminRecords.value.length ? {} : {}, {
+        aB: common_vendor.f(adminRecords.value, (item, k0, i0) => {
+          return {
+            a: common_vendor.t(formatTime(item.createdAt)),
+            b: common_vendor.t((item.players || []).map((p) => p.nickname || p.userId || "未知").join(" / ")),
+            c: common_vendor.o(($event) => deleteRecord(item), item._id),
+            d: item._id
+          };
+        }),
+        aC: !adminGames.value.length
+      }, !adminGames.value.length ? {} : {}, {
+        aD: common_vendor.f(adminGames.value, (item, k0, i0) => {
+          return {
+            a: common_vendor.t(item.title || "未命名组局"),
+            b: common_vendor.t(item.location || "-"),
+            c: common_vendor.t(gameStatusText(item.status)),
+            d: common_vendor.t(formatTime(item.createdAt)),
+            e: common_vendor.o(($event) => deleteGame(item), item.id),
+            f: item.id
+          };
+        })
+      }));
     };
   }
 };

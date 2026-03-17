@@ -15,6 +15,9 @@ if (!Math) {
   "./pages/record/record.js";
   "./pages/record/detail.js";
   "./pages/admin/admin.js";
+  "./pages/record/yakuman.js";
+  "./pages/record/yakuman-upload.js";
+  "./pages/admin/yakuman.js";
 }
 const _sfc_main = {
   onLaunch: function(options) {

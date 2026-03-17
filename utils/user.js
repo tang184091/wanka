@@ -72,7 +72,7 @@ class UserService {
   }
 
   // 云开发登录
-  static async cloudLogin(code, userInfo) {
+  static async cloudLogin(code, userInfo, captchaPayload = null) {
     try {
       console.log('调用云函数 user-service 登录')
       
@@ -82,7 +82,8 @@ class UserService {
         data: {
           action: 'login',
           data: {
-            userInfo: userInfo
+            userInfo: userInfo,
+            ...(captchaPayload || {})
           }
         }
       })
@@ -94,13 +95,25 @@ class UserService {
           success: true,
           userInfo: result.result.data.userInfo,
           token: result.result.data.token,
-          stats: result.result.data.stats
+          stats: result.result.data.stats,
+          needCaptcha: false
         }
-      } else {
-        const errorMsg = result.result?.message || '云函数登录失败'
-        console.error('云函数返回错误:', errorMsg)
-        throw new Error(errorMsg)
       }
+
+      if (result.result && result.result.code === 429 && result.result.data?.needCaptcha) {
+        return {
+          success: false,
+          needCaptcha: true,
+          captchaId: result.result.data.captchaId,
+          captchaHint: result.result.data.captchaHint,
+          forceLogout: !!result.result.data.forceLogout,
+          error: result.result.message || '需要验证码'
+        }
+      }
+
+      const errorMsg = result.result?.message || '云函数登录失败'
+      console.error('云函数返回错误:', errorMsg)
+      throw new Error(errorMsg)
     } catch (error) {
       console.error('云函数调用失败:', error)
       throw error
@@ -336,7 +349,7 @@ class UserService {
   }
 
   // 更新用户头像
-  static async updateUserAvatar(avatarUrl) {
+  static async updateUserAvatar(avatarUrl, avatarSize = 0) {
     const currentUser = this.getCurrentUser()
     if (!currentUser) {
       throw new Error('用户未登录')
@@ -349,7 +362,8 @@ class UserService {
           action: 'updateUserAvatar',
           data: {
             userId: currentUser.id,
-            avatarUrl: avatarUrl
+            avatarUrl: avatarUrl,
+            avatarSize: avatarSize
           }
         }
       })

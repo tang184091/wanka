@@ -2,6 +2,34 @@
   <view class="record-page">
     <scroll-view scroll-y class="record-scroll">
       <view class="card">
+        <view class="card-title">上传战绩</view>
+        <view class="hint">支持输入 4 名玩家，分数总和必须为 100000（或 1000）</view>
+
+        <view v-for="(player, index) in form.players" :key="index" class="form-row">
+          <input
+            class="input"
+            v-model="player.keyword"
+            :placeholder="`玩家${index + 1} 昵称或ID`"
+            @input="onSearch(index)"
+          />
+          <input class="input score" type="number" v-model="player.score" :placeholder="`分数`" />
+          <view v-if="searchingIndex === index && searchResults.length" class="search-box">
+            <view class="search-item" v-for="u in searchResults" :key="u.id" @tap="pickUser(index, u)">
+              {{ u.nickname }}
+            </view>
+          </view>
+        </view>
+
+        <view class="sum" :class="{ok: scoreValid}">当前总和：{{ totalScore }} / 100000（或1000）</view>
+        <view class="btn" @tap="submit">提交战绩</view>
+      </view>
+
+      <view class="middle-card" @tap="goToYakuman">
+        <text class="middle-title">役满榜</text>
+        <text class="middle-sub">点击进入役满榜与上传入口</text>
+      </view>
+
+      <view class="card">
         <view class="card-title">近7天立直麻将战绩</view>
         <view class="card-sub">按时间倒序展示</view>
 
@@ -16,29 +44,6 @@
             <text class="score">{{ player.score }}</text>
           </view>
         </view>
-      </view>
-
-      <view class="card">
-        <view class="card-title">上传战绩</view>
-        <view class="hint">支持输入 4 名玩家，分数总和必须为 100000（或 1000）</view>
-
-        <view v-for="(player, index) in form.players" :key="index" class="form-row">
-          <input
-            class="input"
-            v-model="player.keyword"
-            :placeholder="`玩家${index + 1} ID或昵称`"
-            @input="onSearch(index)"
-          />
-          <input class="input score" type="number" v-model="player.score" :placeholder="`分数`" />
-          <view v-if="searchingIndex === index && searchResults.length" class="search-box">
-            <view class="search-item" v-for="u in searchResults" :key="u.id" @tap="pickUser(index, u)">
-              {{ u.nickname }}
-            </view>
-          </view>
-        </view>
-
-        <view class="sum" :class="{ok: scoreValid}">当前总和：{{ totalScore }} / 100000（或1000）</view>
-        <view class="btn" @tap="submit">提交战绩</view>
       </view>
     </scroll-view>
   </view>
@@ -155,6 +160,10 @@ const openDetail = (item) => {
   uni.navigateTo({ url: `/pages/record/detail?id=${item._id}` })
 }
 
+const goToYakuman = () => {
+  uni.navigateTo({ url: '/pages/record/yakuman' })
+}
+
 onShow(loadRecords)
 </script>
 
@@ -164,21 +173,22 @@ onShow(loadRecords)
 .card { margin: 20rpx; background: #fff; border-radius: 16rpx; padding: 20rpx; }
 .card-title { font-size: 30rpx; font-weight: 700; }
 .card-sub,.hint { color: #6b7280; font-size: 22rpx; margin-top: 8rpx; }
+.middle-card { margin: 0 20rpx; background: linear-gradient(135deg,#fef3c7,#fde68a); border-radius: 16rpx; padding: 20rpx; }
+.middle-title { display:block; font-size:30rpx; font-weight:700; color:#78350f; }
+.middle-sub { display:block; margin-top:6rpx; font-size:22rpx; color:#92400e; }
 .record-item { margin-top: 14rpx; padding: 14rpx; background: #f8fafc; border-radius: 12rpx; }
 .record-head { display:flex; justify-content:space-between; align-items:center; }
 .detail-link { color:#2563eb; font-size:22rpx; }
 .time { font-size: 22rpx; color: #6b7280; }
 .row { display: flex; justify-content: space-between; margin-top: 6rpx; }
 .form-row { position: relative; display: flex; gap: 12rpx; margin-top: 14rpx; }
-.input { flex: 1; height: 70rpx; border: 1rpx solid #d1d5db; border-radius: 10rpx; padding: 0 16rpx; background:#fff; }
-.input.score { flex: 0.8; }
-.search-box { position: absolute; top: 74rpx; left: 0; right: 0; z-index: 10; background:#fff; border:1rpx solid #d1d5db; border-radius:10rpx; }
-.search-item { padding: 12rpx 14rpx; border-bottom: 1rpx solid #eef2f7; }
-.sum { margin-top: 16rpx; color:#ef4444; font-weight:700; }
-.sum.ok { color:#16a34a; }
-.btn { margin-top: 14rpx; height: 72rpx; background:#07c160; color:#fff; border-radius: 10rpx; display:flex; align-items:center; justify-content:center; }
-.empty { margin-top: 10rpx; color:#9ca3af; }
-.name { color:#111827; }
-.score { color:#0891b2; font-weight:700; }
+.input { flex:1; height: 72rpx; background: #f8fafc; border-radius: 10rpx; padding: 0 16rpx; font-size: 24rpx; }
+.score { width: 180rpx; flex: none; }
+.search-box { position: absolute; top: 76rpx; left: 0; right: 180rpx; z-index: 10; background: #fff; border: 1rpx solid #e5e7eb; border-radius: 10rpx; overflow: hidden; }
+.search-item { height: 64rpx; padding: 0 16rpx; display: flex; align-items: center; font-size: 24rpx; border-bottom: 1rpx solid #f1f5f9; }
+.search-item:last-child { border-bottom: none; }
+.sum { margin-top: 16rpx; font-size: 24rpx; color: #ef4444; }
+.sum.ok { color: #16a34a; }
+.btn { margin-top: 16rpx; height: 72rpx; border-radius: 10rpx; background: #07c160; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 26rpx; }
+.empty { margin-top: 16rpx; color: #9ca3af; font-size: 24rpx; }
 </style>
-

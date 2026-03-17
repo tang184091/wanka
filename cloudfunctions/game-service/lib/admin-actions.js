@@ -40,13 +40,28 @@ async function adminDeleteGame(data, wxContext) {
   return success({ gameId, deletedBy: currentUser._id }, '删除成功')
 }
 
+async function adminDeleteYakumanRecord(data, wxContext) {
+  const { error, currentUser } = await assertAdmin(wxContext)
+  if (error) return error
+
+  const recordId = data && data.recordId
+  if (!recordId) return fail(400, '缺少役满ID')
+
+  const recordRes = await db.collection('yakuman_records').doc(recordId).get()
+  if (!recordRes.data) return fail(404, '役满记录不存在')
+
+  await db.collection('yakuman_records').doc(recordId).remove()
+  return success({ recordId, deletedBy: currentUser._id }, '删除成功')
+}
+
 async function getAdminManageData(wxContext) {
   const { error } = await assertAdmin(wxContext)
   if (error) return error
 
-  const [recordsRes, gamesRes] = await Promise.all([
+  const [recordsRes, gamesRes, yakumanRes] = await Promise.all([
     db.collection('mahjong_records').orderBy('createdAt', 'desc').limit(30).get(),
-    db.collection('games').orderBy('createdAt', 'desc').limit(30).get()
+    db.collection('games').orderBy('createdAt', 'desc').limit(30).get(),
+    db.collection('yakuman_records').orderBy('createdAt', 'desc').limit(30).get()
   ])
 
   const records = []
@@ -66,11 +81,22 @@ async function getAdminManageData(wxContext) {
     creatorId: game.creatorId || ''
   }))
 
-  return success({ records, games }, '获取成功')
+  const yakumanRecords = (yakumanRes.data || []).map((item) => ({
+    id: item._id,
+    playerNickname: item.playerNickname || '-',
+    yakumanType: item.yakumanType || '-',
+    achievedAt: item.achievedAt,
+    imageFileId: item.imageFileId || '',
+    uploaderNickname: item.uploaderNickname || '-',
+    createdAt: item.createdAt
+  }))
+
+  return success({ records, games, yakumanRecords }, '获取成功')
 }
 
 module.exports = {
   adminDeleteMahjongRecord,
   adminDeleteGame,
+  adminDeleteYakumanRecord,
   getAdminManageData
 }

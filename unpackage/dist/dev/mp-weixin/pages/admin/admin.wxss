@@ -85,3 +85,21 @@
 }
 .save-btn.disabled.data-v-dbc77958 { opacity: .55;
 }
+.manage-card.data-v-dbc77958 { margin-top: 16rpx; background: #fff; border-radius: 12rpx; padding: 14rpx; border: 1rpx solid #e5e7eb;
+}
+.manage-title.data-v-dbc77958 { font-size: 24rpx; font-weight: 700; color: #111827; margin-bottom: 10rpx;
+}
+.manage-empty.data-v-dbc77958 { color: #9ca3af; font-size: 22rpx;
+}
+.manage-row.data-v-dbc77958 { display: flex; align-items: center; justify-content: space-between; gap: 10rpx; padding: 10rpx 0; border-bottom: 1rpx solid #eef2f7;
+}
+.manage-row.data-v-dbc77958:last-child { border-bottom: 0;
+}
+.manage-info.data-v-dbc77958 { flex: 1;
+}
+.manage-line.data-v-dbc77958 { display: block; font-size: 22rpx; color: #111827;
+}
+.manage-sub.data-v-dbc77958 { display: block; margin-top: 4rpx; font-size: 20rpx; color: #6b7280;
+}
+.delete-btn.data-v-dbc77958 { width: 90rpx; height: 48rpx; border-radius: 8rpx; background: #ef4444; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx;
+}

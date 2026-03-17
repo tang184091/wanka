@@ -104,6 +104,16 @@
 
           <view class="save-btn" :class="{ disabled: saving }" @tap="saveOverrides">{{ saving ? '保存中...' : '保存所有修改' }}</view>
 
+
+          <view class="manage-card">
+            <view class="manage-title">役满图片管理</view>
+            <view class="manage-row">
+              <view class="manage-info">
+                <text class="manage-line">进入专页管理役满照片与信息</text>
+              </view>
+              <view class="delete-btn" style="background:#f59e0b" @tap="goYakumanManage">进入</view>
+            </view>
+          </view>
           <view class="manage-card">
             <view class="manage-title">管理玩家上传战绩</view>
             <view v-if="!adminRecords.length" class="manage-empty">暂无可管理战绩</view>
@@ -317,6 +327,10 @@ const deleteGame = (item) => {
       }
     }
   })
+}
+
+const goYakumanManage = () => {
+  uni.navigateTo({ url: '/pages/admin/yakuman' })
 }
 
 onShow(() => {

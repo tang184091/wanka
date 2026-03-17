@@ -44,13 +44,13 @@ ${scores}`;
         b: common_vendor.t(formatTime(record.value.createdAt)),
         c: common_vendor.f(record.value.players, (player, index, i0) => {
           return {
-            a: common_vendor.t(player.nickname || "未知玩家"),
+            a: common_vendor.t(player.nickname || player.userId || "未知玩家"),
             b: common_vendor.t(player.score),
             c: index
           };
         }),
         d: common_vendor.t(exportText.value),
-        e: common_vendor.o(copyExport, "85")
+        e: common_vendor.o(copyExport, "14")
       } : {});
     };
   }
