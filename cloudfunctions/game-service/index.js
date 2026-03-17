@@ -38,6 +38,14 @@ exports.main = async (event, context) => {
         return await searchGames(data, wxContext)
       case 'getSeatStatus':
         return await getSeatStatus(data, wxContext)
+      case 'getMahjongRecords':
+        return await getMahjongRecords(data, wxContext)
+      case 'createMahjongRecord':
+        return await createMahjongRecord(data, wxContext)
+      case 'getSeatStatusOverrides':
+        return await getSeatStatusOverrides(data, wxContext)
+      case 'setSeatStatusOverrides':
+        return await setSeatStatusOverrides(data, wxContext)
       default:
         return { 
           code: 400, 
@@ -971,11 +979,22 @@ async function getSeatStatus(data, wxContext) {
       }
     }
 
+<<<<<<< ours
+=======
+    const overrideRes = await db.collection('seat_status_overrides').where({ key: 'global' }).limit(1).get()
+    const overrideMap = (overrideRes.data && overrideRes.data[0] && overrideRes.data[0].overrides) || {}
+    const mergedStatus = { ...statusByLocation, ...overrideMap }
+
+>>>>>>> theirs
     return {
       code: 0,
       message: '获取座位状态成功',
       data: {
+<<<<<<< ours
         statusByLocation,
+=======
+        statusByLocation: mergedStatus,
+>>>>>>> theirs
         totalActiveGames: games.length
       }
     }
@@ -991,6 +1010,104 @@ async function getSeatStatus(data, wxContext) {
   }
 }
 
+<<<<<<< ours
+=======
+
+
+async function getMahjongRecords(data, wxContext) {
+  try {
+    const now = Date.now()
+    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000)
+    const res = await db.collection('mahjong_records')
+      .where({ createdAt: _.gte(sevenDaysAgo) })
+      .orderBy('createdAt', 'desc')
+      .limit(200)
+      .get()
+
+    return { code: 0, message: '获取成功', data: { list: res.data || [] } }
+  } catch (error) {
+    return { code: 500, message: '获取战绩失败: ' + error.message, data: { list: [] } }
+  }
+}
+
+async function createMahjongRecord(data, wxContext) {
+  try {
+    const players = (data && data.players) || []
+    if (!Array.isArray(players) || players.length !== 4) {
+      return { code: 400, message: '必须提交4位玩家数据' }
+    }
+
+    const scores = players.map(item => Number(item.score || 0))
+    const total = scores.reduce((sum, n) => sum + n, 0)
+    if (![100000, 1000].includes(total)) {
+      return { code: 400, message: '分数总和必须为100000或1000' }
+    }
+
+    const creatorRes = await db.collection('users').where({ openid: wxContext.OPENID }).get()
+    if (!creatorRes.data.length) {
+      return { code: 401, message: '请先登录' }
+    }
+
+    const creatorId = creatorRes.data[0]._id
+    const gameId = `mj-${Date.now()}`
+
+    const addRes = await db.collection('mahjong_records').add({
+      data: {
+        gameId,
+        players: players.map((p, i) => ({
+          seat: i + 1,
+          userId: p.userId,
+          nickname: p.nickname || '',
+          score: Number(p.score || 0)
+        })),
+        creatorId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    })
+
+    return { code: 0, message: '创建成功', data: { id: addRes._id, gameId } }
+  } catch (error) {
+    return { code: 500, message: '创建战绩失败: ' + error.message }
+  }
+}
+
+async function getSeatStatusOverrides(data, wxContext) {
+  try {
+    const res = await db.collection('seat_status_overrides').where({ key: 'global' }).limit(1).get()
+    const row = (res.data || [])[0] || {}
+    return { code: 0, message: '获取成功', data: { overrides: row.overrides || {} } }
+  } catch (error) {
+    return { code: 500, message: '获取失败: ' + error.message, data: { overrides: {} } }
+  }
+}
+
+async function setSeatStatusOverrides(data, wxContext) {
+  try {
+    const userRes = await db.collection('users').where({ openid: wxContext.OPENID }).limit(1).get()
+    if (!userRes.data.length || !userRes.data[0].isAdmin) {
+      return { code: 403, message: '仅管理员可操作' }
+    }
+
+    const overrides = (data && data.overrides) || {}
+    const existed = await db.collection('seat_status_overrides').where({ key: 'global' }).limit(1).get()
+    if (existed.data.length) {
+      await db.collection('seat_status_overrides').doc(existed.data[0]._id).update({
+        data: { overrides, updatedAt: new Date(), updatedBy: userRes.data[0]._id }
+      })
+    } else {
+      await db.collection('seat_status_overrides').add({
+        data: { key: 'global', overrides, updatedAt: new Date(), updatedBy: userRes.data[0]._id }
+      })
+    }
+
+    return { code: 0, message: '保存成功', data: { overrides } }
+  } catch (error) {
+    return { code: 500, message: '保存失败: ' + error.message }
+  }
+}
+
+>>>>>>> theirs
 // 获取我的组局 - 修复版
 async function getMyGames(data, wxContext) {
   console.log('getMyGames 调用开始，参数:', { data, openid: wxContext.OPENID })

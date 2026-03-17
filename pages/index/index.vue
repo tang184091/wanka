@@ -139,7 +139,7 @@ import UserService from '@/utils/user.js'
 // 响应式数据
 const tabs = ref([
   { id: 'all', name: '全部' },
-  { id: 'mahjong', name: '日麻' },
+  { id: 'mahjong', name: '立直麻将' },
   { id: 'boardgame', name: '桌游' },
   { id: 'videogame', name: '电玩' }
 ])
@@ -174,11 +174,11 @@ const getTypeClass = (type) => {
 // 获取类型文字
 const getTypeText = (type) => {
   const textMap = {
-    'mahjong': '日麻',
+    'mahjong': '立直麻将',
     'boardgame': '桌游',
     'videogame': '电玩'
   }
-  return textMap[type] || '日麻'
+  return textMap[type] || '立直麻将'
 }
 
 // 格式化时间

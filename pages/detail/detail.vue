@@ -445,13 +445,13 @@ const getTypeClass = (type) => {
 // 获取类型文字
 const getTypeText = (type) => {
   const textMap = {
-    'mahjong': '日麻',
+    'mahjong': '立直麻将',
     'boardgame': '桌游',
     'videogame': '电玩',
     'sports': '运动',
     'other': '其他'
   }
-  return textMap[type] || '日麻'
+  return textMap[type] || '立直麻将'
 }
 
 // 获取状态文字

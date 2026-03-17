@@ -117,7 +117,7 @@ import UserService from '@/utils/user.js'
 
 // 游戏类型选项
 const gameTypes = ref([
-  { id: 'mahjong', name: '日麻' },
+  { id: 'mahjong', name: '立直麻将' },
   { id: 'boardgame', name: '桌游' },
   { id: 'videogame', name: '电玩' }
 ])
@@ -144,11 +144,11 @@ const getGameTypeClass = (type) => {
 // 游戏类型文字
 const getGameTypeText = (type) => {
   const textMap = {
-    'mahjong': '日麻',
+    'mahjong': '立直麻将',
     'boardgame': '桌游',
     'videogame': '电玩'
   }
-  return textMap[type] || '日麻'
+  return textMap[type] || '立直麻将'
 }
 
 // 获取类型索引

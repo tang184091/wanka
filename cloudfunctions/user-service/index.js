@@ -27,6 +27,10 @@ exports.main = async (event, context) => {
         return await updateUserAvatar(data, wxContext)
       case 'getUserStats':
         return await getUserStats(data, wxContext)
+      case 'searchUsers':
+        return await searchUsers(data, wxContext)
+      case 'getMe':
+        return await getMe(data, wxContext)
       default:
         return { code: 400, message: '未知操作' }
     }
@@ -76,7 +80,7 @@ async function handleLogin(data, wxContext) {
       
       // 为新用户创建默认标签
       const defaultTags = [
-        { id: 1, name: '日麻初心玩家' }
+        { id: 1, name: '立直麻将初心玩家' }
       ]
       
       // 为新用户创建默认游戏/装备
@@ -122,7 +126,11 @@ async function handleLogin(data, wxContext) {
       console.log('微信返回的头像:', userInfo.avatarUrl)
     }
     
-    // 获取用户统计信息
+    
+
+
+
+// 获取用户统计信息
     const stats = await getUserStats({ userId: userData._id }, wxContext)
     
     return {
@@ -134,7 +142,8 @@ async function handleLogin(data, wxContext) {
           nickname: userData.nickname,
           avatar: userData.avatar,
           tags: userData.tags || [],
-          games: userData.games || []
+          games: userData.games || [],
+          isAdmin: !!userData.isAdmin
         },
         token: wxContext.OPENID,
         stats: stats.data
@@ -175,7 +184,8 @@ async function getUserInfo(data, wxContext) {
         nickname: userData.nickname,
         avatar: userData.avatar,
         tags: userData.tags || [],
-        games: userData.games || []
+        games: userData.games || [],
+        isAdmin: !!userData.isAdmin
       }
     }
   } catch (error) {
@@ -422,6 +432,54 @@ async function updateUserAvatar(data, wxContext) {
       message: '服务器内部错误',
       error: error.message
     }
+  }
+}
+
+
+
+async function getMe(data, wxContext) {
+  try {
+    const res = await db.collection('users').where({ openid: wxContext.OPENID }).limit(1).get()
+    if (!res.data.length) return { code: 404, message: '用户不存在' }
+    const user = res.data[0]
+    return {
+      code: 0,
+      message: '获取成功',
+      data: {
+        id: user._id,
+        nickname: user.nickname || '',
+        avatar: user.avatar || '',
+        isAdmin: !!user.isAdmin
+      }
+    }
+  } catch (error) {
+    return { code: 500, message: '获取用户失败: ' + error.message }
+  }
+}
+
+async function searchUsers(data, wxContext) {
+  try {
+    const keyword = (data && data.keyword ? String(data.keyword) : '').trim()
+    if (!keyword) return { code: 0, message: 'ok', data: { list: [] } }
+
+    const byNick = await db.collection('users')
+      .where({ nickname: db.RegExp({ regexp: keyword, options: 'i' }) })
+      .limit(20)
+      .get()
+
+    const byId = await db.collection('users')
+      .where({ _id: db.RegExp({ regexp: keyword, options: 'i' }) })
+      .limit(20)
+      .get()
+
+    const map = new Map()
+    ;[...(byNick.data || []), ...(byId.data || [])].forEach(u => {
+      if (u && u._id) map.set(u._id, { id: u._id, nickname: u.nickname || '未命名用户', avatar: u.avatar || '' })
+    })
+
+    return { code: 0, message: '获取成功', data: { list: Array.from(map.values()).slice(0, 20) } }
+  } catch (error) {
+    return { code: 500, message: '搜索用户失败: ' + error.message, data: { list: [] } }
   }
 }
 

@@ -116,6 +116,15 @@
 
       <view class="menu-divider"></view>
 
+
+      <view class="menu-item" v-if="userInfo && userInfo.isAdmin" @tap="goToAdmin">
+        <view class="menu-left">
+          <image src="/static/icons/settings.png" class="menu-icon" />
+          <text class="menu-text">管理员功能</text>
+        </view>
+        <image src="/static/icons/arrow-right.png" class="arrow-icon" />
+      </view>
+
       <view class="menu-item" @tap="goToSettings">
         <view class="menu-left">
           <image src="/static/icons/settings.png" class="menu-icon" />
@@ -209,11 +218,11 @@ const getGameTypeClass = (type) => {
 // 游戏类型文字
 const getGameTypeText = (type) => {
   const textMap = {
-    'mahjong': '日麻',
+    'mahjong': '立直麻将',
     'boardgame': '桌游',
     'videogame': '电玩'
   }
-  return textMap[type] || '日麻'
+  return textMap[type] || '立直麻将'
 }
 
 // 微信登录 - 修复后的正确流程
@@ -696,6 +705,19 @@ const goToMyGames = (type) => {
   })
 }
 
+
+// 跳转到管理员页
+const goToAdmin = () => {
+  if (!userInfo.value || !userInfo.value.isAdmin) {
+    uni.showToast({ title: '仅管理员可访问', icon: 'none' })
+    return
+  }
+
+  uni.navigateTo({
+    url: '/pages/admin/admin'
+  })
+}
+
 // 跳转到设置
 const goToSettings = () => {
   uni.navigateTo({
@@ -707,7 +729,7 @@ const goToSettings = () => {
 const goToAbout = () => {
   uni.showModal({
     title: '关于玩咖约局',
-    content: '玩咖约局 v1.0.0\n一个专注于日麻、桌游、电玩组局的小程序\n祝您玩得开心！',
+    content: '玩咖约局 v1.0.0\n一个专注于立直麻将、桌游、电玩组局的小程序\n祝您玩得开心！',
     showCancel: false
   })
 }

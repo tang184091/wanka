@@ -357,11 +357,11 @@ const _sfc_main = {
     };
     const getTypeText = (type) => {
       const textMap = {
-        "mahjong": "日麻",
+        "mahjong": "立直麻将",
         "boardgame": "桌游",
         "videogame": "电玩"
       };
-      return textMap[type] || "日麻";
+      return textMap[type] || "立直麻将";
     };
     const getStatusClass = (status) => {
       const classMap = {
@@ -701,9 +701,9 @@ const _sfc_main = {
     return (_ctx, _cache) => {
       return common_vendor.e({
         a: common_assets._imports_0$3,
-        b: common_vendor.o(goBack, "84"),
+        b: common_vendor.o(goBack, "55"),
         c: common_assets._imports_1,
-        d: common_vendor.o(refreshPage, "c5"),
+        d: common_vendor.o(refreshPage, "fb"),
         e: common_vendor.f(tabs.value, (tab, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(tab.name),
@@ -722,11 +722,11 @@ const _sfc_main = {
         h: common_vendor.t(getEmptyText()),
         i: activeTab.value === "all" || activeTab.value === "created"
       }, activeTab.value === "all" || activeTab.value === "created" ? {
-        j: common_vendor.o(goToCreate, "71")
+        j: common_vendor.o(goToCreate, "05")
       } : {}, {
         k: activeTab.value === "joined"
       }, activeTab.value === "joined" ? {
-        l: common_vendor.o(goToHome, "f2")
+        l: common_vendor.o(goToHome, "9b")
       } : {}) : common_vendor.e({
         m: common_vendor.f(groupedGames.value, (group, k0, i0) => {
           return {
@@ -790,13 +790,13 @@ const _sfc_main = {
       }, loading.value ? {} : {}, {
         p: hasMore.value && !loading.value
       }, hasMore.value && !loading.value ? {
-        q: common_vendor.o(onLoadMore, "87")
+        q: common_vendor.o(onLoadMore, "e9")
       } : {}, {
         r: !hasMore.value && filteredGames.value.length > 0
       }, !hasMore.value && filteredGames.value.length > 0 ? {} : {}), {
         s: refreshing.value,
-        t: common_vendor.o(onRefresh, "28"),
-        v: common_vendor.o(onLoadMore, "e5")
+        t: common_vendor.o(onRefresh, "79"),
+        v: common_vendor.o(onLoadMore, "32")
       });
     };
   }

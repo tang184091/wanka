@@ -8,7 +8,7 @@ const _sfc_main = {
   setup(__props) {
     const tabs = common_vendor.ref([
       { id: "all", name: "全部" },
-      { id: "mahjong", name: "日麻" },
+      { id: "mahjong", name: "立直麻将" },
       { id: "boardgame", name: "桌游" },
       { id: "videogame", name: "电玩" }
     ]);
@@ -36,11 +36,11 @@ const _sfc_main = {
     };
     const getTypeText = (type) => {
       const textMap = {
-        "mahjong": "日麻",
+        "mahjong": "立直麻将",
         "boardgame": "桌游",
         "videogame": "电玩"
       };
-      return textMap[type] || "日麻";
+      return textMap[type] || "立直麻将";
     };
     const formatTime = (time) => {
       if (!time)
@@ -226,13 +226,13 @@ const _sfc_main = {
             d: common_vendor.o(($event) => switchTab(tab.id), tab.id)
           };
         }),
-        b: common_vendor.o(goToCreate, "8c"),
+        b: common_vendor.o(goToCreate, "6d"),
         c: refreshing.value
       }, refreshing.value ? {} : {}, {
         d: gameList.value.length === 0 && !loading.value
       }, gameList.value.length === 0 && !loading.value ? {
         e: common_assets._imports_0,
-        f: common_vendor.o(goToCreate, "22")
+        f: common_vendor.o(goToCreate, "2b")
       } : {}, {
         g: common_vendor.f(gameList.value, (game, k0, i0) => {
           return common_vendor.e({
@@ -277,13 +277,13 @@ const _sfc_main = {
       }, loading.value ? {} : {}, {
         l: hasMore.value && !loading.value
       }, hasMore.value && !loading.value ? {
-        m: common_vendor.o(onLoadMore, "e4")
+        m: common_vendor.o(onLoadMore, "31")
       } : {}, {
         n: !hasMore.value && gameList.value.length > 0
       }, !hasMore.value && gameList.value.length > 0 ? {} : {}, {
         o: refreshing.value,
-        p: common_vendor.o(onRefresh, "fd"),
-        q: common_vendor.o(onLoadMore, "b9")
+        p: common_vendor.o(onRefresh, "23"),
+        q: common_vendor.o(onLoadMore, "72")
       });
     };
   }

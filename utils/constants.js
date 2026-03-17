@@ -13,7 +13,7 @@ export default {
   // 游戏类型
   GAME_TYPES: {
     'mahjong': { 
-      name: '日麻', 
+      name: '立直麻将', 
       color: '#1890ff',
       minPlayers: 3,
       maxPlayers: 4
@@ -44,11 +44,11 @@ export default {
   // 组局可选地点（统一下拉选择，避免自由输入导致地点不规范）
   GAME_LOCATIONS: [
     { id: 'f2-bg-1', name: '桌游房1' },
-    { id: 'f2-mj-1', name: '日麻房1' },
-    { id: 'f2-mj-2', name: '日麻房2' },
-    { id: 'f2-mj-3', name: '日麻房3' },
+    { id: 'f2-mj-1', name: '立直麻将房1' },
+    { id: 'f2-mj-2', name: '立直麻将房2' },
+    { id: 'f2-mj-3', name: '立直麻将房3' },
     { id: 'f2-bg-2', name: '桌游房2' },
-    { id: 'f2-mj-4', name: '日麻房4' },
+    { id: 'f2-mj-4', name: '立直麻将房4' },
     { id: 'f1-desk-1', name: '大厅桌游1' },
     { id: 'f1-desk-2', name: '大厅桌游2' },
     { id: 'f1-desk-3', name: '大厅桌游3' },

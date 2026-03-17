@@ -70,7 +70,9 @@ export const api = {
     updateUserTags: (userId, tags) => callCloudFunction('user-service', 'updateUserTags', { userId, tags }),
     updateUserGames: (userId, games) => callCloudFunction('user-service', 'updateUserGames', { userId, games }),
     updateUserAvatar: (userId, avatarUrl) => callCloudFunction('user-service', 'updateUserAvatar', { userId, avatarUrl }),
-    getUserStats: (userId) => callCloudFunction('user-service', 'getUserStats', { userId })
+    getUserStats: (userId) => callCloudFunction('user-service', 'getUserStats', { userId }),
+    searchUsers: (keyword) => callCloudFunction('user-service', 'searchUsers', { keyword }),
+    getMe: () => callCloudFunction('user-service', 'getMe', {})
   },
   game: {
     getGameList: (params) => callCloudFunction('game-service', 'getGameList', params),
@@ -83,7 +85,11 @@ export const api = {
     getMyGames: (userId, type) => callCloudFunction('game-service', 'getMyGames', { userId, type }),
     getCreatedGames: (userId) => callCloudFunction('game-service', 'getCreatedGames', { userId }),
     getJoinedGames: (userId) => callCloudFunction('game-service', 'getJoinedGames', { userId }),
-    searchGames: (keyword, filters) => callCloudFunction('game-service', 'searchGames', { keyword, ...filters })
+    searchGames: (keyword, filters) => callCloudFunction('game-service', 'searchGames', { keyword, ...filters }),
+    getMahjongRecords: () => callCloudFunction('game-service', 'getMahjongRecords', {}),
+    createMahjongRecord: (players) => callCloudFunction('game-service', 'createMahjongRecord', { players }),
+    getSeatStatusOverrides: () => callCloudFunction('game-service', 'getSeatStatusOverrides', {}),
+    setSeatStatusOverrides: (overrides) => callCloudFunction('game-service', 'setSeatStatusOverrides', { overrides })
   },
   activity: {
     getGameActivities: (gameId) => callCloudFunction('activity-service', 'getGameActivities', { gameId }),

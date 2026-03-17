@@ -4,6 +4,7 @@ const utils_user = require("../../utils/user.js");
 const _sfc_main = {
   __name: "seat",
   setup(__props) {
+    const refreshing = common_vendor.ref(false);
     const seatLegend = common_vendor.ref([
       { status: "available", label: "空闲中" },
       { status: "reserved", label: "预约中" },
@@ -11,13 +12,13 @@ const _sfc_main = {
     ]);
     const floor2Left = common_vendor.ref([
       { id: "f2-bg-1", name: "桌游房1", type: "boardgame", status: "available", capacity: 8, device: "桌游桌 + 置物架" },
-      { id: "f2-mj-1", name: "日麻房1", type: "mahjong", status: "available", capacity: 4, device: "自动麻将机" },
-      { id: "f2-mj-2", name: "日麻房2", type: "mahjong", status: "available", capacity: 4, device: "自动麻将机" },
-      { id: "f2-mj-3", name: "日麻房3", type: "mahjong", status: "available", capacity: 4, device: "自动麻将机" }
+      { id: "f2-mj-1", name: "立直麻将房1", type: "mahjong", status: "available", capacity: 4, device: "自动麻将机" },
+      { id: "f2-mj-2", name: "立直麻将房2", type: "mahjong", status: "available", capacity: 4, device: "自动麻将机" },
+      { id: "f2-mj-3", name: "立直麻将房3", type: "mahjong", status: "available", capacity: 4, device: "自动麻将机" }
     ]);
     const floor2Bottom = common_vendor.ref([
       { id: "f2-bg-2", name: "桌游房2", type: "boardgame", status: "available", capacity: 8, device: "桌游桌 + 展示柜" },
-      { id: "f2-mj-4", name: "日麻房4", type: "mahjong", status: "available", capacity: 4, device: "自动麻将机" }
+      { id: "f2-mj-4", name: "立直麻将房4", type: "mahjong", status: "available", capacity: 4, device: "自动麻将机" }
     ]);
     const hallDeskRows = common_vendor.ref([
       [
@@ -86,11 +87,22 @@ const _sfc_main = {
         interArcade2.value = { ...interArcade2.value, status: setSeatStatusByName(interArcade2.value.name, statusMap) };
         arcadeRoom.value = { ...arcadeRoom.value, status: setSeatStatusByName(arcadeRoom.value.name, statusMap) };
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/seat/seat.vue:187", "获取座位状态失败:", error);
+        common_vendor.index.__f__("error", "at pages/seat/seat.vue:220", "获取座位状态失败:", error);
+      }
+    };
+    const handleRefresh = async () => {
+      if (refreshing.value)
+        return;
+      refreshing.value = true;
+      try {
+        await refreshSeatStatus();
+        common_vendor.index.showToast({ title: "已刷新", icon: "success", duration: 1200 });
+      } finally {
+        refreshing.value = false;
       }
     };
     common_vendor.onShow(() => {
-      refreshSeatStatus();
+      handleRefresh();
     });
     const goToCreateWithPreset = (seat) => {
       const currentUser = utils_user.UserService.getCurrentUser();
@@ -108,7 +120,7 @@ const _sfc_main = {
         return;
       }
       const typeProjectMap = {
-        mahjong: "日麻局",
+        mahjong: "立直麻将局",
         boardgame: "桌游局",
         videogame: "电玩局"
       };
@@ -144,65 +156,84 @@ const _sfc_main = {
     };
     return (_ctx, _cache) => {
       return {
-        a: common_vendor.f(seatLegend.value, (item, k0, i0) => {
+        a: common_vendor.t(refreshing.value ? "刷新中..." : "刷新"),
+        b: refreshing.value ? 1 : "",
+        c: common_vendor.o(handleRefresh, "7f"),
+        d: common_vendor.f(seatLegend.value, (item, k0, i0) => {
           return {
             a: common_vendor.n(`dot-${item.status}`),
             b: common_vendor.t(item.label),
             c: item.status
           };
         }),
-        b: common_vendor.f(hallDeskRows.value, (row, k0, i0) => {
-          return {
-            a: common_vendor.f(row, (seat, k1, i1) => {
-              return {
-                a: common_vendor.t(seat.name),
-                b: common_vendor.t(getSeatStatusText(seat.status)),
-                c: seat.id,
-                d: common_vendor.n(getSeatStatusClass(seat.status)),
-                e: common_vendor.o(($event) => onSeatTap(seat), seat.id)
-              };
-            }),
-            b: row[0].id
-          };
-        }),
-        c: common_vendor.t(arcadeHall.value.name),
-        d: common_vendor.t(getSeatStatusText(arcadeHall.value.status)),
-        e: common_vendor.n(getSeatStatusClass(arcadeHall.value.status)),
-        f: common_vendor.o(($event) => onSeatTap(arcadeHall.value), "09"),
-        g: common_vendor.t(interDesk.value.name),
-        h: common_vendor.t(getSeatStatusText(interDesk.value.status)),
-        i: common_vendor.n(getSeatStatusClass(interDesk.value.status)),
-        j: common_vendor.o(($event) => onSeatTap(interDesk.value), "31"),
-        k: common_vendor.t(interArcade1.value.name),
-        l: common_vendor.t(getSeatStatusText(interArcade1.value.status)),
-        m: common_vendor.n(getSeatStatusClass(interArcade1.value.status)),
-        n: common_vendor.o(($event) => onSeatTap(interArcade1.value), "d5"),
-        o: common_vendor.t(interArcade2.value.name),
-        p: common_vendor.t(getSeatStatusText(interArcade2.value.status)),
-        q: common_vendor.n(getSeatStatusClass(interArcade2.value.status)),
-        r: common_vendor.o(($event) => onSeatTap(interArcade2.value), "9e"),
-        s: common_vendor.t(arcadeRoom.value.name),
-        t: common_vendor.t(getSeatStatusText(arcadeRoom.value.status)),
-        v: common_vendor.n(getSeatStatusClass(arcadeRoom.value.status)),
-        w: common_vendor.o(($event) => onSeatTap(arcadeRoom.value), "4b"),
-        x: common_vendor.f(floor2Left.value, (seat, k0, i0) => {
-          return {
-            a: common_vendor.t(seat.name),
-            b: common_vendor.t(getSeatStatusText(seat.status)),
-            c: seat.id,
-            d: common_vendor.n(getSeatStatusClass(seat.status)),
-            e: common_vendor.o(($event) => onSeatTap(seat), seat.id)
-          };
-        }),
-        y: common_vendor.f(floor2Bottom.value, (seat, k0, i0) => {
-          return {
-            a: common_vendor.t(seat.name),
-            b: common_vendor.t(getSeatStatusText(seat.status)),
-            c: seat.id,
-            d: common_vendor.n(getSeatStatusClass(seat.status)),
-            e: common_vendor.o(($event) => onSeatTap(seat), seat.id)
-          };
-        })
+        e: common_vendor.t(hallDeskRows.value[0][0].name),
+        f: common_vendor.t(getSeatStatusText(hallDeskRows.value[0][0].status)),
+        g: common_vendor.n(getSeatStatusClass(hallDeskRows.value[0][0].status)),
+        h: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[0][0]), "5f"),
+        i: common_vendor.t(hallDeskRows.value[0][1].name),
+        j: common_vendor.t(getSeatStatusText(hallDeskRows.value[0][1].status)),
+        k: common_vendor.n(getSeatStatusClass(hallDeskRows.value[0][1].status)),
+        l: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[0][1]), "f2"),
+        m: common_vendor.t(arcadeHall.value.name),
+        n: common_vendor.t(getSeatStatusText(arcadeHall.value.status)),
+        o: common_vendor.n(getSeatStatusClass(arcadeHall.value.status)),
+        p: common_vendor.o(($event) => onSeatTap(arcadeHall.value), "6a"),
+        q: common_vendor.t(hallDeskRows.value[1][0].name),
+        r: common_vendor.t(getSeatStatusText(hallDeskRows.value[1][0].status)),
+        s: common_vendor.n(getSeatStatusClass(hallDeskRows.value[1][0].status)),
+        t: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[1][0]), "c1"),
+        v: common_vendor.t(hallDeskRows.value[1][1].name),
+        w: common_vendor.t(getSeatStatusText(hallDeskRows.value[1][1].status)),
+        x: common_vendor.n(getSeatStatusClass(hallDeskRows.value[1][1].status)),
+        y: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[1][1]), "b6"),
+        z: common_vendor.t(interDesk.value.name),
+        A: common_vendor.t(getSeatStatusText(interDesk.value.status)),
+        B: common_vendor.n(getSeatStatusClass(interDesk.value.status)),
+        C: common_vendor.o(($event) => onSeatTap(interDesk.value), "9b"),
+        D: common_vendor.t(hallDeskRows.value[2][0].name),
+        E: common_vendor.t(getSeatStatusText(hallDeskRows.value[2][0].status)),
+        F: common_vendor.n(getSeatStatusClass(hallDeskRows.value[2][0].status)),
+        G: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[2][0]), "02"),
+        H: common_vendor.t(hallDeskRows.value[2][1].name),
+        I: common_vendor.t(getSeatStatusText(hallDeskRows.value[2][1].status)),
+        J: common_vendor.n(getSeatStatusClass(hallDeskRows.value[2][1].status)),
+        K: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[2][1]), "d1"),
+        L: common_vendor.t(interArcade1.value.name),
+        M: common_vendor.t(getSeatStatusText(interArcade1.value.status)),
+        N: common_vendor.n(getSeatStatusClass(interArcade1.value.status)),
+        O: common_vendor.o(($event) => onSeatTap(interArcade1.value), "3b"),
+        P: common_vendor.t(interArcade2.value.name),
+        Q: common_vendor.t(getSeatStatusText(interArcade2.value.status)),
+        R: common_vendor.n(getSeatStatusClass(interArcade2.value.status)),
+        S: common_vendor.o(($event) => onSeatTap(interArcade2.value), "a7"),
+        T: common_vendor.t(arcadeRoom.value.name),
+        U: common_vendor.t(getSeatStatusText(arcadeRoom.value.status)),
+        V: common_vendor.n(getSeatStatusClass(arcadeRoom.value.status)),
+        W: common_vendor.o(($event) => onSeatTap(arcadeRoom.value), "c8"),
+        X: common_vendor.t(floor2Left.value[0].name),
+        Y: common_vendor.t(getSeatStatusText(floor2Left.value[0].status)),
+        Z: common_vendor.n(getSeatStatusClass(floor2Left.value[0].status)),
+        aa: common_vendor.o(($event) => onSeatTap(floor2Left.value[0]), "56"),
+        ab: common_vendor.t(floor2Left.value[1].name),
+        ac: common_vendor.t(getSeatStatusText(floor2Left.value[1].status)),
+        ad: common_vendor.n(getSeatStatusClass(floor2Left.value[1].status)),
+        ae: common_vendor.o(($event) => onSeatTap(floor2Left.value[1]), "72"),
+        af: common_vendor.t(floor2Left.value[2].name),
+        ag: common_vendor.t(getSeatStatusText(floor2Left.value[2].status)),
+        ah: common_vendor.n(getSeatStatusClass(floor2Left.value[2].status)),
+        ai: common_vendor.o(($event) => onSeatTap(floor2Left.value[2]), "b6"),
+        aj: common_vendor.t(floor2Left.value[3].name),
+        ak: common_vendor.t(getSeatStatusText(floor2Left.value[3].status)),
+        al: common_vendor.n(getSeatStatusClass(floor2Left.value[3].status)),
+        am: common_vendor.o(($event) => onSeatTap(floor2Left.value[3]), "ae"),
+        an: common_vendor.t(floor2Bottom.value[0].name),
+        ao: common_vendor.t(getSeatStatusText(floor2Bottom.value[0].status)),
+        ap: common_vendor.n(getSeatStatusClass(floor2Bottom.value[0].status)),
+        aq: common_vendor.o(($event) => onSeatTap(floor2Bottom.value[0]), "12"),
+        ar: common_vendor.t(floor2Bottom.value[1].name),
+        as: common_vendor.t(getSeatStatusText(floor2Bottom.value[1].status)),
+        at: common_vendor.n(getSeatStatusClass(floor2Bottom.value[1].status)),
+        av: common_vendor.o(($event) => onSeatTap(floor2Bottom.value[1]), "0a")
       };
     };
   }

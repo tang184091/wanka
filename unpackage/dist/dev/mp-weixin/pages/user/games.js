@@ -6,7 +6,7 @@ const _sfc_main = {
   __name: "games",
   setup(__props) {
     const gameTypes = common_vendor.ref([
-      { id: "mahjong", name: "日麻" },
+      { id: "mahjong", name: "立直麻将" },
       { id: "boardgame", name: "桌游" },
       { id: "videogame", name: "电玩" }
     ]);
@@ -25,11 +25,11 @@ const _sfc_main = {
     };
     const getGameTypeText = (type) => {
       const textMap = {
-        "mahjong": "日麻",
+        "mahjong": "立直麻将",
         "boardgame": "桌游",
         "videogame": "电玩"
       };
-      return textMap[type] || "日麻";
+      return textMap[type] || "立直麻将";
     };
     const getTypeIndex = (type) => {
       return gameTypes.value.findIndex((t) => t.id === type);
@@ -134,8 +134,8 @@ const _sfc_main = {
     return (_ctx, _cache) => {
       return common_vendor.e({
         a: common_assets._imports_0$3,
-        b: common_vendor.o(goBack, "50"),
-        c: common_vendor.o(saveGames, "82"),
+        b: common_vendor.o(goBack, "0b"),
+        c: common_vendor.o(saveGames, "9e"),
         d: common_vendor.t(myGames.value.length),
         e: myGames.value.length === 0
       }, myGames.value.length === 0 ? {
@@ -159,13 +159,13 @@ const _sfc_main = {
         j: common_assets._imports_2$1,
         k: gameTypes.value,
         l: newGame.value.typeIndex,
-        m: common_vendor.o(onNewGameTypeChange, "55"),
-        n: common_vendor.o(addNewGame, "7d"),
+        m: common_vendor.o(onNewGameTypeChange, "20"),
+        n: common_vendor.o(addNewGame, "fa"),
         o: newGame.value.name,
-        p: common_vendor.o(($event) => newGame.value.name = $event.detail.value, "31"),
+        p: common_vendor.o(($event) => newGame.value.name = $event.detail.value, "0b"),
         q: common_vendor.t(myGames.value.length >= 10 ? "已达上限" : "添加到我的列表"),
         r: myGames.value.length >= 10 ? 1 : "",
-        s: common_vendor.o(addNewGame, "86")
+        s: common_vendor.o(addNewGame, "6d")
       });
     };
   }

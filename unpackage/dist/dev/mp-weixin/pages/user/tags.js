@@ -6,7 +6,7 @@ const _sfc_main = {
   __name: "tags",
   setup(__props) {
     const systemTags = common_vendor.ref([
-      { id: 1, name: "日麻素人" },
+      { id: 1, name: "立直麻将素人" },
       { id: 2, name: "你同我认真打" },
       { id: 3, name: "乱冲下次不和你玩了" },
       { id: 4, name: "狙击七段" },
