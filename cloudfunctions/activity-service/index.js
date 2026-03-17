@@ -1,223 +1,127 @@
 // 活动记录服务云函数
 const cloud = require('wx-server-sdk')
-cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
-const db = cloud.database()
 
-exports.main = async (event, context) => {
-  const { action, data } = event
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+
+const db = cloud.database()
+const _ = db.command
+
+const success = (data = null, message = 'ok') => ({ code: 0, message, data })
+const fail = (code, message, data = null) => ({ code, message, data })
+
+exports.main = async (event) => {
+  const { action, data } = event || {}
   const wxContext = cloud.getWXContext()
-  
-  console.log('activity-service 调用:', { action, data, openid: wxContext.OPENID })
-  
+
+  console.log('activity-service 调用:', { action, openid: wxContext.OPENID })
+
   try {
     switch (action) {
       case 'test':
-        return handleTest(wxContext)
+        return success({
+          timestamp: new Date().toISOString(),
+          openid: wxContext.OPENID,
+          appid: wxContext.APPID
+        }, 'activity-service 运行正常')
       case 'getGameActivities':
-        return await getGameActivities(data, wxContext)
+        return await getGameActivities(data)
       case 'addGameActivity':
         return await addGameActivity(data, wxContext)
       case 'getUserActivities':
-        return await getUserActivities(data, wxContext)
+        return await getUserActivities(data)
       case 'getUnreadMessages':
-        return await getUnreadMessages(data, wxContext)
+        return await getUnreadMessages(data)
       case 'markMessageRead':
-        return await markMessageRead(data, wxContext)
+        return await markMessageRead(data)
       case 'markAllMessagesRead':
-        return await markAllMessagesRead(data, wxContext)
+        return await markAllMessagesRead(data)
       default:
-        return { code: 400, message: '未知操作' }
+        return fail(400, '未知操作')
     }
   } catch (error) {
-    console.error('activity-service 错误:', error)
-    return {
-      code: 500,
-      message: '服务器内部错误',
-      error: error.message
-    }
+    console.error('activity-service 未捕获错误:', error)
+    return fail(500, `服务器内部错误: ${error.message}`)
   }
 }
 
-// 测试接口
-function handleTest(wxContext) {
-  return {
-    code: 0,
-    message: 'activity-service 运行正常',
-    data: {
-      timestamp: new Date().toISOString(),
-      openid: wxContext.OPENID,
-      appid: wxContext.APPID
-    }
-  }
+async function getCurrentUser(wxContext) {
+  const res = await db.collection('users').where({ openid: wxContext.OPENID }).limit(1).get()
+  return (res.data || [])[0] || null
 }
 
-// 获取组局活动记录
-async function getGameActivities(data, wxContext) {
-  const { gameId } = data
-  
-  if (!gameId) {
-    return { code: 400, message: '缺少组局ID' }
-  }
-  
-  try {
-    const activitiesRes = await db.collection('activities')
-      .where({ gameId: gameId })
-      .orderBy('createdAt', 'desc')
-      .limit(50)
-      .get()
-    
-    return {
-      code: 0,
-      data: activitiesRes.data
-    }
-  } catch (error) {
-    console.error('获取组局活动记录错误:', error)
-    throw error
-  }
+async function getGameActivities(data) {
+  const payload = data || {}
+  const { gameId } = payload
+  if (!gameId) return fail(400, '缺少组局ID')
+
+  const res = await db.collection('activities')
+    .where({ gameId })
+    .orderBy('createdAt', 'desc')
+    .limit(50)
+    .get()
+
+  return success(res.data || [], '获取成功')
 }
 
-// 添加组局活动记录
 async function addGameActivity(data, wxContext) {
-  const { gameId, activityData } = data
-  
-  if (!gameId || !activityData) {
-    return { code: 400, message: '缺少必要参数' }
+  const payload = data || {}
+  const { gameId, activityData } = payload
+  if (!gameId || !activityData || typeof activityData !== 'object') {
+    return fail(400, '缺少必要参数')
   }
-  
-  try {
-    // 获取当前用户
-    const userRes = await db.collection('users')
-      .where({ openid: wxContext.OPENID })
-      .get()
-    
-    if (userRes.data.length === 0) {
-      return { code: 401, message: '用户不存在' }
+
+  const currentUser = await getCurrentUser(wxContext)
+  if (!currentUser) return fail(401, '用户不存在')
+
+  const addRes = await db.collection('activities').add({
+    data: {
+      gameId,
+      userId: currentUser._id,
+      userName: currentUser.nickname || '未知用户',
+      ...activityData,
+      createdAt: new Date()
     }
-    
-    const userId = userRes.data[0]._id
-    const userName = userRes.data[0].nickname
-    
-    // 添加活动记录
-    const addRes = await db.collection('activities').add({
-      data: {
-        gameId: gameId,
-        userId: userId,
-        userName: userName,
-        ...activityData,
-        createdAt: new Date()
-      }
-    })
-    
-    return {
-      code: 0,
-      message: '活动记录添加成功',
-      data: {
-        id: addRes._id
-      }
-    }
-  } catch (error) {
-    console.error('添加组局活动记录错误:', error)
-    throw error
-  }
+  })
+
+  return success({ id: addRes._id }, '活动记录添加成功')
 }
 
-// 获取用户活动记录
-async function getUserActivities(data, wxContext) {
-  const { userId, limit = 20 } = data
-  
-  if (!userId) {
-    return { code: 400, message: '缺少用户ID' }
-  }
-  
-  try {
-    // 获取用户参与的组局
-    const participationsRes = await db.collection('participations')
-      .where({ userId: userId })
-      .get()
-    
-    const gameIds = participationsRes.data.map(p => p.gameId)
-    
-    if (gameIds.length === 0) {
-      return { code: 0, data: [] }
-    }
-    
-    // 获取相关组局的活动记录
-    const activitiesRes = await db.collection('activities')
-      .where({ gameId: db.command.in(gameIds) })
-      .orderBy('createdAt', 'desc')
-      .limit(limit)
-      .get()
-    
-    return {
-      code: 0,
-      data: activitiesRes.data
-    }
-  } catch (error) {
-    console.error('获取用户活动记录错误:', error)
-    throw error
-  }
+async function getUserActivities(data) {
+  const payload = data || {}
+  const { userId, limit = 20 } = payload
+  if (!userId) return fail(400, '缺少用户ID')
+
+  const participationsRes = await db.collection('participations').where({ userId }).get()
+  const gameIds = [...new Set((participationsRes.data || []).map((p) => p.gameId).filter(Boolean))]
+
+  if (!gameIds.length) return success([], '获取成功')
+
+  const activitiesRes = await db.collection('activities')
+    .where({ gameId: _.in(gameIds) })
+    .orderBy('createdAt', 'desc')
+    .limit(Number(limit) > 0 ? Number(limit) : 20)
+    .get()
+
+  return success(activitiesRes.data || [], '获取成功')
 }
 
-// 获取未读消息
-async function getUnreadMessages(data, wxContext) {
-  const { userId } = data
-  
-  if (!userId) {
-    return { code: 400, message: '缺少用户ID' }
-  }
-  
-  try {
-    // 模拟返回未读消息数量
-    // 实际应该根据业务逻辑查询数据库
-    return {
-      code: 0,
-      data: {
-        count: 0, // 默认0条未读
-        messages: []
-      }
-    }
-  } catch (error) {
-    console.error('获取未读消息错误:', error)
-    throw error
-  }
+async function getUnreadMessages(data) {
+  const payload = data || {}
+  if (!payload.userId) return fail(400, '缺少用户ID')
+
+  return success({ count: 0, messages: [] }, '获取成功')
 }
 
-// 标记消息已读
-async function markMessageRead(data, wxContext) {
-  const { userId, messageId } = data
-  
-  if (!userId || !messageId) {
-    return { code: 400, message: '缺少必要参数' }
-  }
-  
-  try {
-    // 模拟标记消息已读
-    return {
-      code: 0,
-      message: '消息已标记为已读'
-    }
-  } catch (error) {
-    console.error('标记消息已读错误:', error)
-    throw error
-  }
+async function markMessageRead(data) {
+  const payload = data || {}
+  if (!payload.userId || !payload.messageId) return fail(400, '缺少必要参数')
+
+  return success(null, '消息已标记为已读')
 }
 
-// 标记所有消息已读
-async function markAllMessagesRead(data, wxContext) {
-  const { userId } = data
-  
-  if (!userId) {
-    return { code: 400, message: '缺少用户ID' }
-  }
-  
-  try {
-    // 模拟标记所有消息已读
-    return {
-      code: 0,
-      message: '所有消息已标记为已读'
-    }
-  } catch (error) {
-    console.error('标记所有消息已读错误:', error)
-    throw error
-  }
+async function markAllMessagesRead(data) {
+  const payload = data || {}
+  if (!payload.userId) return fail(400, '缺少用户ID')
+
+  return success(null, '所有消息已标记为已读')
 }

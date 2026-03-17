@@ -1,22 +1,32 @@
 // 用户服务云函数
 const cloud = require('wx-server-sdk')
-cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
-const db = cloud.database()
 
-exports.main = async (event, context) => {
-  const { action, data } = event
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+
+const db = cloud.database()
+const _ = db.command
+
+const success = (data = null, message = 'ok') => ({ code: 0, message, data })
+const fail = (code, message, data = null) => ({ code, message, data })
+
+exports.main = async (event) => {
+  const { action, data } = event || {}
   const wxContext = cloud.getWXContext()
-  
-  console.log('user-service 调用:', { action, data, openid: wxContext.OPENID })
-  
+
+  console.log('user-service 调用:', { action, openid: wxContext.OPENID })
+
   try {
     switch (action) {
       case 'test':
-        return handleTest(wxContext)
+        return success({
+          timestamp: new Date().toISOString(),
+          openid: wxContext.OPENID,
+          appid: wxContext.APPID
+        }, 'user-service 运行正常')
       case 'login':
         return await handleLogin(data, wxContext)
       case 'getUserInfo':
-        return await getUserInfo(data, wxContext)
+        return await getUserInfo(data)
       case 'updateUserInfo':
         return await updateUserInfo(data, wxContext)
       case 'updateUserTags':
@@ -26,37 +36,45 @@ exports.main = async (event, context) => {
       case 'updateUserAvatar':
         return await updateUserAvatar(data, wxContext)
       case 'getUserStats':
+<<<<<<< ours
         return await getUserStats(data, wxContext)
       case 'searchUsers':
         return await searchUsers(data, wxContext)
       case 'getMe':
         return await getMe(data, wxContext)
+=======
+        return await getUserStats(data)
+      case 'searchUsers':
+        return await searchUsers(data)
+      case 'getMe':
+        return await getMe(wxContext)
+>>>>>>> theirs
       default:
-        return { code: 400, message: '未知操作' }
+        return fail(400, '未知操作')
     }
   } catch (error) {
-    console.error('user-service 错误:', error)
-    return {
-      code: 500,
-      message: '服务器内部错误',
-      error: error.message
-    }
+    console.error('user-service 未捕获错误:', error)
+    return fail(500, `服务器内部错误: ${error.message}`)
   }
 }
 
-// 测试接口
-function handleTest(wxContext) {
+async function getCurrentUser(wxContext) {
+  const res = await db.collection('users').where({ openid: wxContext.OPENID }).limit(1).get()
+  return (res.data || [])[0] || null
+}
+
+function toUserDto(user) {
   return {
-    code: 0,
-    message: 'user-service 运行正常',
-    data: {
-      timestamp: new Date().toISOString(),
-      openid: wxContext.OPENID,
-      appid: wxContext.APPID
-    }
+    id: user._id,
+    nickname: user.nickname || '',
+    avatar: user.avatar || '',
+    tags: user.tags || [],
+    games: user.games || [],
+    isAdmin: !!user.isAdmin
   }
 }
 
+<<<<<<< ours
 // 用户登录/注册 - 修复版，不再覆盖用户已修改的信息
 async function handleLogin(data, wxContext) {
   const { userInfo } = data
@@ -158,283 +176,179 @@ async function handleLogin(data, wxContext) {
       error: error.message
     }
   }
+=======
+function sanitizeUserUpdates(updates = {}) {
+  const allowed = ['nickname', 'gender', 'province', 'city', 'country']
+  const next = {}
+  allowed.forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(updates, key)) next[key] = updates[key]
+  })
+  return next
+>>>>>>> theirs
 }
 
-// 获取用户信息
-async function getUserInfo(data, wxContext) {
-  const { userId } = data
-  
-  if (!userId) {
-    return { code: 400, message: '缺少用户ID' }
+function ensureOwner(currentUser, targetUserId) {
+  if (!currentUser) return fail(404, '用户不存在')
+  if (targetUserId && String(currentUser._id) !== String(targetUserId)) {
+    return fail(403, '无权操作其他用户')
   }
-  
-  try {
-    const userRes = await db.collection('users').doc(userId).get()
-    
-    if (!userRes.data) {
-      return { code: 404, message: '用户不存在' }
+  return null
+}
+
+async function handleLogin(data, wxContext) {
+  const payload = data || {}
+  const { userInfo } = payload
+  if (!userInfo) return fail(400, '缺少用户信息')
+
+  const now = new Date()
+  const queryResult = await db.collection('users').where({ openid: wxContext.OPENID }).limit(1).get()
+
+  let userData
+  let isNewUser = false
+
+  if (!(queryResult.data || []).length) {
+    isNewUser = true
+    const defaultTags = [{ id: 1, name: '立直麻将初心玩家' }]
+    const defaultGames = [{ id: Date.now(), name: 'root', type: 'mahjong' }]
+
+    const newUser = {
+      openid: wxContext.OPENID,
+      nickname: userInfo.nickname || '微信用户',
+      avatar: userInfo.avatarUrl || userInfo.avatar || '',
+      gender: userInfo.gender || 0,
+      province: userInfo.province || '',
+      city: userInfo.city || '',
+      country: userInfo.country || '',
+      tags: defaultTags,
+      games: defaultGames,
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: now
     }
-    
-    const userData = userRes.data
-    
-    return {
-      code: 0,
+
+    const addResult = await db.collection('users').add({ data: newUser })
+    userData = { ...newUser, _id: addResult._id }
+  } else {
+    userData = queryResult.data[0]
+    await db.collection('users').doc(userData._id).update({
       data: {
+<<<<<<< ours
         id: userData._id,
         nickname: userData.nickname,
         avatar: userData.avatar,
         tags: userData.tags || [],
         games: userData.games || [],
         isAdmin: !!userData.isAdmin
+=======
+        lastLoginAt: now
+>>>>>>> theirs
       }
-    }
-  } catch (error) {
-    console.error('获取用户信息错误:', error)
-    throw error
+    })
   }
+
+  const statsRes = await getUserStats({ userId: userData._id })
+
+  return success({
+    userInfo: toUserDto(userData),
+    token: wxContext.OPENID,
+    stats: statsRes.data || { createdGames: 0, joinedGames: 0, completedGames: 0 }
+  }, isNewUser ? '注册成功' : '登录成功')
 }
 
-// 更新用户信息 - 修复版
+async function getUserInfo(data) {
+  const payload = data || {}
+  const { userId } = payload
+  if (!userId) return fail(400, '缺少用户ID')
+
+  const userRes = await db.collection('users').doc(userId).get()
+  if (!userRes.data) return fail(404, '用户不存在')
+
+  return success(toUserDto(userRes.data), '获取成功')
+}
+
 async function updateUserInfo(data, wxContext) {
-  const { userId, updates } = data
-  
-  if (!updates) {
-    return { code: 400, message: '缺少更新数据' }
-  }
-  
-  try {
-    console.log('更新用户信息参数:', { userId, updates, openid: wxContext.OPENID })
-    
-    // 通过 openid 查找用户
-    const userRes = await db.collection('users')
-      .where({ openid: wxContext.OPENID })
-      .get()
-    
-    console.log('查询到的用户:', userRes.data)
-    
-    if (userRes.data.length === 0) {
-      return { code: 404, message: '用户不存在' }
+  const payload = data || {}
+  const { userId, updates } = payload
+  if (!updates || typeof updates !== 'object') return fail(400, '缺少更新数据')
+
+  const currentUser = await getCurrentUser(wxContext)
+  const ownerError = ensureOwner(currentUser, userId)
+  if (ownerError) return ownerError
+
+  const filteredUpdates = sanitizeUserUpdates(updates)
+  if (!Object.keys(filteredUpdates).length) return fail(400, '没有有效的更新字段')
+
+  await db.collection('users').doc(currentUser._id).update({
+    data: {
+      ...filteredUpdates,
+      updatedAt: new Date()
     }
-    
-    const userDoc = userRes.data[0]
-    const userDocId = userDoc._id
-    
-    // 将 ObjectId 转为字符串比较
-    if (userId && userDocId.toString() !== userId) {
-      console.warn('用户ID不匹配:', { 
-        dbId: userDocId.toString(), 
-        passedId: userId 
-      })
-      return { code: 403, message: '无权操作其他用户' }
-    }
-    
-    // 过滤不允许更新的字段
-    const allowedUpdates = ['nickname', 'gender', 'province', 'city', 'country']
-    const filteredUpdates = {}
-    
-    Object.keys(updates).forEach(key => {
-      if (allowedUpdates.includes(key)) {
-        filteredUpdates[key] = updates[key]
-      }
-    })
-    
-    if (Object.keys(filteredUpdates).length === 0) {
-      return { code: 400, message: '没有有效的更新字段' }
-    }
-    
-    // 执行更新
-    await db.collection('users').doc(userDocId).update({
-      data: {
-        ...filteredUpdates,
-        updatedAt: new Date()
-      }
-    })
-    
-    console.log('✅ 用户信息更新成功:', filteredUpdates)
-    
-    return {
-      code: 0,
-      message: '更新成功',
-      data: filteredUpdates
-    }
-  } catch (error) {
-    console.error('更新用户信息错误:', error)
-    return {
-      code: 500,
-      message: '服务器内部错误',
-      error: error.message
-    }
-  }
+  })
+
+  return success(filteredUpdates, '更新成功')
 }
 
-// 更新用户标签
 async function updateUserTags(data, wxContext) {
-  const { userId, tags } = data
-  
-  if (!userId || !tags || !Array.isArray(tags)) {
-    return { code: 400, message: '缺少必要参数或参数格式错误' }
-  }
-  
-  try {
-    console.log('更新用户标签参数:', { userId, tags, openid: wxContext.OPENID })
-    
-    // 通过 openid 查找用户
-    const userRes = await db.collection('users')
-      .where({ openid: wxContext.OPENID })
-      .get()
-    
-    if (userRes.data.length === 0) {
-      return { code: 404, message: '用户不存在' }
+  const payload = data || {}
+  const { userId, tags } = payload
+  if (!Array.isArray(tags)) return fail(400, '缺少必要参数或参数格式错误')
+
+  const currentUser = await getCurrentUser(wxContext)
+  const ownerError = ensureOwner(currentUser, userId)
+  if (ownerError) return ownerError
+
+  await db.collection('users').doc(currentUser._id).update({
+    data: {
+      tags,
+      updatedAt: new Date()
     }
-    
-    const userDoc = userRes.data[0]
-    const userDocId = userDoc._id
-    
-    // 验证用户权限
-    if (userDocId.toString() !== userId) {
-      return { code: 403, message: '无权操作' }
-    }
-    
-    // 执行更新
-    await db.collection('users').doc(userDocId).update({
-      data: {
-        tags: tags,
-        updatedAt: new Date()
-      }
-    })
-    
-    console.log('✅ 用户标签更新成功:', tags)
-    
-    return {
-      code: 0,
-      message: '标签更新成功',
-      data: { tags }
-    }
-  } catch (error) {
-    console.error('更新用户标签错误:', error)
-    return {
-      code: 500,
-      message: '服务器内部错误',
-      error: error.message
-    }
-  }
+  })
+
+  return success({ tags }, '标签更新成功')
 }
 
-// 更新用户游戏/设备
 async function updateUserGames(data, wxContext) {
-  const { userId, games } = data
-  
-  if (!userId || !games || !Array.isArray(games)) {
-    return { code: 400, message: '缺少必要参数或参数格式错误' }
-  }
-  
-  try {
-    console.log('更新用户游戏参数:', { userId, games, openid: wxContext.OPENID })
-    
-    // 通过 openid 查找用户
-    const userRes = await db.collection('users')
-      .where({ openid: wxContext.OPENID })
-      .get()
-    
-    if (userRes.data.length === 0) {
-      return { code: 404, message: '用户不存在' }
+  const payload = data || {}
+  const { userId, games } = payload
+  if (!Array.isArray(games)) return fail(400, '缺少必要参数或参数格式错误')
+
+  const currentUser = await getCurrentUser(wxContext)
+  const ownerError = ensureOwner(currentUser, userId)
+  if (ownerError) return ownerError
+
+  await db.collection('users').doc(currentUser._id).update({
+    data: {
+      games,
+      updatedAt: new Date()
     }
-    
-    const userDoc = userRes.data[0]
-    const userDocId = userDoc._id
-    
-    // 验证用户权限
-    if (userDocId.toString() !== userId) {
-      return { code: 403, message: '无权操作' }
-    }
-    
-    // 执行更新
-    await db.collection('users').doc(userDocId).update({
-      data: {
-        games: games,
-        updatedAt: new Date()
-      }
-    })
-    
-    console.log('✅ 用户游戏更新成功:', games)
-    
-    return {
-      code: 0,
-      message: '游戏/设备更新成功',
-      data: { games }
-    }
-  } catch (error) {
-    console.error('更新用户游戏错误:', error)
-    return {
-      code: 500,
-      message: '服务器内部错误',
-      error: error.message
-    }
-  }
+  })
+
+  return success({ games }, '游戏/设备更新成功')
 }
 
-// 更新用户头像
 async function updateUserAvatar(data, wxContext) {
-  const { userId, avatarUrl } = data
-  
-  if (!avatarUrl) {
-    return { code: 400, message: '缺少头像URL' }
+  const payload = data || {}
+  const { userId, avatarUrl } = payload
+  if (!avatarUrl) return fail(400, '缺少头像URL')
+  if (!String(avatarUrl).startsWith('cloud://') && !String(avatarUrl).startsWith('http')) {
+    return fail(400, '头像URL格式不正确')
   }
-  
-  try {
-    console.log('更新用户头像参数:', { userId, avatarUrl, openid: wxContext.OPENID })
-    
-    // 通过 openid 查找用户
-    const userRes = await db.collection('users')
-      .where({ openid: wxContext.OPENID })
-      .get()
-    
-    if (userRes.data.length === 0) {
-      return { code: 404, message: '用户不存在' }
+
+  const currentUser = await getCurrentUser(wxContext)
+  const ownerError = ensureOwner(currentUser, userId)
+  if (ownerError) return ownerError
+
+  await db.collection('users').doc(currentUser._id).update({
+    data: {
+      avatar: avatarUrl,
+      updatedAt: new Date()
     }
-    
-    const userDoc = userRes.data[0]
-    const userDocId = userDoc._id
-    
-    // 将 ObjectId 转为字符串比较
-    if (userId && userDocId.toString() !== userId) {
-      console.warn('用户ID不匹配:', { 
-        dbId: userDocId.toString(), 
-        passedId: userId 
-      })
-      return { code: 403, message: '无权操作其他用户' }
-    }
-    
-    // 验证头像URL格式
-    if (!avatarUrl.startsWith('cloud://') && !avatarUrl.startsWith('http')) {
-      return { code: 400, message: '头像URL格式不正确' }
-    }
-    
-    // 执行更新
-    await db.collection('users').doc(userDocId).update({
-      data: {
-        avatar: avatarUrl,
-        updatedAt: new Date()
-      }
-    })
-    
-    console.log('✅ 用户头像更新成功:', avatarUrl)
-    
-    return {
-      code: 0,
-      message: '头像更新成功',
-      data: { avatar: avatarUrl }
-    }
-  } catch (error) {
-    console.error('更新用户头像错误:', error)
-    return {
-      code: 500,
-      message: '服务器内部错误',
-      error: error.message
-    }
-  }
+  })
+
+  return success({ avatar: avatarUrl }, '头像更新成功')
 }
 
+<<<<<<< ours
 
 
 async function getMe(data, wxContext) {
@@ -491,53 +405,63 @@ async function getUserStats(data, wxContext) {
     return { code: 400, message: '缺少用户ID' }
   }
   
+=======
+async function getMe(wxContext) {
+  const user = await getCurrentUser(wxContext)
+  if (!user) return fail(404, '用户不存在')
+
+  return success({
+    id: user._id,
+    nickname: user.nickname || '',
+    avatar: user.avatar || '',
+    isAdmin: !!user.isAdmin
+  }, '获取成功')
+}
+
+async function searchUsers(data) {
+  const payload = data || {}
+  const keyword = String(payload.keyword || '').trim()
+  if (!keyword) return success({ list: [] }, 'ok')
+
+  const byNick = await db.collection('users')
+    .where({ nickname: db.RegExp({ regexp: keyword, options: 'i' }) })
+    .limit(20)
+    .get()
+
+  const list = (byNick.data || []).map((u) => ({
+    id: u._id,
+    nickname: u.nickname || '未命名用户',
+    avatar: u.avatar || ''
+  }))
+
+  return success({ list }, '获取成功')
+}
+
+async function getUserStats(data) {
+  const payload = data || {}
+  const { userId } = payload
+  if (!userId) return fail(400, '缺少用户ID')
+
+>>>>>>> theirs
   try {
-    const db = cloud.database()
-    const _ = db.command
-    
-    // 1. 获取用户创建的、进行中的组局数量
-    const createdGamesRes = await db.collection('games')
-      .where({ 
-        creatorId: userId,
-        status: 'pending'  // 只统计进行中的
-      })
-      .count()
-    
-    // 2. 获取用户参与的、进行中的组局数量（排除自己创建的）
-    const joinedGamesRes = await db.collection('games')
-      .where({
-        'participants.id': userId,
-        status: 'pending',  // 只统计进行中的
-        creatorId: _.neq(userId)  // 排除自己创建的
-      })
-      .count()
-    
-    // 3. 获取用户已完成的组局数量（包括创建和参与）
-    const completedGamesRes = await db.collection('games')
-      .where({
-        'participants.id': userId,
-        status: 'completed'
-      })
-      .count()
-    
-    return {
-      code: 0,
-      data: {
-        createdGames: createdGamesRes.total || 0,
-        joinedGames: joinedGamesRes.total || 0,
-        completedGames: completedGamesRes.total || 0
-      }
-    }
+    const [createdGamesRes, joinedGamesRes, completedCreatedRes, completedJoinedRes] = await Promise.all([
+      db.collection('games').where({ creatorId: userId, status: 'pending' }).count(),
+      db.collection('games').where({ 'participants.id': userId, status: 'pending', creatorId: _.neq(userId) }).count(),
+      db.collection('games').where({ creatorId: userId, status: 'completed' }).count(),
+      db.collection('games').where({ 'participants.id': userId, status: 'completed', creatorId: _.neq(userId) }).count()
+    ])
+
+    return success({
+      createdGames: createdGamesRes.total || 0,
+      joinedGames: joinedGamesRes.total || 0,
+      completedGames: (completedCreatedRes.total || 0) + (completedJoinedRes.total || 0)
+    }, '获取成功')
   } catch (error) {
-    console.error('获取用户统计错误:', error)
-    // 返回默认统计
-    return {
-      code: 0,
-      data: {
-        createdGames: 0,
-        joinedGames: 0,
-        completedGames: 0
-      }
-    }
+    console.error('获取用户统计失败:', error)
+    return success({
+      createdGames: 0,
+      joinedGames: 0,
+      completedGames: 0
+    }, '获取成功')
   }
 }
