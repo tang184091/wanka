@@ -978,23 +978,14 @@ async function getSeatStatus(data, wxContext) {
         statusByLocation[game.location] = calculatedStatus
       }
     }
-
-<<<<<<< ours
-=======
     const overrideRes = await db.collection('seat_status_overrides').where({ key: 'global' }).limit(1).get()
     const overrideMap = (overrideRes.data && overrideRes.data[0] && overrideRes.data[0].overrides) || {}
     const mergedStatus = { ...statusByLocation, ...overrideMap }
-
->>>>>>> theirs
     return {
       code: 0,
       message: '获取座位状态成功',
       data: {
-<<<<<<< ours
-        statusByLocation,
-=======
         statusByLocation: mergedStatus,
->>>>>>> theirs
         totalActiveGames: games.length
       }
     }
@@ -1009,11 +1000,6 @@ async function getSeatStatus(data, wxContext) {
     }
   }
 }
-
-<<<<<<< ours
-=======
-
-
 async function getMahjongRecords(data, wxContext) {
   try {
     const now = Date.now()
@@ -1106,8 +1092,6 @@ async function setSeatStatusOverrides(data, wxContext) {
     return { code: 500, message: '保存失败: ' + error.message }
   }
 }
-
->>>>>>> theirs
 // 获取我的组局 - 修复版
 async function getMyGames(data, wxContext) {
   console.log('getMyGames 调用开始，参数:', { data, openid: wxContext.OPENID })
