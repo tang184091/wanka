@@ -3,18 +3,8 @@
     <scroll-view class="seat-scroll" scroll-y>
       <view class="layout-card">
         <view class="layout-header">
-          <view>
-            <text class="layout-title">座位详情</text>
-            <text class="layout-subtitle">点击房间/座位查看状态，空闲可快速创建组局</text>
-          </view>
+          <text class="layout-title">座位详情</text>
           <view class="refresh-btn" :class="{ disabled: refreshing }" @tap="handleRefresh">{{ refreshing ? '刷新中...' : '刷新' }}</view>
-        </view>
-
-        <view class="legend-row">
-          <view v-for="item in seatLegend" :key="item.status" class="legend-item">
-            <view class="legend-dot" :class="`dot-${item.status}`"></view>
-            <text class="legend-text">{{ item.label }}</text>
-          </view>
         </view>
 
         <view class="floor-card">
@@ -40,13 +30,14 @@
             </view>
 
             <view class="corridor-box floor1-corridor">走廊</view>
-            <view class="seat-item floor1-desk5" :class="getSeatStatusClass(hallDeskRows[2][0].status)" @tap="onSeatTap(hallDeskRows[2][0])">
-              <text class="seat-name">{{ hallDeskRows[2][0].name }}</text>
-              <text class="seat-status">{{ getSeatStatusText(hallDeskRows[2][0].status) }}</text>
-            </view>
+
             <view class="seat-item floor1-desk6" :class="getSeatStatusClass(hallDeskRows[2][1].status)" @tap="onSeatTap(hallDeskRows[2][1])">
               <text class="seat-name">{{ hallDeskRows[2][1].name }}</text>
               <text class="seat-status">{{ getSeatStatusText(hallDeskRows[2][1].status) }}</text>
+            </view>
+            <view class="seat-item floor1-desk5" :class="getSeatStatusClass(hallDeskRows[2][0].status)" @tap="onSeatTap(hallDeskRows[2][0])">
+              <text class="seat-name">{{ hallDeskRows[2][0].name }}</text>
+              <text class="seat-status">{{ getSeatStatusText(hallDeskRows[2][0].status) }}</text>
             </view>
 
             <view class="seat-item floor1-arcade-hall" :class="getSeatStatusClass(arcadeHall.status)" @tap="onSeatTap(arcadeHall)">
@@ -75,34 +66,32 @@
         <view class="floor-card">
           <view class="floor-tag">二楼</view>
           <view class="second-floor-grid">
-            <view class="second-floor-main">
-              <view class="seat-item floor2-top-left" :class="getSeatStatusClass(floor2Bottom[1].status)" @tap="onSeatTap(floor2Bottom[1])">
-                <text class="seat-name">{{ floor2Bottom[1].name }}</text>
-                <text class="seat-status">{{ getSeatStatusText(floor2Bottom[1].status) }}</text>
-              </view>
-              <view class="seat-item floor2-top-right" :class="getSeatStatusClass(floor2Bottom[0].status)" @tap="onSeatTap(floor2Bottom[0])">
-                <text class="seat-name">{{ floor2Bottom[0].name }}</text>
-                <text class="seat-status">{{ getSeatStatusText(floor2Bottom[0].status) }}</text>
-              </view>
+            <view class="seat-item floor2-top-left" :class="getSeatStatusClass(floor2Bottom[1].status)" @tap="onSeatTap(floor2Bottom[1])">
+              <text class="seat-name">{{ floor2Bottom[1].name }}</text>
+              <text class="seat-status">{{ getSeatStatusText(floor2Bottom[1].status) }}</text>
+            </view>
+            <view class="seat-item floor2-top-right" :class="getSeatStatusClass(floor2Bottom[0].status)" @tap="onSeatTap(floor2Bottom[0])">
+              <text class="seat-name">{{ floor2Bottom[0].name }}</text>
+              <text class="seat-status">{{ getSeatStatusText(floor2Bottom[0].status) }}</text>
+            </view>
 
-              <view class="disabled-room">包间暂停使用</view>
+            <view class="corridor-box floor2-corridor">走廊</view>
 
-              <view class="seat-item floor2-r1" :class="getSeatStatusClass(floor2Left[3].status)" @tap="onSeatTap(floor2Left[3])">
-                <text class="seat-name">{{ floor2Left[3].name }}</text>
-                <text class="seat-status">{{ getSeatStatusText(floor2Left[3].status) }}</text>
-              </view>
-              <view class="seat-item floor2-r2" :class="getSeatStatusClass(floor2Left[2].status)" @tap="onSeatTap(floor2Left[2])">
-                <text class="seat-name">{{ floor2Left[2].name }}</text>
-                <text class="seat-status">{{ getSeatStatusText(floor2Left[2].status) }}</text>
-              </view>
-              <view class="seat-item floor2-r3" :class="getSeatStatusClass(floor2Left[1].status)" @tap="onSeatTap(floor2Left[1])">
-                <text class="seat-name">{{ floor2Left[1].name }}</text>
-                <text class="seat-status">{{ getSeatStatusText(floor2Left[1].status) }}</text>
-              </view>
-              <view class="seat-item floor2-r4" :class="getSeatStatusClass(floor2Left[0].status)" @tap="onSeatTap(floor2Left[0])">
-                <text class="seat-name">{{ floor2Left[0].name }}</text>
-                <text class="seat-status">{{ getSeatStatusText(floor2Left[0].status) }}</text>
-              </view>
+            <view class="seat-item floor2-r1" :class="getSeatStatusClass(floor2Left[3].status)" @tap="onSeatTap(floor2Left[3])">
+              <text class="seat-name">{{ floor2Left[3].name }}</text>
+              <text class="seat-status">{{ getSeatStatusText(floor2Left[3].status) }}</text>
+            </view>
+            <view class="seat-item floor2-r2" :class="getSeatStatusClass(floor2Left[2].status)" @tap="onSeatTap(floor2Left[2])">
+              <text class="seat-name">{{ floor2Left[2].name }}</text>
+              <text class="seat-status">{{ getSeatStatusText(floor2Left[2].status) }}</text>
+            </view>
+            <view class="seat-item floor2-r3" :class="getSeatStatusClass(floor2Left[1].status)" @tap="onSeatTap(floor2Left[1])">
+              <text class="seat-name">{{ floor2Left[1].name }}</text>
+              <text class="seat-status">{{ getSeatStatusText(floor2Left[1].status) }}</text>
+            </view>
+            <view class="seat-item floor2-r4" :class="getSeatStatusClass(floor2Left[0].status)" @tap="onSeatTap(floor2Left[0])">
+              <text class="seat-name">{{ floor2Left[0].name }}</text>
+              <text class="seat-status">{{ getSeatStatusText(floor2Left[0].status) }}</text>
             </view>
           </view>
         </view>
@@ -118,22 +107,16 @@ import UserService from '@/utils/user.js'
 
 const refreshing = ref(false)
 
-const seatLegend = ref([
-  { status: 'available', label: '空闲中' },
-  { status: 'reserved', label: '预约中' },
-  { status: 'occupied', label: '使用中' }
-])
-
 const floor2Left = ref([
-  { id: 'f2-bg-1', name: '桌游房1', type: 'boardgame', status: 'available', capacity: 8, device: '桌游桌 + 置物架' },
-  { id: 'f2-mj-1', name: '立直麻将房1', type: 'mahjong', status: 'available', capacity: 4, device: '自动麻将机' },
-  { id: 'f2-mj-2', name: '立直麻将房2', type: 'mahjong', status: 'available', capacity: 4, device: '自动麻将机' },
-  { id: 'f2-mj-3', name: '立直麻将房3', type: 'mahjong', status: 'available', capacity: 4, device: '自动麻将机' }
+  { id: 'f2-bg-1', name: '桌游房1', type: 'boardgame', status: 'available', capacity: 8, device: '桌游桌' },
+  { id: 'f2-mj-1', name: '立直麻将房1', type: 'mahjong', status: 'available', capacity: 4, device: '四口机' },
+  { id: 'f2-mj-2', name: '立直麻将房2', type: 'mahjong', status: 'available', capacity: 4, device: '四口机+八口机' },
+  { id: 'f2-mj-3', name: '立直麻将房3', type: 'mahjong', status: 'available', capacity: 4, device: '八口机' }
 ])
 
 const floor2Bottom = ref([
   { id: 'f2-bg-2', name: '桌游房2', type: 'boardgame', status: 'available', capacity: 8, device: '桌游桌 + 展示柜' },
-  { id: 'f2-mj-4', name: '立直麻将房4', type: 'mahjong', status: 'available', capacity: 4, device: '自动麻将机' }
+  { id: 'f2-mj-4', name: '立直麻将房4', type: 'mahjong', status: 'available', capacity: 4, device: '八口机' }
 ])
 
 const hallDeskRows = ref([
@@ -153,9 +136,9 @@ const hallDeskRows = ref([
 
 const arcadeHall = ref({ id: 'f1-arcade-hall', name: '电玩大厅', type: 'videogame', status: 'available', capacity: 8, device: '多台主机 + 大屏显示器' })
 const interDesk = ref({ id: 'f1-inter-desk', name: '间层桌游', type: 'boardgame', status: 'available', capacity: 8, device: '桌游桌' })
-const interArcade1 = ref({ id: 'f1-inter-arcade-1', name: '间层电玩1', type: 'videogame', status: 'available', capacity: 2, device: 'PS5 + 电视' })
-const interArcade2 = ref({ id: 'f1-inter-arcade-2', name: '间层电玩2', type: 'videogame', status: 'available', capacity: 2, device: 'Switch + 显示器' })
-const arcadeRoom = ref({ id: 'f1-arcade-room', name: '电玩房', type: 'videogame', status: 'available', capacity: 4, device: 'PS5 + Xbox + 4K电视' })
+const interArcade1 = ref({ id: 'f1-inter-arcade-1', name: '间层电玩1', type: 'videogame', status: 'available', capacity: 2, device: '主机 + 电视' })
+const interArcade2 = ref({ id: 'f1-inter-arcade-2', name: '间层电玩2', type: 'videogame', status: 'available', capacity: 2, device: '主机 + 电视' })
+const arcadeRoom = ref({ id: 'f1-arcade-room', name: '电玩房', type: 'videogame', status: 'available', capacity: 4, device: '主机 + 电视' })
 
 const getSeatStatusClass = (status) => ({ available: 'status-available', reserved: 'status-reserved', occupied: 'status-occupied' }[status] || 'status-available')
 const getSeatStatusText = (status) => ({ available: '空闲中', reserved: '预约中', occupied: '使用中' }[status] || '空闲中')
@@ -239,66 +222,44 @@ const onSeatTap = (seat) => {
 <style scoped>
 .seat-page { min-height: 100vh; background: #f3f4f6; }
 .seat-scroll { height: 100vh; }
-.layout-card { margin: 20rpx; background: #ffffff; border-radius: 20rpx; box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.08); border: 1rpx solid #e6e7eb; padding: 24rpx; }
-.layout-header { margin-bottom: 16rpx; display: flex; justify-content: space-between; align-items: flex-start; gap: 16rpx; }
-.layout-title { display: block; font-size: 34rpx; color: #1f2937; font-weight: 700; }
-.layout-subtitle { display: block; margin-top: 6rpx; font-size: 24rpx; color: #6b7280; }
-.refresh-btn { flex-shrink: 0; min-width: 120rpx; height: 56rpx; border-radius: 28rpx; background: #07c160; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24rpx; }
+.layout-card { margin: 20rpx; background: #f8f9fa; border-radius: 18rpx; border: 1rpx solid #e5e7eb; padding: 16rpx; }
+.layout-header { margin-bottom: 10rpx; display: flex; justify-content: space-between; align-items: center; }
+.layout-title { font-size: 26rpx; color: #6b7280; font-weight: 700; }
+.refresh-btn { min-width: 110rpx; height: 48rpx; border-radius: 24rpx; background: #07c160; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx; }
 .refresh-btn.disabled { background: #9ca3af; }
-.legend-row { display: flex; flex-wrap: wrap; gap: 18rpx; margin-bottom: 20rpx; }
-.legend-item { display: flex; align-items: center; }
-.legend-dot { width: 14rpx; height: 14rpx; border-radius: 50%; margin-right: 8rpx; }
-.dot-available { background: #40c057; }
-.dot-reserved { background: #4dabf7; }
-.dot-occupied { background: #ff6b6b; }
-.legend-text { font-size: 22rpx; color: #374151; }
 
-.floor-card { background: #f8f9fa; border: 2rpx solid #e5e7eb; border-radius: 14rpx; padding: 16rpx; margin-bottom: 18rpx; position: relative; }
-.floor-tag { position: absolute; right: 16rpx; top: 10rpx; font-size: 24rpx; color: #6b7280; }
+.floor-card { background: #eef0f2; border: 1rpx solid #d9dde2; border-radius: 14rpx; padding: 12rpx; margin-bottom: 14rpx; position: relative; }
+.floor-tag { position: absolute; right: 14rpx; top: -18rpx; font-size: 24rpx; color: #6b7280; background: #f3f4f6; padding: 0 8rpx; }
 
-.first-floor-grid { margin-top: 30rpx; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(5, 108rpx); gap: 10rpx; }
-.floor1-arcade-room { grid-column: 1 / span 6; grid-row: 1; }
-.floor1-shop { grid-column: 7 / span 6; grid-row: 1; }
-.floor1-arcade-1 { grid-column: 1 / span 3; grid-row: 2; }
-.floor1-arcade-2 { grid-column: 4 / span 3; grid-row: 2; }
-.floor1-inter-desk { grid-column: 7 / span 6; grid-row: 2; }
-.floor1-corridor { grid-column: 1 / span 4; grid-row: 3 / span 3; }
-.floor1-desk5 { grid-column: 5 / span 2; grid-row: 3; }
-.floor1-desk6 { grid-column: 5 / span 2; grid-row: 4; }
-.floor1-arcade-hall { grid-column: 7 / span 6; grid-row: 3; }
-.floor1-desk1 { grid-column: 7 / span 3; grid-row: 4; }
-.floor1-desk2 { grid-column: 10 / span 3; grid-row: 4; }
-.floor1-desk3 { grid-column: 7 / span 3; grid-row: 5; }
-.floor1-desk4 { grid-column: 10 / span 3; grid-row: 5; }
+.first-floor-grid { margin-top: 8rpx; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(5, 88rpx); gap: 8rpx; }
+.floor1-arcade-room { grid-column: 1 / span 8; grid-row: 1; }
+.floor1-shop { grid-column: 9 / span 4; grid-row: 1; }
+.floor1-arcade-1 { grid-column: 1 / span 4; grid-row: 2; }
+.floor1-arcade-2 { grid-column: 5 / span 4; grid-row: 2; }
+.floor1-inter-desk { grid-column: 9 / span 4; grid-row: 2; }
+.floor1-corridor { grid-column: 9 / span 4; grid-row: 3; }
+.floor1-desk6 { grid-column: 1 / span 4; grid-row: 3; }
+.floor1-desk5 { grid-column: 5 / span 4; grid-row: 3; }
+.floor1-arcade-hall { grid-column: 1 / span 4; grid-row: 4 / span 2; }
+.floor1-desk1 { grid-column: 5 / span 4; grid-row: 4; }
+.floor1-desk2 { grid-column: 9 / span 4; grid-row: 4; }
+.floor1-desk3 { grid-column: 5 / span 4; grid-row: 5; }
+.floor1-desk4 { grid-column: 9 / span 4; grid-row: 5; }
 
-.second-floor-grid { margin-top: 30rpx; }
-.second-floor-main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, 108rpx); gap: 10rpx; }
+.second-floor-grid { margin-top: 8rpx; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, 88rpx); gap: 8rpx; }
 .floor2-top-left { grid-column: 1; grid-row: 1; }
 .floor2-top-right { grid-column: 2; grid-row: 1; }
-.disabled-room { grid-column: 1; grid-row: 2 / span 4; border-radius: 12rpx; border: 2rpx solid #adb5bd; background: #dee2e6; color: #6b7280; display: flex; justify-content: center; align-items: center; font-size: 30rpx; }
+.floor2-corridor { grid-column: 1; grid-row: 2 / span 4; }
 .floor2-r1 { grid-column: 2; grid-row: 2; }
 .floor2-r2 { grid-column: 2; grid-row: 3; }
 .floor2-r3 { grid-column: 2; grid-row: 4; }
 .floor2-r4 { grid-column: 2; grid-row: 5; }
 
-.corridor-box { border-radius: 12rpx; border: 2rpx solid #adb5bd; background: #dee2e6; color: #374151; font-size: 30rpx; display: flex; align-items: center; justify-content: center; }
-.seat-item { border: 2rpx solid #d1d5db; border-radius: 10rpx; padding: 12rpx 8rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; transition: transform .2s ease; min-height: 100rpx; }
-.seat-item:active { transform: scale(0.98); }
-.seat-name { font-size: 24rpx; color: #1f2937; font-weight: 600; text-align: center; }
-.seat-status { margin-top: 6rpx; font-size: 22rpx; color: #374151; }
-.status-available { background: rgba(64, 192, 87, 0.2); border-color: #40c057; }
-.status-reserved { background: rgba(77, 171, 247, 0.2); border-color: #4dabf7; }
-.status-occupied { background: rgba(255, 107, 107, 0.2); border-color: #ff6b6b; }
-
-@media (prefers-color-scheme: dark) {
-  .seat-page { background: #111317; }
-  .layout-card { background: #1a1e24; border-color: #2c313a; box-shadow: none; }
-  .layout-title, .seat-name { color: #f3f4f6; }
-  .layout-subtitle, .legend-text, .seat-status { color: #d1d5db; }
-  .floor-card { background: #252a33; border-color: #3b4048; }
-  .floor-tag { color: #d1d5db; }
-  .disabled-room, .corridor-box { background: #4b5563; color: #f3f4f6; border-color: #6b7280; }
-  .refresh-btn { background: #10b981; }
-  .refresh-btn.disabled { background: #6b7280; }
-}
+.corridor-box { border-radius: 10rpx; border: 2rpx solid #b9c0c8; background: #c7cbd1; color: #111827; font-size: 34rpx; display: flex; align-items: center; justify-content: center; }
+.seat-item { border: 2rpx solid #7ddf9f; border-radius: 10rpx; background: #c0dcc7; padding: 6rpx 4rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
+.seat-name { font-size: 27rpx; color: #1f2937; font-weight: 700; text-align: center; }
+.seat-status { margin-top: 4rpx; font-size: 22rpx; color: #374151; }
+.status-available { background: #c0dcc7; border-color: #7ddf9f; }
+.status-reserved { background: #c4d9ea; border-color: #83bde3; }
+.status-occupied { background: #e5c1c1; border-color: #e39b9b; }
 </style>

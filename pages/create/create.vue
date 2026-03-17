@@ -182,7 +182,7 @@ import constants from '@/utils/constants.js'
 const gameTypes = ref([
   { 
     id: 'mahjong', 
-    name: '日麻', 
+    name: '立直麻将', 
     icon: '/static/icons/mahjong.png',
     minPlayers: constants.GAME_TYPES.mahjong.minPlayers,
     maxPlayers: constants.GAME_TYPES.mahjong.maxPlayers

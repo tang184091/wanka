@@ -10,7 +10,7 @@ const _sfc_main = {
     const gameTypes = common_vendor.ref([
       {
         id: "mahjong",
-        name: "日麻",
+        name: "立直麻将",
         icon: "/static/icons/mahjong.png",
         minPlayers: utils_constants.constants.GAME_TYPES.mahjong.minPlayers,
         maxPlayers: utils_constants.constants.GAME_TYPES.mahjong.maxPlayers
