@@ -12,7 +12,7 @@
             <text class="detail-link">查看详情</text>
           </view>
           <view class="row" v-for="(player, index) in item.players" :key="index">
-            <text class="name">{{ player.nickname || '未知玩家' }}</text>
+            <text class="name">{{ player.nickname || player.userId || '未知玩家' }}</text>
             <text class="score">{{ player.score }}</text>
           </view>
         </view>
@@ -23,7 +23,12 @@
         <view class="hint">支持输入 4 名玩家，分数总和必须为 100000（或 1000）</view>
 
         <view v-for="(player, index) in form.players" :key="index" class="form-row">
-          <input class="input" v-model="player.userId" :placeholder="`玩家${index + 1} ID`" @input="onSearch(index)" />
+          <input
+            class="input"
+            v-model="player.keyword"
+            :placeholder="`玩家${index + 1} ID或昵称`"
+            @input="onSearch(index)"
+          />
           <input class="input score" type="number" v-model="player.score" :placeholder="`分数`" />
           <view v-if="searchingIndex === index && searchResults.length" class="search-box">
             <view class="search-item" v-for="u in searchResults" :key="u.id" @tap="pickUser(index, u)">
@@ -44,14 +49,14 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 
 const records = ref([])
-const form = ref({
-  players: [
-    { userId: '', nickname: '', score: '' },
-    { userId: '', nickname: '', score: '' },
-    { userId: '', nickname: '', score: '' },
-    { userId: '', nickname: '', score: '' }
-  ]
-})
+const emptyPlayers = () => ([
+  { keyword: '', userId: '', nickname: '', score: '' },
+  { keyword: '', userId: '', nickname: '', score: '' },
+  { keyword: '', userId: '', nickname: '', score: '' },
+  { keyword: '', userId: '', nickname: '', score: '' }
+])
+
+const form = ref({ players: emptyPlayers() })
 const searchResults = ref([])
 const searchingIndex = ref(-1)
 let timer = null
@@ -79,37 +84,52 @@ const loadRecords = async () => {
 
 const onSearch = (index) => {
   searchingIndex.value = index
-  const keyword = form.value.players[index].userId
+  const player = form.value.players[index]
+  const keyword = (player.keyword || '').trim()
+
+  if (player.nickname && keyword !== player.nickname) {
+    player.nickname = ''
+    player.userId = ''
+  }
+
   clearTimeout(timer)
   timer = setTimeout(async () => {
-    if (!keyword) {
+    if (keyword.length < 2) {
       searchResults.value = []
       return
     }
+
     const res = await wx.cloud.callFunction({
       name: 'user-service',
       data: { action: 'searchUsers', data: { keyword } }
     })
     if (res.result?.code === 0) {
-      searchResults.value = res.result.data.list || []
+      searchResults.value = (res.result.data.list || []).slice(0, 5)
     }
-  }, 250)
+  }, 220)
 }
 
 const pickUser = (index, user) => {
   form.value.players[index].userId = user.id
   form.value.players[index].nickname = user.nickname
+  form.value.players[index].keyword = user.nickname
   searchResults.value = []
 }
 
 const submit = async () => {
-  const players = form.value.players.map(p => ({
-    userId: (p.userId || '').trim(),
-    nickname: p.nickname,
-    score: Number(p.score || 0)
-  }))
+  const players = form.value.players.map(p => {
+    const typed = (p.keyword || '').trim()
+    const userId = (p.userId || typed).trim()
+    const nickname = p.nickname || ''
+    return {
+      userId,
+      nickname,
+      score: Number(p.score || 0)
+    }
+  })
+
   if (players.some(p => !p.userId)) {
-    uni.showToast({ title: '请填写4位玩家ID', icon: 'none' })
+    uni.showToast({ title: '请填写4位玩家ID或昵称', icon: 'none' })
     return
   }
   if (!scoreValid.value) {
@@ -124,12 +144,7 @@ const submit = async () => {
 
   if (res.result?.code === 0) {
     uni.showToast({ title: '提交成功', icon: 'success' })
-    form.value.players = [
-      { userId: '', nickname: '', score: '' },
-      { userId: '', nickname: '', score: '' },
-      { userId: '', nickname: '', score: '' },
-      { userId: '', nickname: '', score: '' }
-    ]
+    form.value.players = emptyPlayers()
     await loadRecords()
   } else {
     uni.showToast({ title: res.result?.message || '提交失败', icon: 'none' })
@@ -159,10 +174,11 @@ onShow(loadRecords)
 .input.score { flex: 0.8; }
 .search-box { position: absolute; top: 74rpx; left: 0; right: 0; z-index: 10; background:#fff; border:1rpx solid #d1d5db; border-radius:10rpx; }
 .search-item { padding: 12rpx 14rpx; border-bottom: 1rpx solid #eef2f7; }
-.sum { margin-top: 14rpx; color: #ef4444; }
-.sum.ok { color: #16a34a; }
-.btn { margin-top: 16rpx; background: #07c160; color:#fff; height: 72rpx; border-radius: 12rpx; display:flex; align-items:center; justify-content:center; }
-.empty { margin-top: 12rpx; color: #9ca3af; }
+.sum { margin-top: 16rpx; color:#ef4444; font-weight:700; }
+.sum.ok { color:#16a34a; }
+.btn { margin-top: 14rpx; height: 72rpx; background:#07c160; color:#fff; border-radius: 10rpx; display:flex; align-items:center; justify-content:center; }
+.empty { margin-top: 10rpx; color:#9ca3af; }
 .name { color:#111827; }
-.score { color:#0f766e; }
+.score { color:#0891b2; font-weight:700; }
 </style>
+

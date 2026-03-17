@@ -103,6 +103,29 @@
           </view>
 
           <view class="save-btn" :class="{ disabled: saving }" @tap="saveOverrides">{{ saving ? '保存中...' : '保存所有修改' }}</view>
+
+          <view class="manage-card">
+            <view class="manage-title">管理玩家上传战绩</view>
+            <view v-if="!adminRecords.length" class="manage-empty">暂无可管理战绩</view>
+            <view v-for="item in adminRecords" :key="item._id" class="manage-row">
+              <view class="manage-info">
+                <text class="manage-line">{{ formatTime(item.createdAt) }} · {{ (item.players || []).map(p => p.nickname || p.userId || '未知').join(' / ') }}</text>
+              </view>
+              <view class="delete-btn" @tap="deleteRecord(item)">删除</view>
+            </view>
+          </view>
+
+          <view class="manage-card">
+            <view class="manage-title">管理用户创建组局</view>
+            <view v-if="!adminGames.length" class="manage-empty">暂无可管理组局</view>
+            <view v-for="item in adminGames" :key="item.id" class="manage-row">
+              <view class="manage-info">
+                <text class="manage-line">{{ item.title || '未命名组局' }}（{{ item.location || '-' }}）</text>
+                <text class="manage-sub">{{ gameStatusText(item.status) }} · {{ formatTime(item.createdAt) }}</text>
+              </view>
+              <view class="delete-btn" @tap="deleteGame(item)">删除</view>
+            </view>
+          </view>
         </view>
       </view>
     </scroll-view>
@@ -117,6 +140,8 @@ const isAdmin = ref(false)
 const refreshing = ref(false)
 const saving = ref(false)
 const statusValues = ['available', 'reserved', 'occupied']
+const adminRecords = ref([])
+const adminGames = ref([])
 
 const floor2Left = ref([
   { id: 'f2-bg-1', name: '桌游房1', status: 'available' },
@@ -124,12 +149,10 @@ const floor2Left = ref([
   { id: 'f2-mj-2', name: '立直麻将房2', status: 'available' },
   { id: 'f2-mj-3', name: '立直麻将房3', status: 'available' }
 ])
-
 const floor2Bottom = ref([
   { id: 'f2-bg-2', name: '桌游房2', status: 'available' },
   { id: 'f2-mj-4', name: '立直麻将房4', status: 'available' }
 ])
-
 const hallDeskRows = ref([
   [
     { id: 'f1-desk-1', name: '大厅桌游1', status: 'available' },
@@ -153,12 +176,28 @@ const arcadeRoom = ref({ id: 'f1-arcade-room', name: '电玩房', status: 'avail
 
 const getSeatStatusClass = (status) => ({ available: 'status-available', reserved: 'status-reserved', occupied: 'status-occupied' }[status] || 'status-available')
 const getSeatStatusText = (status) => ({ available: '空闲中', reserved: '预约中', occupied: '使用中' }[status] || '空闲中')
+const gameStatusText = (status) => ({ pending: '招募中', cancelled: '已取消', completed: '已完成', ongoing: '进行中' }[status] || status || '-')
+
+const formatTime = (t) => {
+  if (!t) return '-'
+  const d = new Date(t)
+  const pad = (n) => `${n}`.padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 const setSeatStatusByName = (name, statusMap) => statusMap[name] || 'available'
 
 const checkAdmin = async () => {
   const res = await wx.cloud.callFunction({ name: 'user-service', data: { action: 'getMe', data: {} } })
   isAdmin.value = !!(res?.result?.code === 0 && res?.result?.data?.isAdmin)
+}
+
+const loadManageData = async () => {
+  const res = await wx.cloud.callFunction({ name: 'game-service', data: { action: 'getAdminManageData', data: {} } })
+  if (res?.result?.code === 0) {
+    adminRecords.value = res.result.data.records || []
+    adminGames.value = res.result.data.games || []
+  }
 }
 
 const refreshData = async () => {
@@ -180,8 +219,10 @@ const refreshData = async () => {
     interArcade1.value = { ...interArcade1.value, status: setSeatStatusByName(interArcade1.value.name, statusMap) }
     interArcade2.value = { ...interArcade2.value, status: setSeatStatusByName(interArcade2.value.name, statusMap) }
     arcadeRoom.value = { ...arcadeRoom.value, status: setSeatStatusByName(arcadeRoom.value.name, statusMap) }
+
+    await loadManageData()
   } catch (error) {
-    console.error('刷新管理员座位状态失败:', error)
+    console.error('刷新管理员数据失败:', error)
     uni.showToast({ title: '刷新失败', icon: 'none' })
   } finally {
     refreshing.value = false
@@ -208,7 +249,6 @@ const collectOverrides = () => {
     interArcade2.value,
     arcadeRoom.value
   ]
-
   const overrides = {}
   flatSeats.forEach((item) => {
     overrides[item.name] = item.status || 'available'
@@ -237,6 +277,46 @@ const saveOverrides = async () => {
   } finally {
     saving.value = false
   }
+}
+
+const deleteRecord = (item) => {
+  uni.showModal({
+    title: '确认删除战绩',
+    content: '删除后不可恢复，确认继续？',
+    success: async (res) => {
+      if (!res.confirm) return
+      const r = await wx.cloud.callFunction({
+        name: 'game-service',
+        data: { action: 'adminDeleteMahjongRecord', data: { recordId: item._id } }
+      })
+      if (r?.result?.code === 0) {
+        uni.showToast({ title: '已删除', icon: 'success' })
+        await loadManageData()
+      } else {
+        uni.showToast({ title: r?.result?.message || '删除失败', icon: 'none' })
+      }
+    }
+  })
+}
+
+const deleteGame = (item) => {
+  uni.showModal({
+    title: '确认删除组局',
+    content: '将同时删除相关参与和活动记录，确认继续？',
+    success: async (res) => {
+      if (!res.confirm) return
+      const r = await wx.cloud.callFunction({
+        name: 'game-service',
+        data: { action: 'adminDeleteGame', data: { gameId: item.id } }
+      })
+      if (r?.result?.code === 0) {
+        uni.showToast({ title: '已删除', icon: 'success' })
+        await loadManageData()
+      } else {
+        uni.showToast({ title: r?.result?.message || '删除失败', icon: 'none' })
+      }
+    }
+  })
 }
 
 onShow(() => {
@@ -293,4 +373,14 @@ onShow(() => {
 
 .save-btn { margin-top: 8rpx; height: 64rpx; border-radius: 10rpx; background: #16a34a; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 24rpx; }
 .save-btn.disabled { opacity: .55; }
+
+.manage-card { margin-top: 16rpx; background: #fff; border-radius: 12rpx; padding: 14rpx; border: 1rpx solid #e5e7eb; }
+.manage-title { font-size: 24rpx; font-weight: 700; color: #111827; margin-bottom: 10rpx; }
+.manage-empty { color: #9ca3af; font-size: 22rpx; }
+.manage-row { display: flex; align-items: center; justify-content: space-between; gap: 10rpx; padding: 10rpx 0; border-bottom: 1rpx solid #eef2f7; }
+.manage-row:last-child { border-bottom: 0; }
+.manage-info { flex: 1; }
+.manage-line { display: block; font-size: 22rpx; color: #111827; }
+.manage-sub { display: block; margin-top: 4rpx; font-size: 20rpx; color: #6b7280; }
+.delete-btn { width: 90rpx; height: 48rpx; border-radius: 8rpx; background: #ef4444; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx; }
 </style>

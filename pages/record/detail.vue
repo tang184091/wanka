@@ -5,7 +5,7 @@
       <view class="time">{{ formatTime(record.createdAt) }}</view>
 
       <view class="row" v-for="(player, index) in record.players" :key="index">
-        <text class="name">{{ player.nickname || '未知玩家' }}</text>
+        <text class="name">{{ player.nickname || player.userId || '未知玩家' }}</text>
         <text class="score">{{ player.score }}</text>
       </view>
 
