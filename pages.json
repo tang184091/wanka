@@ -178,8 +178,8 @@
       {
         "pagePath": "pages/seat/seat",
         "text": "座位详情",
-        "iconPath": "static/tabbar/home.png",
-        "selectedIconPath": "static/tabbar/home-active.png"
+        "iconPath": "static/tabbar/seat.png",
+        "selectedIconPath": "static/tabbar/seat-active.png"
       },
       {
         "pagePath": "pages/record/record",

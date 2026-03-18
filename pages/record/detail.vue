@@ -8,7 +8,7 @@
         <text class="name">{{ player.nickname || player.userId || '未知玩家' }}</text>
         <view class="score-wrap">
           <text class="score">{{ player.score }}</text>
-          <text class="uma">{{ getUmaLabel(index) }}</text>
+          <text class="uma">{{ getResultLabel(index) }}</text>
         </view>
       </view>
 
@@ -43,19 +43,47 @@ const copyExport = () => {
   uni.setClipboardData({ data: exportText.value })
 }
 
-const getUmaList = () => {
-  if (!record.value?.players?.length) return []
-  const scores = record.value.players.map((p, idx) => ({ idx, score: Number(p.score || 0) }))
-  scores.sort((a, b) => b.score - a.score)
-  const points = [20, 10, -10, -20]
-  const umaByIndex = {}
-  scores.forEach((item, rank) => { umaByIndex[item.idx] = points[rank] || 0 })
-  return record.value.players.map((_, idx) => umaByIndex[idx] || 0)
+const parseScore = (raw) => {
+  const n = Number(String(raw ?? '').replace(/,/g, ''))
+  return Number.isFinite(n) ? n : 0
 }
 
-const getUmaLabel = (index) => {
-  const uma = getUmaList()[index] || 0
-  return `${uma > 0 ? '+' : ''}${uma}P`
+const detectScoreRule = (scores) => {
+  const maxAbs = Math.max(...scores.map((n) => Math.abs(n)), 0)
+
+  if (maxAbs >= 10000) return { returnPoint: 30000, divisor: 1000 }
+  if (maxAbs >= 1000) return { returnPoint: 3000, divisor: 100 }
+  if (maxAbs >= 100) return { returnPoint: 300, divisor: 10 }
+  return { returnPoint: 30, divisor: 1 }
+}
+
+const getUmaList = (scores) => {
+  if (!scores.length) return []
+  const rankScores = scores.map((score, idx) => ({ idx, score }))
+  rankScores.sort((a, b) => b.score - a.score)
+  const points = [40, 10, -10, -20]
+  const umaByIndex = {}
+  rankScores.forEach((item, rank) => {
+    umaByIndex[item.idx] = points[rank] || 0
+  })
+  return scores.map((_, idx) => umaByIndex[idx] || 0)
+}
+
+const getResultList = () => {
+  if (!record.value?.players?.length) return []
+  const scores = record.value.players.map((p) => parseScore(p.score))
+  const { returnPoint, divisor } = detectScoreRule(scores)
+  const umaList = getUmaList(scores)
+
+  return scores.map((score, idx) => {
+    const base = (score - returnPoint) / divisor
+    return base + (umaList[idx] || 0)
+  })
+}
+
+const getResultLabel = (index) => {
+  const result = getResultList()[index] || 0
+  return `${result > 0 ? '+' : ''}${result.toFixed(1)}P`
 }
 
 onLoad(async (options) => {

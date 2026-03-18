@@ -119,7 +119,7 @@
 
       <view class="menu-item" v-if="userInfo && userInfo.isAdmin" @tap="goToAdmin">
         <view class="menu-left">
-          <image src="/static/icons/settings.png" class="menu-icon" />
+          <image src="/static/icons/admin.png" class="menu-icon" />
           <text class="menu-text">管理员功能</text>
         </view>
         <image src="/static/icons/arrow-right.png" class="arrow-icon" />

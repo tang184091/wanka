@@ -1,0 +1,6 @@
+
+.page.data-v-e1573dd1{min-height:100vh;background:#f5f6f8}.scroll.data-v-e1573dd1{height:100vh}.card.data-v-e1573dd1{margin:20rpx;background:#fff;border-radius:12rpx;padding:16rpx}
+.title.data-v-e1573dd1{font-size:30rpx;font-weight:700}.sub.data-v-e1573dd1{font-size:22rpx;color:#6b7280;margin-top:6rpx}.line.data-v-e1573dd1{font-size:24rpx;color:#111827}
+.subline.data-v-e1573dd1{margin-top:6rpx;font-size:22rpx;color:#6b7280}
+.del.data-v-e1573dd1{margin-top:12rpx;height:60rpx;background:#ef4444;color:#fff;border-radius:8rpx;display:flex;align-items:center;justify-content:center}
+.empty.data-v-e1573dd1{margin:20rpx;color:#9ca3af}

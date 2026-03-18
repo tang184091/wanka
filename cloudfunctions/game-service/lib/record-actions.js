@@ -21,8 +21,6 @@ function isAdminUser(user) {
   return user.isAdmin === true || user.isAdmin === 'true' || user.role === 'admin'
 }
 
-<<<<<<< ours
-=======
 function isCollectionNotExistsError(error) {
   const msg = String(error?.message || error?.errMsg || error || '')
   return msg.includes('-502005')
@@ -30,7 +28,6 @@ function isCollectionNotExistsError(error) {
     || msg.includes('Db or Table not exist')
 }
 
->>>>>>> theirs
 async function fillPlayerNicknames(players = []) {
   const isValidDocId = (id) => /^[a-fA-F0-9]{24}$/.test(String(id || ''))
   const userIds = [...new Set(players.map((item) => item.userId).filter(isValidDocId))]
@@ -158,35 +155,6 @@ async function createYakumanRecord(data, wxContext) {
   const currentUser = await getCurrentUser(wxContext)
   if (!currentUser) return fail(401, '请先登录')
 
-<<<<<<< ours
-  if (!isAdminUser(currentUser)) {
-    const now = new Date()
-    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
-
-    const todayUploadsRes = await db.collection('yakuman_records').where({
-      uploaderId: currentUser._id,
-      createdAt: _.gte(dayStart).and(_.lt(dayEnd))
-    }).count()
-
-    if ((todayUploadsRes.total || 0) >= 2) {
-      return fail(429, '每日最多上传2次役满照片')
-    }
-  }
-
-  const addRes = await db.collection('yakuman_records').add({
-    data: {
-      achievedAt: achievedDate,
-      playerNickname: String(playerNickname).trim(),
-      yakumanType,
-      imageFileId,
-      imageSize: Number(imageSize) || 0,
-      note: String(note || '').trim(),
-      uploaderId: currentUser._id,
-      uploaderNickname: currentUser.nickname || '未知用户',
-      createdAt: new Date(),
-      updatedAt: new Date()
-=======
   try {
     if (!isAdminUser(currentUser)) {
       const now = new Date()
@@ -201,7 +169,6 @@ async function createYakumanRecord(data, wxContext) {
       if ((todayUploadsRes.total || 0) >= 2) {
         return fail(429, '每日最多上传2次役满照片')
       }
->>>>>>> theirs
     }
 
     const addRes = await db.collection('yakuman_records').add({

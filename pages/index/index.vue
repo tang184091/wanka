@@ -3,8 +3,8 @@
     <!-- 顶部筛选栏 -->
     <view class="filter-bar">
       <scroll-view class="type-tabs" scroll-x>
-        <view 
-          v-for="tab in tabs" 
+        <view
+          v-for="tab in tabs"
           :key="tab.id"
           class="type-tab"
           :class="{ active: activeTab === tab.id }"
@@ -13,9 +13,11 @@
           {{ tab.name }}
         </view>
       </scroll-view>
-      
-      <view class="create-btn" @tap="goToCreate">
-        <text>+ 创建</text>
+
+      <view class="action-row">
+        <view class="create-btn" @tap="goToCreate">
+          <text>+ 创建</text>
+        </view>
       </view>
     </view>
 
@@ -410,7 +412,8 @@ onMounted(() => {
 /* 筛选栏样式 */
 .filter-bar {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   padding: 20rpx 30rpx;
   background-color: white;
   border-bottom: 1rpx solid #f0f0f0;
@@ -420,7 +423,7 @@ onMounted(() => {
 }
 
 .type-tabs {
-  flex: 1;
+  width: 100%;
   white-space: nowrap;
   height: 80rpx;
 }
@@ -442,6 +445,12 @@ onMounted(() => {
   color: white;
 }
 
+.action-row {
+  margin-top: 10rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .create-btn {
   width: 120rpx;
   height: 60rpx;
@@ -451,7 +460,6 @@ onMounted(() => {
   border-radius: 30rpx;
   font-size: 28rpx;
   text-align: center;
-  margin-left: 20rpx;
   flex-shrink: 0;
 }
 
@@ -461,7 +469,7 @@ onMounted(() => {
 
 /* 组局列表样式 */
 .game-list {
-  height: calc(100vh - 120rpx);
+  height: calc(100vh - 180rpx);
 }
 
 .refresh-tip {

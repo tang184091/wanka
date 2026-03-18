@@ -194,9 +194,19 @@ const getSeatStatusText = (status) => ({ available: '空闲中', reserved: '预�
 
 const setSeatStatusByName = (name, statusMap) => statusMap[name] || 'available'
 
+const redirectNonAdmin = () => {
+  uni.showToast({ title: '仅管理员可访问', icon: 'none' })
+  setTimeout(() => {
+    uni.switchTab({ url: '/pages/user/user' })
+  }, 300)
+}
+
 const checkAdmin = async () => {
   const res = await wx.cloud.callFunction({ name: 'user-service', data: { action: 'getMe', data: {} } })
   isAdmin.value = !!(res?.result?.code === 0 && res?.result?.data?.isAdmin)
+  if (!isAdmin.value) {
+    redirectNonAdmin()
+  }
 }
 
 const loadManageData = async () => {
@@ -283,18 +293,22 @@ const saveOverrides = async () => {
 }
 
 const goYakumanManage = () => {
+  if (!isAdmin.value) return redirectNonAdmin()
   uni.navigateTo({ url: '/pages/admin/yakuman' })
 }
 
 const goRecordManage = () => {
+  if (!isAdmin.value) return redirectNonAdmin()
   uni.navigateTo({ url: '/pages/admin/records' })
 }
 
 const goGameManage = () => {
+  if (!isAdmin.value) return redirectNonAdmin()
   uni.navigateTo({ url: '/pages/admin/games' })
 }
 
 const goHonorManage = () => {
+  if (!isAdmin.value) return redirectNonAdmin()
   uni.navigateTo({ url: '/pages/admin/honor' })
 }
 

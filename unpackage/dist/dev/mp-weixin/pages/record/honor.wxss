@@ -1,0 +1,29 @@
+
+.page.data-v-d6d8b840 { min-height: 100vh; background: #f5f6f8;
+}
+.scroll.data-v-d6d8b840 { height: 100vh;
+}
+.header.data-v-d6d8b840 { margin: 20rpx; background: #fff; border-radius: 16rpx; padding: 20rpx; display:flex; justify-content:space-between; align-items:center;
+}
+.title.data-v-d6d8b840 { font-size: 30rpx; font-weight: 700; color: #111827;
+}
+.sub.data-v-d6d8b840 { margin-top: 6rpx; font-size: 22rpx; color: #6b7280;
+}
+.empty.data-v-d6d8b840 { margin: 20rpx; color: #9ca3af;
+}
+.card.data-v-d6d8b840 { margin: 0 20rpx 16rpx; background:#fff; border-radius: 14rpx; padding: 16rpx;
+}
+.card-head.data-v-d6d8b840 { display:flex; justify-content:space-between; align-items:center; margin-bottom:8rpx;
+}
+.badge.data-v-d6d8b840 { font-size: 22rpx; padding: 4rpx 12rpx; border-radius: 999rpx; color:#fff;
+}
+.badge-match.data-v-d6d8b840 { background:#7c3aed;
+}
+.badge-rank.data-v-d6d8b840 { background:#2563eb;
+}
+.time.data-v-d6d8b840 { font-size: 22rpx; color:#6b7280;
+}
+.line.data-v-d6d8b840 { margin-top: 6rpx; color:#111827; font-size: 24rpx;
+}
+.note.data-v-d6d8b840 { margin-top: 10rpx; background:#f8fafc; border-radius: 10rpx; padding: 10rpx; color:#374151; font-size: 22rpx;
+}

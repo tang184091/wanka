@@ -1,0 +1,396 @@
+
+.game-list-container.data-v-54b926a2 {
+  height: 100vh;
+  background-color: #f8f8f8;
+}
+
+/* 导航栏 */
+.nav-bar.data-v-54b926a2 {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  background-color: white;
+  border-bottom: 1rpx solid #f0f0f0;
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.nav-left.data-v-54b926a2 {
+  width: 80rpx;
+}
+.back-icon.data-v-54b926a2 {
+  width: 40rpx;
+  height: 40rpx;
+}
+.nav-title.data-v-54b926a2 {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+  text-align: center;
+  margin-right: 80rpx;
+}
+.nav-right.data-v-54b926a2 {
+  width: 80rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+.refresh-icon.data-v-54b926a2 {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+/* 筛选标签 */
+.filter-tabs.data-v-54b926a2 {
+  background-color: white;
+  position: -webkit-sticky;
+  position: sticky;
+  top: 100rpx;
+  z-index: 10;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+.tabs-scroll.data-v-54b926a2 {
+  white-space: nowrap;
+  height: 100rpx;
+  padding: 0 20rpx;
+}
+.tab-item.data-v-54b926a2 {
+  display: inline-flex;
+  align-items: center;
+  height: 100rpx;
+  padding: 0 30rpx;
+  font-size: 28rpx;
+  color: #666;
+  position: relative;
+  transition: all 0.3s;
+}
+.tab-item.active.data-v-54b926a2 {
+  color: #07c160;
+  font-weight: bold;
+}
+.tab-item.active.data-v-54b926a2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20rpx;
+  right: 20rpx;
+  height: 4rpx;
+  background-color: #07c160;
+  border-radius: 2rpx;
+}
+.tab-text.data-v-54b926a2 {
+  font-size: 28rpx;
+}
+.tab-count.data-v-54b926a2 {
+  font-size: 24rpx;
+  margin-left: 8rpx;
+  opacity: 0.7;
+}
+
+/* 组局滚动区域 */
+.game-scroll.data-v-54b926a2 {
+  height: calc(100vh - 200rpx);
+}
+
+/* 空状态 */
+.empty-state.data-v-54b926a2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 40rpx;
+  text-align: center;
+}
+.empty-image.data-v-54b926a2 {
+  width: 300rpx;
+  height: 300rpx;
+  margin-bottom: 40rpx;
+  opacity: 0.5;
+}
+.empty-text.data-v-54b926a2 {
+  font-size: 32rpx;
+  color: #999;
+  margin-bottom: 40rpx;
+}
+.empty-btn.data-v-54b926a2 {
+  padding: 20rpx 40rpx;
+  background-color: #07c160;
+  color: white;
+  border-radius: 10rpx;
+  font-size: 30rpx;
+}
+.empty-btn.data-v-54b926a2:active {
+  background-color: #06ad56;
+}
+
+/* 日期分组 */
+.date-group.data-v-54b926a2 {
+  margin: 20rpx 0;
+}
+.date-title.data-v-54b926a2 {
+  padding: 0 30rpx 20rpx;
+}
+.date-text.data-v-54b926a2 {
+  font-size: 28rpx;
+  color: #999;
+  font-weight: 500;
+}
+
+/* 游戏列表 */
+.games-list.data-v-54b926a2 {
+  padding: 0 20rpx;
+}
+.game-item.data-v-54b926a2 {
+  margin-bottom: 20rpx;
+  padding: 30rpx;
+  transition: all 0.3s;
+}
+.game-item.data-v-54b926a2:active {
+  transform: translateY(-2rpx);
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 游戏头部 */
+.game-header.data-v-54b926a2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.game-type-info.data-v-54b926a2 {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+.type-tag.data-v-54b926a2 {
+  background-color: #e6f7ff;
+  color: #1890ff;
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  font-size: 24rpx;
+}
+.tag-mahjong.data-v-54b926a2 {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+.tag-boardgame.data-v-54b926a2 {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+.tag-videogame.data-v-54b926a2 {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+.tag-competition.data-v-54b926a2 {
+  background-color: #f3e8ff;
+  color: #7c3aed;
+}
+.creator-tag.data-v-54b926a2 {
+  background-color: #1890ff;
+  color: white;
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  font-size: 20rpx;
+}
+
+/* 状态标签 */
+.status-tag.data-v-54b926a2 {
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  font-size: 20rpx;
+}
+.tag-status-pending.data-v-54b926a2 {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+.tag-status-completed.data-v-54b926a2 {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+.tag-status-cancelled.data-v-54b926a2 {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+.tag-status-full.data-v-54b926a2 {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+/* 游戏主要内容 */
+.game-main.data-v-54b926a2 {
+  margin-bottom: 20rpx;
+}
+.game-title.data-v-54b926a2 {
+  margin-bottom: 10rpx;
+}
+.title-text.data-v-54b926a2 {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  line-height: 1.4;
+}
+.game-project.data-v-54b926a2 {
+  margin-bottom: 20rpx;
+}
+.project-text.data-v-54b926a2 {
+  font-size: 30rpx;
+  color: #666;
+  line-height: 1.4;
+}
+.game-info.data-v-54b926a2 {
+  display: flex;
+  flex-direction: column;
+  gap: 15rpx;
+}
+.game-info .info-item.data-v-54b926a2 {
+  display: flex;
+  align-items: center;
+}
+.game-info .info-icon.data-v-54b926a2 {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 15rpx;
+  opacity: 0.7;
+}
+.game-info .info-text.data-v-54b926a2 {
+  font-size: 28rpx;
+  color: #666;
+  flex: 1;
+}
+
+/* 游戏底部 */
+.game-footer.data-v-54b926a2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+.players-info.data-v-54b926a2 {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.avatars.data-v-54b926a2 {
+  display: flex;
+  align-items: center;
+}
+.avatar-wrapper.data-v-54b926a2 {
+  position: relative;
+  margin-right: -15rpx;
+}
+.avatar-wrapper.data-v-54b926a2:first-child {
+  margin-left: 0;
+}
+.player-avatar.data-v-54b926a2 {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  border: 2rpx solid white;
+  background-color: #f0f0f0;
+}
+.more-players.data-v-54b926a2 {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #999;
+  border: 2rpx solid white;
+  margin-left: -15rpx;
+}
+.players-count.data-v-54b926a2 {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 游戏操作 */
+.game-actions.data-v-54b926a2 {
+  display: flex;
+  gap: 10rpx;
+}
+.action-btn.data-v-54b926a2 {
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.manage-btn.data-v-54b926a2 {
+  background-color: #1890ff;
+  color: white;
+}
+.manage-btn.data-v-54b926a2:active {
+  background-color: #096dd9;
+}
+.quit-btn.data-v-54b926a2 {
+  background-color: #ff4d4f;
+  color: white;
+}
+.quit-btn.data-v-54b926a2:active {
+  background-color: #ff7875;
+}
+.join-btn.data-v-54b926a2 {
+  background-color: #07c160;
+  color: white;
+}
+.join-btn.data-v-54b926a2:active {
+  background-color: #06ad56;
+}
+.review-btn.data-v-54b926a2 {
+  background-color: #f0f0f0;
+  color: #666;
+}
+.review-btn.data-v-54b926a2:active {
+  background-color: #e0e0e0;
+}
+.cancelled-btn.data-v-54b926a2 {
+  background-color: #f0f0f0;
+  color: #999;
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+}
+
+/* 加载提示 */
+.loading-tip.data-v-54b926a2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+.loading-spinner.data-v-54b926a2 {
+  width: 40rpx;
+  height: 40rpx;
+  border: 4rpx solid #f0f0f0;
+  border-top-color: #07c160;
+  border-radius: 50%;
+  animation: spin-54b926a2 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+@keyframes spin-54b926a2 {
+to { transform: rotate(360deg);
+}
+}
+.load-more.data-v-54b926a2 {
+  text-align: center;
+  padding: 30rpx;
+  color: #07c160;
+  font-size: 28rpx;
+}
+.load-more.data-v-54b926a2:active {
+  opacity: 0.7;
+}
+.no-more.data-v-54b926a2 {
+  text-align: center;
+  padding: 30rpx;
+  color: #999;
+  font-size: 28rpx;
+}

@@ -29,6 +29,12 @@ import { onShow } from '@dcloudio/uni-app'
 
 const isAdmin = ref(false)
 const list = ref([])
+const redirectNonAdmin = () => {
+  uni.showToast({ title: '仅管理员可访问', icon: 'none' })
+  setTimeout(() => {
+    uni.switchTab({ url: '/pages/user/user' })
+  }, 300)
+}
 
 const formatTime = (t) => {
   if (!t) return '-'
@@ -40,7 +46,7 @@ const formatTime = (t) => {
 const loadData = async () => {
   const me = await wx.cloud.callFunction({ name: 'user-service', data: { action: 'getMe', data: {} } })
   isAdmin.value = !!me?.result?.data?.isAdmin
-  if (!isAdmin.value) return
+  if (!isAdmin.value) return redirectNonAdmin()
 
   const res = await wx.cloud.callFunction({
     name: 'game-service',

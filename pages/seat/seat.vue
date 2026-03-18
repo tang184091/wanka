@@ -223,13 +223,13 @@ const onSeatTap = (seat) => {
 .seat-page { min-height: 100vh; background: #f3f4f6; }
 .seat-scroll { height: 100vh; }
 .layout-card { margin: 20rpx; background: #f8f9fa; border-radius: 18rpx; border: 1rpx solid #e5e7eb; padding: 16rpx; }
-.layout-header { margin-bottom: 10rpx; display: flex; justify-content: space-between; align-items: center; }
+.layout-header { margin-bottom: 18rpx; display: flex; justify-content: space-between; align-items: center; }
 .layout-title { font-size: 26rpx; color: #6b7280; font-weight: 700; }
 .refresh-btn { min-width: 110rpx; height: 48rpx; border-radius: 24rpx; background: #07c160; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx; }
 .refresh-btn.disabled { background: #9ca3af; }
 
-.floor-card { background: #eef0f2; border: 1rpx solid #d9dde2; border-radius: 14rpx; padding: 12rpx; margin-bottom: 14rpx; position: relative; }
-.floor-tag { position: absolute; right: 14rpx; top: -18rpx; font-size: 24rpx; color: #6b7280; background: #f3f4f6; padding: 0 8rpx; }
+.floor-card { background: #eef0f2; border: 1rpx solid #d9dde2; border-radius: 14rpx; padding: 28rpx 12rpx 12rpx; margin: 12rpx 0 14rpx; position: relative; }
+.floor-tag { position: absolute; right: 14rpx; top: 8rpx; font-size: 24rpx; color: #6b7280; background: #f3f4f6; padding: 0 8rpx; border-radius: 8rpx; }
 
 .first-floor-grid { margin-top: 8rpx; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(5, 88rpx); gap: 8rpx; }
 .floor1-arcade-room { grid-column: 1 / span 8; grid-row: 1; }

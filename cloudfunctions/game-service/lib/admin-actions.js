@@ -1,102 +1,78 @@
 const { db, success, fail, getCurrentUser } = require('./shared')
-const { fillPlayerNicknames } = require('./record-actions')
 
-async function assertAdmin(wxContext) {
+function isAdminUser(user) {
+  if (!user) return false
+  return user.isAdmin === true || user.isAdmin === 'true' || user.role === 'admin'
+}
+
+async function ensureAdmin(wxContext) {
   const currentUser = await getCurrentUser(wxContext)
-  if (!currentUser || !currentUser.isAdmin) {
-    return { error: fail(403, '仅管理员可操作') }
-  }
-  return { currentUser }
-}
-
-async function adminDeleteMahjongRecord(data, wxContext) {
-  const { error, currentUser } = await assertAdmin(wxContext)
-  if (error) return error
-
-  const recordId = data && data.recordId
-  if (!recordId) return fail(400, '缺少战绩ID')
-
-  const recordRes = await db.collection('mahjong_records').doc(recordId).get()
-  if (!recordRes.data) return fail(404, '战绩不存在')
-
-  await db.collection('mahjong_records').doc(recordId).remove()
-  return success({ recordId, deletedBy: currentUser._id }, '删除成功')
-}
-
-async function adminDeleteGame(data, wxContext) {
-  const { error, currentUser } = await assertAdmin(wxContext)
-  if (error) return error
-
-  const gameId = data && data.gameId
-  if (!gameId) return fail(400, '缺少组局ID')
-
-  const gameRes = await db.collection('games').doc(gameId).get()
-  if (!gameRes.data) return fail(404, '组局不存在')
-
-  await db.collection('games').doc(gameId).remove()
-  await db.collection('participations').where({ gameId }).remove().catch(() => {})
-  await db.collection('activities').where({ gameId }).remove().catch(() => {})
-
-  return success({ gameId, deletedBy: currentUser._id }, '删除成功')
-}
-
-async function adminDeleteYakumanRecord(data, wxContext) {
-  const { error, currentUser } = await assertAdmin(wxContext)
-  if (error) return error
-
-  const recordId = data && data.recordId
-  if (!recordId) return fail(400, '缺少役满ID')
-
-  const recordRes = await db.collection('yakuman_records').doc(recordId).get()
-  if (!recordRes.data) return fail(404, '役满记录不存在')
-
-  await db.collection('yakuman_records').doc(recordId).remove()
-  return success({ recordId, deletedBy: currentUser._id }, '删除成功')
+  if (!currentUser) return { error: fail(401, '请先登录') }
+  if (!isAdminUser(currentUser)) return { error: fail(403, '仅管理员可操作') }
+  return { user: currentUser }
 }
 
 async function getAdminManageData(wxContext) {
-  const { error } = await assertAdmin(wxContext)
-  if (error) return error
+  const auth = await ensureAdmin(wxContext)
+  if (auth.error) return auth.error
 
-  const [recordsRes, gamesRes, yakumanRes] = await Promise.all([
-    db.collection('mahjong_records').orderBy('createdAt', 'desc').limit(30).get(),
-    db.collection('games').orderBy('createdAt', 'desc').limit(30).get(),
-    db.collection('yakuman_records').orderBy('createdAt', 'desc').limit(30).get()
+  const [recordsRes, gamesRes, yakumanRes, honorRes] = await Promise.all([
+    db.collection('mahjong_records').orderBy('createdAt', 'desc').limit(200).get(),
+    db.collection('games').orderBy('createdAt', 'desc').limit(200).get(),
+    db.collection('yakuman_records').orderBy('createdAt', 'desc').limit(200).get().catch(() => ({ data: [] })),
+    db.collection('honor_records').orderBy('achievedAt', 'desc').limit(200).get().catch(() => ({ data: [] }))
   ])
 
-  const records = []
-  for (const record of (recordsRes.data || [])) {
-    records.push({
-      ...record,
-      players: await fillPlayerNicknames(record.players || [])
-    })
-  }
+  const records = recordsRes.data || []
+  const games = (gamesRes.data || []).map((g) => ({ ...g, id: g._id }))
+  const yakumanRecords = (yakumanRes.data || []).map((item) => ({ ...item, id: item._id }))
+  const honorRecords = (honorRes.data || []).map((item) => ({ ...item, id: item._id }))
 
-  const games = (gamesRes.data || []).map((game) => ({
-    id: game._id,
-    title: game.title || '未命名组局',
-    location: game.location || '',
-    status: game.status || 'pending',
-    createdAt: game.createdAt,
-    creatorId: game.creatorId || ''
-  }))
+  return success({ records, games, yakumanRecords, honorRecords }, '获取成功')
+}
 
-  const yakumanRecords = (yakumanRes.data || []).map((item) => ({
-    id: item._id,
-    playerNickname: item.playerNickname || '-',
-    yakumanType: item.yakumanType || '-',
-    achievedAt: item.achievedAt,
-    imageFileId: item.imageFileId || '',
-    uploaderNickname: item.uploaderNickname || '-',
-    createdAt: item.createdAt
-  }))
+async function adminDeleteMahjongRecord(data, wxContext) {
+  const auth = await ensureAdmin(wxContext)
+  if (auth.error) return auth.error
+  const { recordId } = data || {}
+  if (!recordId) return fail(400, '缺少战绩ID')
+  await db.collection('mahjong_records').doc(recordId).remove()
+  return success(null, '删除成功')
+}
 
-  return success({ records, games, yakumanRecords }, '获取成功')
+async function adminDeleteGame(data, wxContext) {
+  const auth = await ensureAdmin(wxContext)
+  if (auth.error) return auth.error
+  const { gameId } = data || {}
+  if (!gameId) return fail(400, '缺少组局ID')
+  await db.collection('games').doc(gameId).remove()
+  await db.collection('participations').where({ gameId }).remove().catch(() => {})
+  await db.collection('activities').where({ gameId }).remove().catch(() => {})
+  return success(null, '删除成功')
+}
+
+async function adminDeleteYakumanRecord(data, wxContext) {
+  const auth = await ensureAdmin(wxContext)
+  if (auth.error) return auth.error
+  const { recordId } = data || {}
+  if (!recordId) return fail(400, '缺少役满记录ID')
+  await db.collection('yakuman_records').doc(recordId).remove()
+  return success(null, '删除成功')
+}
+
+async function adminDeleteHonorRecord(data, wxContext) {
+  const auth = await ensureAdmin(wxContext)
+  if (auth.error) return auth.error
+  const { recordId } = data || {}
+  if (!recordId) return fail(400, '缺少荣誉记录ID')
+  await db.collection('honor_records').doc(recordId).remove()
+  return success(null, '删除成功')
 }
 
 module.exports = {
+  getAdminManageData,
   adminDeleteMahjongRecord,
   adminDeleteGame,
   adminDeleteYakumanRecord,
-  getAdminManageData
+  adminDeleteHonorRecord
 }
