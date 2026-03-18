@@ -9,11 +9,14 @@ const _ = db.command
 const success = (data = null, message = 'ok') => ({ code: 0, message, data })
 const fail = (code, message, data = null) => ({ code, message, data })
 
-const RISK_WINDOW_MS = 60 * 1000
-const FAST_RETRY_MS = 5000
-const MAX_RISK_COUNT = 6
-const CAPTCHA_FAIL_LIMIT = 3
 const CAPTCHA_LOCK_MS = 30 * 60 * 1000
+
+function isCollectionNotExistsError(error) {
+  const text = String(error?.message || error?.errMsg || error || '')
+  return text.includes('-502005')
+    || text.includes('collection not exists')
+    || text.includes('Db or Table not exist')
+}	
 
 exports.main = async (event) => {
   const { action, data } = event || {}
@@ -46,6 +49,8 @@ exports.main = async (event) => {
       case 'searchUsers':
         return await searchUsers(data)
       case 'getMe':
+        return await getMe(wxContext)
+      case 'getCurrentUser':
         return await getMe(wxContext)
       case 'forceLogout':
         return await forceLogout(wxContext)
@@ -83,153 +88,16 @@ function sanitizeUserUpdates(updates = {}) {
   return next
 }
 
+function isAdminUser(user) {
+  if (!user) return false
+  return user.isAdmin === true || user.isAdmin === 'true' || user.role === 'admin'
+}
+
 function ensureOwner(currentUser, targetUserId) {
   if (!currentUser) return fail(404, '用户不存在')
   if (targetUserId && String(currentUser._id) !== String(targetUserId)) {
     return fail(403, '无权操作其他用户')
   }
-  return null
-}
-
-function randomCaptchaCode() {
-  const pool = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  let out = ''
-  for (let i = 0; i < 4; i++) {
-    out += pool[Math.floor(Math.random() * pool.length)]
-  }
-  return out
-}
-
-function buildCaptchaChallenge(old) {
-  const code = randomCaptchaCode()
-  return {
-    captchaId: `cp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    captchaCode: code,
-    captchaHint: `请输入验证码：${code}`,
-    failedCaptchaCount: old?.failedCaptchaCount || 0,
-    captchaRequired: true,
-    updatedAt: new Date()
-  }
-}
-
-async function getRiskDoc(openid) {
-  const res = await db.collection('login_security').where({ openid }).limit(1).get()
-  return (res.data || [])[0] || null
-}
-
-async function saveRiskDoc(openid, data, docId = '') {
-  if (docId) {
-    await db.collection('login_security').doc(docId).update({ data })
-    return docId
-  }
-  const addRes = await db.collection('login_security').add({ data: { openid, ...data } })
-  return addRes._id
-}
-
-function parseRecentAttempts(lastAttempts = [], nowMs) {
-  return (lastAttempts || []).filter((ts) => Number(ts) > nowMs - RISK_WINDOW_MS)
-}
-
-async function markRiskAttempt(openid, riskDoc) {
-  const nowMs = Date.now()
-  const recentAttempts = parseRecentAttempts(riskDoc?.recentAttempts || [], nowMs)
-  recentAttempts.push(nowMs)
-
-  const payload = {
-    recentAttempts,
-    lastAttemptAt: new Date(nowMs),
-    updatedAt: new Date(nowMs)
-  }
-
-  if (riskDoc?._id) {
-    await saveRiskDoc(openid, payload, riskDoc._id)
-    return { ...riskDoc, ...payload }
-  }
-
-  const id = await saveRiskDoc(openid, payload)
-  return { _id: id, openid, ...payload }
-}
-
-function needCaptchaByFrequency(riskDoc, nowMs) {
-  const recentAttempts = parseRecentAttempts(riskDoc?.recentAttempts || [], nowMs)
-  const lastTs = recentAttempts.length ? recentAttempts[recentAttempts.length - 1] : 0
-  const tooFast = lastTs && (nowMs - lastTs) < FAST_RETRY_MS
-  const tooMany = recentAttempts.length >= MAX_RISK_COUNT
-  return tooFast || tooMany
-}
-
-async function requireCaptcha(openid, riskDoc, reason = '操作过于频繁，请完成验证码后重新登录') {
-  const next = buildCaptchaChallenge(riskDoc)
-  const data = {
-    ...next,
-    forceLogoutAt: new Date(),
-    reason
-  }
-
-  if (riskDoc?._id) {
-    await saveRiskDoc(openid, data, riskDoc._id)
-  } else {
-    await saveRiskDoc(openid, data)
-  }
-
-  return fail(429, reason, {
-    needCaptcha: true,
-    captchaId: next.captchaId,
-    captchaHint: next.captchaHint,
-    forceLogout: true
-  })
-}
-
-async function validateCaptchaIfNeeded(openid, payload, riskDoc) {
-  const nowMs = Date.now()
-  const lockUntil = riskDoc?.lockUntil ? new Date(riskDoc.lockUntil).getTime() : 0
-  if (lockUntil && lockUntil > nowMs) {
-    return fail(429, '验证码输入错误次数过多，请稍后再试', {
-      needCaptcha: true,
-      captchaId: riskDoc.captchaId,
-      captchaHint: riskDoc.captchaHint,
-      forceLogout: true
-    })
-  }
-
-  if (!riskDoc?.captchaRequired) return null
-
-  const inputId = String(payload.captchaId || '')
-  const inputAnswer = String(payload.captchaAnswer || '').trim().toUpperCase()
-  const expectedId = String(riskDoc.captchaId || '')
-  const expectedCode = String(riskDoc.captchaCode || '').trim().toUpperCase()
-
-  if (!inputId || !inputAnswer || inputId !== expectedId || inputAnswer !== expectedCode) {
-    const failCount = Number(riskDoc.failedCaptchaCount || 0) + 1
-    const patch = {
-      failedCaptchaCount: failCount,
-      updatedAt: new Date()
-    }
-
-    if (failCount >= CAPTCHA_FAIL_LIMIT) {
-      patch.lockUntil = new Date(Date.now() + CAPTCHA_LOCK_MS)
-    }
-
-    await saveRiskDoc(openid, patch, riskDoc._id)
-
-    return fail(429, '验证码错误，请重试', {
-      needCaptcha: true,
-      captchaId: riskDoc.captchaId,
-      captchaHint: riskDoc.captchaHint,
-      forceLogout: true
-    })
-  }
-
-  await saveRiskDoc(openid, {
-    captchaRequired: false,
-    captchaId: '',
-    captchaCode: '',
-    captchaHint: '',
-    failedCaptchaCount: 0,
-    lockUntil: null,
-    updatedAt: new Date()
-  }, riskDoc._id)
-
   return null
 }
 
@@ -240,18 +108,6 @@ async function handleLogin(data, wxContext) {
 
   const openid = wxContext.OPENID
   const now = new Date()
-
-  let riskDoc = await getRiskDoc(openid)
-  const nowMs = Date.now()
-
-  const captchaErr = await validateCaptchaIfNeeded(openid, payload, riskDoc)
-  if (captchaErr) return captchaErr
-
-  riskDoc = await markRiskAttempt(openid, riskDoc)
-
-  if (needCaptchaByFrequency(riskDoc, nowMs)) {
-    return requireCaptcha(openid, riskDoc)
-  }
 
   const queryResult = await db.collection('users').where({ openid }).limit(1).get()
 
@@ -284,10 +140,19 @@ async function handleLogin(data, wxContext) {
   } else {
     userData = queryResult.data[0]
 
+    const lockUntilTs = userData.forceLogoutUntil ? new Date(userData.forceLogoutUntil).getTime() : 0
+    if (lockUntilTs && lockUntilTs > Date.now()) {
+      return fail(423, '账号已被强制下线，请30分钟后再登录', {
+        forceLogout: true,
+        lockUntil: userData.forceLogoutUntil
+      })
+    }
+
     if (userData.forceLogoutFlag) {
       await db.collection('users').doc(userData._id).update({
         data: {
           forceLogoutFlag: false,
+          forceLogoutUntil: null,
           lastLoginAt: now,
           updatedAt: now
         }
@@ -297,20 +162,6 @@ async function handleLogin(data, wxContext) {
         data: { lastLoginAt: now }
       })
     }
-  }
-
-  if (riskDoc?._id) {
-    await saveRiskDoc(openid, {
-      captchaRequired: false,
-      captchaId: '',
-      captchaCode: '',
-      captchaHint: '',
-      failedCaptchaCount: 0,
-      lockUntil: null,
-      forceLogoutAt: null,
-      reason: '',
-      updatedAt: now
-    }, riskDoc._id)
   }
 
   const statsRes = await getUserStats({ userId: userData._id })
@@ -407,9 +258,21 @@ async function updateUserAvatar(data, wxContext) {
   const ownerError = ensureOwner(currentUser, userId)
   if (ownerError) return ownerError
 
+  if (!isAdminUser(currentUser)) {
+    const lastUpdateTs = currentUser.lastAvatarUpdateAt ? new Date(currentUser.lastAvatarUpdateAt).getTime() : 0
+    if (lastUpdateTs) {
+      const now = new Date()
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+      if (lastUpdateTs >= dayStart) {
+        return fail(429, '头像每天仅可更新1次')
+      }
+    }
+  }
+
   await db.collection('users').doc(currentUser._id).update({
     data: {
       avatar: avatarUrl,
+      lastAvatarUpdateAt: new Date(),
       updatedAt: new Date()
     }
   })
@@ -433,14 +296,16 @@ async function forceLogout(wxContext) {
   const user = await getCurrentUser(wxContext)
   if (!user) return fail(404, '用户不存在')
 
+  const lockUntil = new Date(Date.now() + CAPTCHA_LOCK_MS)
   await db.collection('users').doc(user._id).update({
     data: {
       forceLogoutFlag: true,
+      forceLogoutUntil: lockUntil,
       updatedAt: new Date()
     }
   })
 
-  return success(null, '已标记强制退出')
+  return success({ lockUntil }, '已标记强制退出并锁定30分钟')
 }
 
 async function searchUsers(data) {

@@ -1,7 +1,7 @@
 {
-  "name": "activity-service",
+  "name": "cleanup-service",
   "version": "1.0.0",
-  "description": "玩咖约局活动记录服务云函数",
+  "description": "玩咖约局清理任务云函数",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

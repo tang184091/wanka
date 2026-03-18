@@ -200,6 +200,13 @@ const gameTypes = ref([
     icon: '/static/icons/videogame.png',
     minPlayers: constants.GAME_TYPES.videogame.minPlayers,
     maxPlayers: constants.GAME_TYPES.videogame.maxPlayers
+  },
+  {
+    id: 'competition',
+    name: '比赛',
+    icon: '/static/icons/activity-create.png',
+    minPlayers: constants.GAME_TYPES.competition.minPlayers,
+    maxPlayers: constants.GAME_TYPES.competition.maxPlayers
   }
 ])
 
@@ -423,7 +430,8 @@ const getProjectPlaceholder = () => {
   const placeholders = {
     mahjong: '请输入规则，如：三麻，抽血局',
     boardgame: '请输入具体桌游，如：《历史巨轮》',
-    videogame: '请输入具体游戏/设备，如：Switch《马里奥赛车》'
+    videogame: '请输入具体游戏/设备，如：Switch《马里奥赛车》',
+    competition: '请输入比赛名称，如：春季店赛'
   }
   return placeholders[formData.value.type] || '请输入具体项目'
 }
@@ -759,7 +767,8 @@ watch(() => formData.value.time, (newTime) => {
 /* 类型选择样式 */
 .type-options {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  gap: 12rpx;
   margin-bottom: 10rpx;
 }
 
@@ -769,7 +778,9 @@ watch(() => formData.value.time, (newTime) => {
   align-items: center;
   padding: 20rpx;
   border-radius: 16rpx;
-  width: 200rpx;
+  width: 25%;
+  box-sizing: border-box;
+  padding: 14rpx 8rpx;
   transition: all 0.3s;
   border: 2rpx solid transparent;
 }
@@ -782,14 +793,14 @@ watch(() => formData.value.time, (newTime) => {
 }
 
 .type-icon {
-  width: 100rpx;
-  height: 100rpx;
+  width: 76rpx;
+  height: 76rpx;
   border-radius: 50%;
   background-color: #f5f5f5;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20rpx;
+  margin-bottom: 10rpx;
   overflow: hidden;
 }
 
@@ -798,12 +809,12 @@ watch(() => formData.value.time, (newTime) => {
 }
 
 .type-icon-img {
-  width: 60rpx;
-  height: 60rpx;
+  width: 44rpx;
+  height: 44rpx;
 }
 
 .type-name {
-  font-size: 28rpx;
+  font-size: 24rpx;
   color: #666;
   font-weight: 500;
 }

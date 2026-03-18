@@ -16,6 +16,21 @@ const YAKUMAN_TYPES = [
   '累计役满'
 ]
 
+function isAdminUser(user) {
+  if (!user) return false
+  return user.isAdmin === true || user.isAdmin === 'true' || user.role === 'admin'
+}
+
+<<<<<<< ours
+=======
+function isCollectionNotExistsError(error) {
+  const msg = String(error?.message || error?.errMsg || error || '')
+  return msg.includes('-502005')
+    || msg.includes('collection not exists')
+    || msg.includes('Db or Table not exist')
+}
+
+>>>>>>> theirs
 async function fillPlayerNicknames(players = []) {
   const isValidDocId = (id) => /^[a-fA-F0-9]{24}$/.test(String(id || ''))
   const userIds = [...new Set(players.map((item) => item.userId).filter(isValidDocId))]
@@ -90,15 +105,26 @@ async function createMahjongRecord(data, wxContext) {
 }
 
 async function getYakumanList() {
-  const res = await db.collection('yakuman_records')
-    .orderBy('achievedAt', 'desc')
-    .limit(200)
-    .get()
+  try {
+    const res = await db.collection('yakuman_records')
+      .orderBy('achievedAt', 'desc')
+      .limit(200)
+      .get()
 
-  return success({
-    list: res.data || [],
-    yakumanTypes: YAKUMAN_TYPES
-  }, '获取成功')
+    return success({
+      list: res.data || [],
+      yakumanTypes: YAKUMAN_TYPES
+    }, '获取成功')
+  } catch (error) {
+    if (isCollectionNotExistsError(error)) {
+      return success({
+        list: [],
+        yakumanTypes: YAKUMAN_TYPES,
+        warning: 'yakuman_records 集合不存在'
+      }, '获取成功')
+    }
+    throw error
+  }
 }
 
 async function createYakumanRecord(data, wxContext) {
@@ -132,6 +158,22 @@ async function createYakumanRecord(data, wxContext) {
   const currentUser = await getCurrentUser(wxContext)
   if (!currentUser) return fail(401, '请先登录')
 
+<<<<<<< ours
+  if (!isAdminUser(currentUser)) {
+    const now = new Date()
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+
+    const todayUploadsRes = await db.collection('yakuman_records').where({
+      uploaderId: currentUser._id,
+      createdAt: _.gte(dayStart).and(_.lt(dayEnd))
+    }).count()
+
+    if ((todayUploadsRes.total || 0) >= 2) {
+      return fail(429, '每日最多上传2次役满照片')
+    }
+  }
+
   const addRes = await db.collection('yakuman_records').add({
     data: {
       achievedAt: achievedDate,
@@ -144,10 +186,128 @@ async function createYakumanRecord(data, wxContext) {
       uploaderNickname: currentUser.nickname || '未知用户',
       createdAt: new Date(),
       updatedAt: new Date()
-    }
-  })
+=======
+  try {
+    if (!isAdminUser(currentUser)) {
+      const now = new Date()
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
 
-  return success({ id: addRes._id }, '上传成功')
+      const todayUploadsRes = await db.collection('yakuman_records').where({
+        uploaderId: currentUser._id,
+        createdAt: _.gte(dayStart).and(_.lt(dayEnd))
+      }).count()
+
+      if ((todayUploadsRes.total || 0) >= 2) {
+        return fail(429, '每日最多上传2次役满照片')
+      }
+>>>>>>> theirs
+    }
+
+    const addRes = await db.collection('yakuman_records').add({
+      data: {
+        achievedAt: achievedDate,
+        playerNickname: String(playerNickname).trim(),
+        yakumanType,
+        imageFileId,
+        imageSize: Number(imageSize) || 0,
+        note: String(note || '').trim(),
+        uploaderId: currentUser._id,
+        uploaderNickname: currentUser.nickname || '未知用户',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    })
+
+    return success({ id: addRes._id }, '上传成功')
+  } catch (error) {
+    if (isCollectionNotExistsError(error)) {
+      return fail(500, '缺少 yakuman_records 集合，请先在云开发数据库中创建该集合')
+    }
+    throw error
+  }
+}
+
+async function getHonorList() {
+  try {
+    const res = await db.collection('honor_records')
+      .orderBy('achievedAt', 'desc')
+      .limit(500)
+      .get()
+
+    return success({ list: res.data || [] }, '获取成功')
+  } catch (error) {
+    if (isCollectionNotExistsError(error)) {
+      return success({ list: [] }, '获取成功')
+    }
+    throw error
+  }
+}
+
+async function createHonorRecord(data, wxContext) {
+  const currentUser = await getCurrentUser(wxContext)
+  if (!currentUser) return fail(401, '请先登录')
+  if (!isAdminUser(currentUser)) return fail(403, '仅管理员可上传荣誉记录')
+
+  const payload = data || {}
+  const type = String(payload.type || '').trim()
+  const achievedAt = new Date(payload.achievedAt || Date.now())
+  if (!['tournament', 'rank'].includes(type)) return fail(400, '荣誉类型不合法')
+  if (Number.isNaN(achievedAt.getTime())) return fail(400, '达成日期格式错误')
+
+  const base = {
+    type,
+    achievedAt,
+    note: String(payload.note || '').trim(),
+    uploaderId: currentUser._id,
+    uploaderNickname: currentUser.nickname || '未知用户',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+
+  if (type === 'tournament') {
+    const championNickname = String(payload.championNickname || '').trim()
+    const participantCount = Number(payload.participantCount || 0)
+    if (!championNickname || participantCount < 4 || participantCount > 32) {
+      return fail(400, '比赛信息不完整，人数需在4-32之间')
+    }
+    try {
+      const addRes = await db.collection('honor_records').add({
+        data: {
+          ...base,
+          title: String(payload.title || '店内比赛').trim(),
+          championNickname,
+          participantCount
+        }
+      })
+      return success({ id: addRes._id }, '上传成功')
+    } catch (error) {
+      if (isCollectionNotExistsError(error)) {
+        return fail(500, '缺少 honor_records 集合，请先在云开发数据库中创建该集合')
+      }
+      throw error
+    }
+  }
+
+  const playerNickname = String(payload.playerNickname || '').trim()
+  const rankName = String(payload.rankName || '').trim()
+  if (!playerNickname || !rankName) return fail(400, '段位荣誉信息不完整')
+
+  try {
+    const addRes = await db.collection('honor_records').add({
+      data: {
+        ...base,
+        playerNickname,
+        rankName
+      }
+    })
+    return success({ id: addRes._id }, '上传成功')
+  } catch (error) {
+    if (isCollectionNotExistsError(error)) {
+      return fail(500, '缺少 honor_records 集合，请先在云开发数据库中创建该集合')
+    }
+    throw error
+  }
 }
 
 module.exports = {
@@ -157,6 +317,7 @@ module.exports = {
   createMahjongRecord,
   getYakumanList,
   createYakumanRecord,
+  getHonorList,
+  createHonorRecord,
   YAKUMAN_TYPES
 }
-

@@ -16,6 +16,19 @@ async function createGame(data, wxContext) {
   const gameData = payload.gameData
   if (!gameData) return fail(400, '缺少游戏数据')
 
+  const type = gameData.type || 'mahjong'
+  const maxPlayers = Number(gameData.maxPlayers || 0)
+  const playerRange = {
+    mahjong: [3, 4],
+    boardgame: [2, 10],
+    videogame: [2, 8],
+    competition: [4, 32]
+  }
+  const [minAllowed, maxAllowed] = playerRange[type] || [2, 20]
+  if (maxPlayers < minAllowed || maxPlayers > maxAllowed) {
+    return fail(400, `该活动类型人数需在${minAllowed}-${maxAllowed}之间`)
+  }
+
   const currentUser = await getCurrentUser(wxContext)
   if (!currentUser) return fail(401, '用户不存在，请先登录')
 
@@ -117,7 +130,12 @@ async function updateGame(data, wxContext) {
 
   if (updates.maxPlayers) {
     const maxPlayers = Number(updates.maxPlayers)
-    if (maxPlayers < 2 || maxPlayers > 20) return fail(400, '参与人数必须在2-20人之间')
+    const gameType = updates.type || gameRes.data.type
+    const maxAllowed = gameType === 'competition' ? 32 : 20
+    const minAllowed = gameType === 'competition' ? 4 : 2
+    if (maxPlayers < minAllowed || maxPlayers > maxAllowed) {
+      return fail(400, `参与人数必须在${minAllowed}-${maxAllowed}人之间`)
+    }
 
     const participants = await normalizeParticipants(gameRes.data.participants || [])
     const currentPlayers = participants.length + 1

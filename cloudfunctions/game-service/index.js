@@ -67,6 +67,10 @@ exports.main = async (event) => {
         return await recordActions.getYakumanList()
       case 'createYakumanRecord':
         return await recordActions.createYakumanRecord(data, wxContext)
+      case 'getHonorList':
+        return await recordActions.getHonorList()
+      case 'createHonorRecord':
+        return await recordActions.createHonorRecord(data, wxContext)
 
       // 管理员
       case 'adminDeleteMahjongRecord':
@@ -77,6 +81,8 @@ exports.main = async (event) => {
         return await adminActions.getAdminManageData(wxContext)
       case 'adminDeleteYakumanRecord':
         return await adminActions.adminDeleteYakumanRecord(data, wxContext)
+      case 'adminDeleteHonorRecord':
+        return await adminActions.adminDeleteHonorRecord(data, wxContext)
 
       default:
         return fail(400, '未知操作')

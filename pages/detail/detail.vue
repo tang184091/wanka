@@ -436,6 +436,7 @@ const getTypeClass = (type) => {
     'mahjong': 'tag-mahjong',
     'boardgame': 'tag-boardgame',
     'videogame': 'tag-videogame',
+    'competition': 'tag-competition',
     'sports': 'tag-sports',
     'other': 'tag-other'
   }
@@ -448,6 +449,7 @@ const getTypeText = (type) => {
     'mahjong': '立直麻将',
     'boardgame': '桌游',
     'videogame': '电玩',
+    'competition': '比赛',
     'sports': '运动',
     'other': '其他'
   }
@@ -1018,6 +1020,7 @@ onShareTimeline(() => {
 .tag-mahjong { background-color: #ff6b6b; }
 .tag-boardgame { background-color: #4dabf7; }
 .tag-videogame { background-color: #69db7c; }
+.tag-competition { background-color: #8b5cf6; }
 .tag-sports { background-color: #ff922b; }
 .tag-other { background-color: #adb5bd; }
 

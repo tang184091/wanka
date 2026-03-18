@@ -29,6 +29,11 @@
         <text class="middle-sub">点击进入役满榜与上传入口</text>
       </view>
 
+      <view class="middle-card honor" @tap="goToHonor">
+        <text class="middle-title">荣誉榜</text>
+        <text class="middle-sub">比赛冠军 / 段位荣誉</text>
+      </view>
+
       <view class="card">
         <view class="card-title">近7天立直麻将战绩</view>
         <view class="card-sub">按时间倒序展示</view>
@@ -164,6 +169,10 @@ const goToYakuman = () => {
   uni.navigateTo({ url: '/pages/record/yakuman' })
 }
 
+const goToHonor = () => {
+  uni.navigateTo({ url: '/pages/record/honor' })
+}
+
 onShow(loadRecords)
 </script>
 
@@ -174,6 +183,7 @@ onShow(loadRecords)
 .card-title { font-size: 30rpx; font-weight: 700; }
 .card-sub,.hint { color: #6b7280; font-size: 22rpx; margin-top: 8rpx; }
 .middle-card { margin: 0 20rpx; background: linear-gradient(135deg,#fef3c7,#fde68a); border-radius: 16rpx; padding: 20rpx; }
+.middle-card.honor { margin-top: 14rpx; background: linear-gradient(135deg,#ede9fe,#ddd6fe); }
 .middle-title { display:block; font-size:30rpx; font-weight:700; color:#78350f; }
 .middle-sub { display:block; margin-top:6rpx; font-size:22rpx; color:#92400e; }
 .record-item { margin-top: 14rpx; padding: 14rpx; background: #f8fafc; border-radius: 12rpx; }

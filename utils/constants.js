@@ -29,6 +29,12 @@ export default {
       color: '#fa8c16',
       minPlayers: 2,
       maxPlayers: 8
+    },
+    'competition': {
+      name: '比赛',
+      color: '#8b5cf6',
+      minPlayers: 4,
+      maxPlayers: 32
     }
   },
   

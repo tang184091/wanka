@@ -72,7 +72,7 @@ class UserService {
   }
 
   // 云开发登录
-  static async cloudLogin(code, userInfo, captchaPayload = null) {
+  static async cloudLogin(code, userInfo) {
     try {
       console.log('调用云函数 user-service 登录')
       
@@ -82,8 +82,7 @@ class UserService {
         data: {
           action: 'login',
           data: {
-            userInfo: userInfo,
-            ...(captchaPayload || {})
+            userInfo: userInfo
           }
         }
       })
@@ -95,19 +94,7 @@ class UserService {
           success: true,
           userInfo: result.result.data.userInfo,
           token: result.result.data.token,
-          stats: result.result.data.stats,
-          needCaptcha: false
-        }
-      }
-
-      if (result.result && result.result.code === 429 && result.result.data?.needCaptcha) {
-        return {
-          success: false,
-          needCaptcha: true,
-          captchaId: result.result.data.captchaId,
-          captchaHint: result.result.data.captchaHint,
-          forceLogout: !!result.result.data.forceLogout,
-          error: result.result.message || '需要验证码'
+          stats: result.result.data.stats
         }
       }
 
@@ -117,6 +104,64 @@ class UserService {
     } catch (error) {
       console.error('云函数调用失败:', error)
       throw error
+    }
+  }
+
+  // 弹出验证码输入框
+  static async promptCaptcha(captchaHint = '请输入验证码') {
+    return new Promise((resolve, reject) => {
+      uni.showModal({
+        title: '安全验证',
+        content: captchaHint,
+        editable: true,
+        placeholderText: '请输入验证码',
+        confirmText: '提交',
+        cancelText: '取消',
+        success: (res) => {
+          if (!res.confirm) {
+            reject(new Error('已取消验证码验证'))
+            return
+          }
+
+          const value = String(res.content || '').trim()
+          if (!value) {
+            reject(new Error('请输入验证码'))
+            return
+          }
+
+          resolve(value)
+        },
+        fail: (err) => {
+          reject(new Error(err?.errMsg || '验证码输入失败'))
+        }
+      })
+    })
+  }
+
+  // 登录（自动处理验证码挑战）
+  static async cloudLoginWithCaptcha(code, userInfo, maxCaptchaRetries = 3) {
+    let captchaPayload = null
+    let captchaRetries = 0
+
+    while (true) {
+      const result = await this.cloudLogin(code, userInfo, captchaPayload)
+
+      if (result.success) return result
+
+      if (!result.needCaptcha) {
+        throw new Error(result.error || '登录失败')
+      }
+
+      captchaRetries += 1
+      if (captchaRetries > maxCaptchaRetries) {
+        throw new Error('验证码重试次数过多，请稍后再试')
+      }
+
+      const captchaAnswer = await this.promptCaptcha(result.captchaHint || '请输入验证码')
+      captchaPayload = {
+        captchaId: result.captchaId,
+        captchaAnswer
+      }
     }
   }
 

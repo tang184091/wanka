@@ -266,7 +266,7 @@ const handleLogin = () => {
       
       try {
         // 3. 调用云函数登录
-        const loginResult = await UserService.cloudLogin(loginRes.code, userInfoData)
+        const loginResult = await UserService.cloudLoginWithCaptcha(loginRes.code, userInfoData)
         
         if (loginResult.success) {
           console.log('✅ 云函数登录成功')

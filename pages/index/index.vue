@@ -141,7 +141,8 @@ const tabs = ref([
   { id: 'all', name: '全部' },
   { id: 'mahjong', name: '立直麻将' },
   { id: 'boardgame', name: '桌游' },
-  { id: 'videogame', name: '电玩' }
+  { id: 'videogame', name: '电玩' },
+  { id: 'competition', name: '比赛' }
 ])
 
 const activeTab = ref('all')
@@ -166,7 +167,8 @@ const getTypeClass = (type) => {
   const classMap = {
     'mahjong': 'tag-mahjong',
     'boardgame': 'tag-boardgame',
-    'videogame': 'tag-videogame'
+    'videogame': 'tag-videogame',
+    'competition': 'tag-competition'
   }
   return classMap[type] || 'tag-mahjong'
 }
@@ -176,7 +178,8 @@ const getTypeText = (type) => {
   const textMap = {
     'mahjong': '立直麻将',
     'boardgame': '桌游',
-    'videogame': '电玩'
+    'videogame': '电玩',
+    'competition': '比赛'
   }
   return textMap[type] || '立直麻将'
 }
@@ -543,6 +546,11 @@ onMounted(() => {
 .tag-videogame {
   background-color: #fff7e6;
   color: #fa8c16;
+}
+
+.tag-competition {
+  background-color: #f3e8ff;
+  color: #7c3aed;
 }
 
 .status-tag {

@@ -49,7 +49,7 @@ export const userActions = {
       const loginResult = await UserService.wechatLogin()
       
       if (loginResult.code) {
-        const cloudResult = await UserService.cloudLogin(loginResult.code, userInfo)
+        const cloudResult = await UserService.cloudLoginWithCaptcha(loginResult.code, userInfo)
         
         if (cloudResult.success) {
           state.user.isLoggedIn = true

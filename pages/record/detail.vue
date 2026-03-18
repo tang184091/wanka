@@ -6,7 +6,10 @@
 
       <view class="row" v-for="(player, index) in record.players" :key="index">
         <text class="name">{{ player.nickname || player.userId || '未知玩家' }}</text>
-        <text class="score">{{ player.score }}</text>
+        <view class="score-wrap">
+          <text class="score">{{ player.score }}</text>
+          <text class="uma">{{ getUmaLabel(index) }}</text>
+        </view>
       </view>
 
       <view class="export-title">导出文本</view>
@@ -40,6 +43,21 @@ const copyExport = () => {
   uni.setClipboardData({ data: exportText.value })
 }
 
+const getUmaList = () => {
+  if (!record.value?.players?.length) return []
+  const scores = record.value.players.map((p, idx) => ({ idx, score: Number(p.score || 0) }))
+  scores.sort((a, b) => b.score - a.score)
+  const points = [20, 10, -10, -20]
+  const umaByIndex = {}
+  scores.forEach((item, rank) => { umaByIndex[item.idx] = points[rank] || 0 })
+  return record.value.players.map((_, idx) => umaByIndex[idx] || 0)
+}
+
+const getUmaLabel = (index) => {
+  const uma = getUmaList()[index] || 0
+  return `${uma > 0 ? '+' : ''}${uma}P`
+}
+
 onLoad(async (options) => {
   const id = options?.id
   if (!id) return
@@ -65,6 +83,8 @@ onLoad(async (options) => {
 .row { display:flex; justify-content:space-between; margin-top:14rpx; padding:10rpx 0; border-bottom:1rpx solid #eef2f7; }
 .name { color:#111827; }
 .score { color:#0f766e; }
+.score-wrap { display:flex; gap:10rpx; align-items:center; }
+.uma { font-size: 22rpx; color:#7c3aed; }
 .export-title { margin-top:18rpx; font-size:26rpx; font-weight:600; }
 .export-box { margin-top:10rpx; white-space:pre-line; background:#f8fafc; border-radius:10rpx; padding:14rpx; }
 .btn { margin-top:16rpx; background:#2563eb; color:#fff; height:72rpx; border-radius:12rpx; display:flex; align-items:center; justify-content:center; }

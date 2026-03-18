@@ -120,6 +120,38 @@
         "navigationBarBackgroundColor": "#07c160",
         "navigationBarTextStyle": "white"
       }
+    },
+    {
+      "path": "pages/record/honor",
+      "style": {
+        "navigationBarTitleText": "荣誉榜",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/admin/honor",
+      "style": {
+        "navigationBarTitleText": "荣誉榜管理",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/admin/records",
+      "style": {
+        "navigationBarTitleText": "战绩管理",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/admin/games",
+      "style": {
+        "navigationBarTitleText": "组局管理",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
     }
   ],
   "globalStyle": {
