@@ -83,13 +83,6 @@ const _sfc_main = {
       });
     };
     const saveGames = async () => {
-      if (myGames.value.length === 0) {
-        common_vendor.index.showToast({
-          title: "请至少添加一个游戏/设备",
-          icon: "none"
-        });
-        return;
-      }
       if (myGames.value.length > 10) {
         common_vendor.index.showToast({
           title: "游戏/设备数量不能超过10个",
@@ -112,7 +105,7 @@ const _sfc_main = {
           common_vendor.index.navigateBack();
         }, 1500);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/user/games.vue:262", "保存游戏列表失败:", error);
+        common_vendor.index.__f__("error", "at pages/user/games.vue:254", "保存游戏列表失败:", error);
         common_vendor.index.showToast({
           title: "保存失败: " + (error.message || "请重试"),
           icon: "none",
@@ -156,7 +149,7 @@ const _sfc_main = {
         h: gameTypes.value
       }, {
         i: common_vendor.t(gameTypes.value[newGame.value.typeIndex].name),
-        j: common_assets._imports_2$1,
+        j: common_assets._imports_5$1,
         k: gameTypes.value,
         l: newGame.value.typeIndex,
         m: common_vendor.o(onNewGameTypeChange, "20"),

@@ -72,13 +72,6 @@ const _sfc_main = {
       }));
       const allTagsToSave = [...selectedSystemTags, ...selectedCustomTags];
       common_vendor.index.__f__("log", "at pages/user/tags.vue:184", "要保存的标签:", allTagsToSave);
-      if (allTagsToSave.length === 0) {
-        common_vendor.index.showToast({
-          title: "请至少选择一个或创建一个标签",
-          icon: "none"
-        });
-        return;
-      }
       if (allTagsToSave.length > 8) {
         common_vendor.index.showToast({
           title: "最多选择8个标签",
@@ -91,9 +84,9 @@ const _sfc_main = {
         mask: true
       });
       try {
-        common_vendor.index.__f__("log", "at pages/user/tags.vue:209", "调用 UserService.updateUserTags");
+        common_vendor.index.__f__("log", "at pages/user/tags.vue:201", "调用 UserService.updateUserTags");
         await utils_user.UserService.updateUserTags(allTagsToSave);
-        common_vendor.index.__f__("log", "at pages/user/tags.vue:214", "✅ 标签保存成功");
+        common_vendor.index.__f__("log", "at pages/user/tags.vue:206", "✅ 标签保存成功");
         common_vendor.index.showToast({
           title: "保存成功",
           icon: "success",
@@ -103,7 +96,7 @@ const _sfc_main = {
           common_vendor.index.navigateBack();
         }, 1500);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/user/tags.vue:228", "保存标签失败:", error);
+        common_vendor.index.__f__("error", "at pages/user/tags.vue:220", "保存标签失败:", error);
         common_vendor.index.showToast({
           title: "保存失败: " + (error.message || "请重试"),
           icon: "none",
@@ -135,8 +128,8 @@ const _sfc_main = {
     return (_ctx, _cache) => {
       return {
         a: common_assets._imports_0$3,
-        b: common_vendor.o(goBack, "fa"),
-        c: common_vendor.o(saveTags, "ad"),
+        b: common_vendor.o(goBack, "de"),
+        c: common_vendor.o(saveTags, "10"),
         d: common_vendor.f(systemTags.value, (tag, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(tag.name),
@@ -165,7 +158,7 @@ const _sfc_main = {
             d: index
           };
         }),
-        g: common_vendor.o(addCustomTag, "05")
+        g: common_vendor.o(addCustomTag, "03")
       };
     };
   }

@@ -1,24 +1,27 @@
-const { db, _, success, fail, getCurrentUser } = require('./shared')
+const { db, success, fail, getCurrentUser } = require('./shared')
 
 async function getSeatStatus() {
   const now = new Date()
-  const where = { status: _.nin(['cancelled', 'finished', 'completed']) }
-
-  const totalRes = await db.collection('games').where(where).count()
+  const inactiveStatus = new Set(['cancelled', 'finished', 'completed'])
+  const totalRes = await db.collection('games').count()
   const total = totalRes.total || 0
   const pageSize = 100
   const games = []
 
   for (let offset = 0; offset < total; offset += pageSize) {
-    const pageRes = await db.collection('games').where(where).skip(offset).limit(pageSize).get()
-    games.push(...(pageRes.data || []))
+    const pageRes = await db.collection('games').skip(offset).limit(pageSize).get()
+    const pageGames = (pageRes.data || []).filter((game) => !inactiveStatus.has(game.status))
+    games.push(...pageGames)
   }
 
   const priority = { available: 0, reserved: 1, occupied: 2 }
   const statusByLocation = {}
+  const normalizeLocationName = (name = '') => String(name).replace(/\s+/g, '').trim()
 
   games.forEach((game) => {
     if (!game.location) return
+    const locationKey = normalizeLocationName(game.location)
+    if (!locationKey) return
 
     let status = 'reserved'
     const gameTime = game.time ? new Date(game.time) : null
@@ -26,17 +29,31 @@ async function getSeatStatus() {
       status = 'occupied'
     }
 
-    const current = statusByLocation[game.location] || 'available'
+    const current = statusByLocation[locationKey] || 'available'
     if (priority[status] > priority[current]) {
-      statusByLocation[game.location] = status
+      statusByLocation[locationKey] = status
     }
   })
 
   const overrideRes = await db.collection('seat_status_overrides').where({ key: 'global' }).limit(1).get()
-  const overrideMap = (((overrideRes.data || [])[0]) || {}).overrides || {}
+  const overrideMapRaw = (((overrideRes.data || [])[0]) || {}).overrides || {}
+  const overrideMap = {}
+  Object.keys(overrideMapRaw).forEach((key) => {
+    const locationKey = normalizeLocationName(key)
+    if (locationKey) {
+      overrideMap[locationKey] = overrideMapRaw[key]
+    }
+  })
+
+  const mergedStatusByLocation = { ...statusByLocation }
+  Object.keys(overrideMap).forEach((locationKey) => {
+    const current = mergedStatusByLocation[locationKey] || 'available'
+    const override = overrideMap[locationKey] || 'available'
+    mergedStatusByLocation[locationKey] = (priority[override] > priority[current]) ? override : current
+  })
 
   return success({
-    statusByLocation: { ...statusByLocation, ...overrideMap },
+    statusByLocation: mergedStatusByLocation,
     totalActiveGames: games.length
   }, '获取座位状态成功')
 }

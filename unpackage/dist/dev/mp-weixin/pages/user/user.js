@@ -467,29 +467,29 @@ const _sfc_main = {
       }, userStats.value ? {
         t: common_vendor.t(userStats.value.createdGames || 0)
       } : {}, {
-        v: common_assets._imports_2$1,
+        v: common_assets._imports_5$1,
         w: common_vendor.o(($event) => goToMyGames("created"), "5e"),
-        x: common_assets._imports_2$2,
+        x: common_assets._imports_2$1,
         y: userStats.value
       }, userStats.value ? {
         z: common_vendor.t(userStats.value.joinedGames || 0)
       } : {}, {
-        A: common_assets._imports_2$1,
+        A: common_assets._imports_5$1,
         B: common_vendor.o(($event) => goToMyGames("joined"), "d9"),
         C: common_assets._imports_3$2,
-        D: common_assets._imports_2$1,
+        D: common_assets._imports_5$1,
         E: common_vendor.o(($event) => goToMyGames("history"), "97"),
         F: userInfo.value && userInfo.value.isAdmin
       }, userInfo.value && userInfo.value.isAdmin ? {
-        G: common_assets._imports_4,
-        H: common_assets._imports_2$1,
+        G: common_assets._imports_4$1,
+        H: common_assets._imports_5$1,
         I: common_vendor.o(goToAdmin, "c9")
       } : {}, {
         J: common_assets._imports_5,
-        K: common_assets._imports_2$1,
+        K: common_assets._imports_5$1,
         L: common_vendor.o(goToSettings, "f2"),
-        M: common_assets._imports_12,
-        N: common_assets._imports_2$1,
+        M: common_assets._imports_4,
+        N: common_assets._imports_5$1,
         O: common_vendor.o(goToAbout, "be"),
         P: !userInfo.value
       }, !userInfo.value ? {

@@ -183,14 +183,6 @@ const saveTags = async () => {
   
   console.log('要保存的标签:', allTagsToSave)
   
-  if (allTagsToSave.length === 0) {
-    uni.showToast({
-      title: '请至少选择一个或创建一个标签',
-      icon: 'none'
-    })
-    return
-  }
-  
   if (allTagsToSave.length > 8) {
     uni.showToast({
       title: '最多选择8个标签',

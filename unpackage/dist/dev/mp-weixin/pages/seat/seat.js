@@ -1,10 +1,12 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const utils_user = require("../../utils/user.js");
+const SEAT_REFRESH_INTERVAL = 1e4;
 const _sfc_main = {
   __name: "seat",
   setup(__props) {
     const refreshing = common_vendor.ref(false);
+    let seatRefreshTimer = null;
     const floor2Left = common_vendor.ref([
       { id: "f2-bg-1", name: "桌游房1", type: "boardgame", status: "available", capacity: 8, device: "桌游桌" },
       { id: "f2-mj-1", name: "立直麻将房1", type: "mahjong", status: "available", capacity: 4, device: "四口机" },
@@ -36,12 +38,17 @@ const _sfc_main = {
     const arcadeRoom = common_vendor.ref({ id: "f1-arcade-room", name: "电玩房", type: "videogame", status: "available", capacity: 4, device: "主机 + 电视" });
     const getSeatStatusClass = (status) => ({ available: "status-available", reserved: "status-reserved", occupied: "status-occupied" })[status] || "status-available";
     const getSeatStatusText = (status) => ({ available: "空闲中", reserved: "预约中", occupied: "使用中" })[status] || "空闲中";
-    const setSeatStatusByName = (name, statusMap) => statusMap[name] || "available";
+    const normalizeLocationName = (name = "") => String(name).replace(/\s+/g, "").trim();
+    const setSeatStatusByName = (name, statusMap) => statusMap[normalizeLocationName(name)] || statusMap[name] || "available";
     const refreshSeatStatus = async () => {
       var _a, _b;
       try {
         const res = await common_vendor.wx$1.cloud.callFunction({ name: "game-service", data: { action: "getSeatStatus", data: {} } });
-        const statusMap = ((_b = (_a = res == null ? void 0 : res.result) == null ? void 0 : _a.data) == null ? void 0 : _b.statusByLocation) || {};
+        const rawStatusMap = ((_b = (_a = res == null ? void 0 : res.result) == null ? void 0 : _a.data) == null ? void 0 : _b.statusByLocation) || {};
+        const statusMap = {};
+        Object.keys(rawStatusMap).forEach((key) => {
+          statusMap[normalizeLocationName(key)] = rawStatusMap[key];
+        });
         floor2Left.value = floor2Left.value.map((item) => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }));
         floor2Bottom.value = floor2Bottom.value.map((item) => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }));
         hallDeskRows.value = hallDeskRows.value.map((row) => row.map((item) => ({ ...item, status: setSeatStatusByName(item.name, statusMap) })));
@@ -51,7 +58,7 @@ const _sfc_main = {
         interArcade2.value = { ...interArcade2.value, status: setSeatStatusByName(interArcade2.value.name, statusMap) };
         arcadeRoom.value = { ...arcadeRoom.value, status: setSeatStatusByName(arcadeRoom.value.name, statusMap) };
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/seat/seat.vue:163", "获取座位状态失败:", error);
+        common_vendor.index.__f__("error", "at pages/seat/seat.vue:170", "获取座位状态失败:", error);
       }
     };
     const handleRefresh = async () => {
@@ -67,6 +74,22 @@ const _sfc_main = {
     };
     common_vendor.onShow(() => {
       handleRefresh();
+      stopAutoRefresh();
+      seatRefreshTimer = setInterval(() => {
+        refreshSeatStatus();
+      }, SEAT_REFRESH_INTERVAL);
+    });
+    const stopAutoRefresh = () => {
+      if (seatRefreshTimer) {
+        clearInterval(seatRefreshTimer);
+        seatRefreshTimer = null;
+      }
+    };
+    common_vendor.onHide(() => {
+      stopAutoRefresh();
+    });
+    common_vendor.onUnload(() => {
+      stopAutoRefresh();
     });
     const goToCreateWithPreset = (seat) => {
       const currentUser = utils_user.UserService.getCurrentUser();

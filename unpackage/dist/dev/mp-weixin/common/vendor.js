@@ -7030,7 +7030,7 @@ function isConsoleWritable() {
 function initRuntimeSocketService() {
   const hosts = "192.168.0.115,127.0.0.1";
   const port = "8090";
-  const id = "mp-weixin_dKK7hE";
+  const id = "mp-weixin_FgVeZL";
   const lazy = typeof swan !== "undefined";
   let restoreError = lazy ? () => {
   } : initOnError();
@@ -7984,8 +7984,18 @@ const onShow = /* @__PURE__ */ createLifeCycleHook(
   1 | 2
   /* HookFlags.PAGE */
 );
+const onHide = /* @__PURE__ */ createLifeCycleHook(
+  ON_HIDE,
+  1 | 2
+  /* HookFlags.PAGE */
+);
 const onLoad = /* @__PURE__ */ createLifeCycleHook(
   ON_LOAD,
+  2
+  /* HookFlags.PAGE */
+);
+const onUnload = /* @__PURE__ */ createLifeCycleHook(
+  ON_UNLOAD,
   2
   /* HookFlags.PAGE */
 );
@@ -8007,11 +8017,13 @@ exports.f = f;
 exports.index = index;
 exports.n = n;
 exports.o = o;
+exports.onHide = onHide;
 exports.onLoad = onLoad;
 exports.onMounted = onMounted;
 exports.onShareAppMessage = onShareAppMessage;
 exports.onShareTimeline = onShareTimeline;
 exports.onShow = onShow;
+exports.onUnload = onUnload;
 exports.onUnmounted = onUnmounted;
 exports.reactive = reactive;
 exports.ref = ref;

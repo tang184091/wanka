@@ -10,23 +10,8 @@ const _sfc_main = {
       message: true,
       vibration: false
     });
-    const cacheSize = common_vendor.ref("0KB");
     const goBack = () => {
       common_vendor.index.navigateBack();
-    };
-    const goToAccountInfo = () => {
-      common_vendor.index.showModal({
-        title: "账号信息",
-        content: "功能开发中，敬请期待",
-        showCancel: false
-      });
-    };
-    const changePassword = () => {
-      common_vendor.index.showModal({
-        title: "修改密码",
-        content: "功能开发中，敬请期待",
-        showCancel: false
-      });
     };
     const onGameReminderChange = (e) => {
       notificationSettings.value.gameReminder = e.detail.value;
@@ -45,78 +30,6 @@ const _sfc_main = {
       common_vendor.index.showToast({
         title: "设置已保存",
         icon: "success"
-      });
-    };
-    const blockedUsers = () => {
-      common_vendor.index.showModal({
-        title: "屏蔽用户",
-        content: "功能开发中，敬请期待",
-        showCancel: false
-      });
-    };
-    const clearCache = () => {
-      common_vendor.index.showModal({
-        title: "清理缓存",
-        content: "确定要清理缓存吗？",
-        success: (res) => {
-          if (res.confirm) {
-            common_vendor.index.showLoading({
-              title: "清理中...",
-              mask: true
-            });
-            setTimeout(() => {
-              common_vendor.index.clearStorageSync();
-              cacheSize.value = "0KB";
-              common_vendor.index.hideLoading();
-              common_vendor.index.showToast({
-                title: "清理完成",
-                icon: "success"
-              });
-            }, 1e3);
-          }
-        }
-      });
-    };
-    const checkUpdate = () => {
-      const updateManager = common_vendor.index.getUpdateManager();
-      updateManager.onCheckForUpdate((res) => {
-        if (res.hasUpdate) {
-          common_vendor.index.showModal({
-            title: "更新提示",
-            content: "发现新版本，是否更新？",
-            success: (res2) => {
-              if (res2.confirm) {
-                updateManager.onUpdateReady(() => {
-                  common_vendor.index.showModal({
-                    title: "更新提示",
-                    content: "新版本下载完成，是否重启应用？",
-                    success: (res3) => {
-                      if (res3.confirm) {
-                        updateManager.applyUpdate();
-                      }
-                    }
-                  });
-                });
-                updateManager.onUpdateFailed(() => {
-                  common_vendor.index.showToast({
-                    title: "更新失败",
-                    icon: "none"
-                  });
-                });
-              }
-            }
-          });
-        } else {
-          common_vendor.index.showToast({
-            title: "已是最新版本",
-            icon: "success"
-          });
-        }
-      });
-    };
-    const feedback = () => {
-      common_vendor.index.navigateTo({
-        url: "/pages/user/feedback"
       });
     };
     const about = () => {
@@ -146,23 +59,6 @@ const _sfc_main = {
         }
       });
     };
-    const calculateCacheSize = () => {
-      let total = 0;
-      const info = common_vendor.index.getStorageInfoSync();
-      info.keys.forEach((key) => {
-        const data = common_vendor.index.getStorageSync(key);
-        if (data) {
-          total += JSON.stringify(data).length;
-        }
-      });
-      if (total < 1024) {
-        cacheSize.value = total + "B";
-      } else if (total < 1024 * 1024) {
-        cacheSize.value = (total / 1024).toFixed(2) + "KB";
-      } else {
-        cacheSize.value = (total / (1024 * 1024)).toFixed(2) + "MB";
-      }
-    };
     const loadNotificationSettings = () => {
       const saved = common_vendor.index.getStorageSync("notification_settings");
       if (saved) {
@@ -170,47 +66,25 @@ const _sfc_main = {
       }
     };
     common_vendor.onMounted(() => {
-      calculateCacheSize();
       loadNotificationSettings();
     });
     return (_ctx, _cache) => {
       return {
         a: common_assets._imports_0$3,
-        b: common_vendor.o(goBack, "de"),
+        b: common_vendor.o(goBack, "99"),
         c: common_assets._imports_1$2,
-        d: common_assets._imports_2$1,
-        e: common_vendor.o(goToAccountInfo, "7b"),
-        f: common_assets._imports_3$3,
-        g: common_assets._imports_2$1,
-        h: common_vendor.o(changePassword, "6d"),
-        i: common_assets._imports_4$2,
-        j: notificationSettings.value.gameReminder,
-        k: common_vendor.o(onGameReminderChange, "23"),
-        l: common_assets._imports_5$2,
-        m: notificationSettings.value.message,
-        n: common_vendor.o(onMessageChange, "7d"),
-        o: common_assets._imports_6$1,
-        p: notificationSettings.value.vibration,
-        q: common_vendor.o(onVibrationChange, "cc"),
-        r: common_assets._imports_7$2,
-        s: common_assets._imports_2$1,
-        t: common_assets._imports_8$1,
-        v: common_assets._imports_2$1,
-        w: common_vendor.o(blockedUsers, "42"),
-        x: common_assets._imports_9$1,
-        y: common_vendor.t(cacheSize.value),
-        z: common_assets._imports_2$1,
-        A: common_vendor.o(clearCache, "50"),
-        B: common_assets._imports_10$1,
-        C: common_assets._imports_2$1,
-        D: common_vendor.o(checkUpdate, "1a"),
-        E: common_assets._imports_11$1,
-        F: common_assets._imports_2$1,
-        G: common_vendor.o(feedback, "20"),
-        H: common_assets._imports_12,
-        I: common_assets._imports_2$1,
-        J: common_vendor.o(about, "09"),
-        K: common_vendor.o(handleLogout, "89")
+        d: notificationSettings.value.gameReminder,
+        e: common_vendor.o(onGameReminderChange, "26"),
+        f: common_assets._imports_2$2,
+        g: notificationSettings.value.message,
+        h: common_vendor.o(onMessageChange, "14"),
+        i: common_assets._imports_3$3,
+        j: notificationSettings.value.vibration,
+        k: common_vendor.o(onVibrationChange, "76"),
+        l: common_assets._imports_4,
+        m: common_assets._imports_5$1,
+        n: common_vendor.o(about, "a0"),
+        o: common_vendor.o(handleLogout, "6a")
       };
     };
   }

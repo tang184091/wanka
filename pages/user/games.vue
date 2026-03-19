@@ -221,14 +221,6 @@ const removeGame = (index) => {
 
 // 保存游戏列表
 const saveGames = async () => {
-  if (myGames.value.length === 0) {
-    uni.showToast({
-      title: '请至少添加一个游戏/设备',
-      icon: 'none'
-    })
-    return
-  }
-  
   if (myGames.value.length > 10) {
     uni.showToast({
       title: '游戏/设备数量不能超过10个',

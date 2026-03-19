@@ -102,10 +102,12 @@
 
 <script setup>
 import { ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onShow, onHide, onUnload } from '@dcloudio/uni-app'
 import UserService from '@/utils/user.js'
 
 const refreshing = ref(false)
+let seatRefreshTimer = null
+const SEAT_REFRESH_INTERVAL = 10000
 
 const floor2Left = ref([
   { id: 'f2-bg-1', name: '桌游房1', type: 'boardgame', status: 'available', capacity: 8, device: '桌游桌' },
@@ -143,12 +145,17 @@ const arcadeRoom = ref({ id: 'f1-arcade-room', name: '电玩房', type: 'videoga
 const getSeatStatusClass = (status) => ({ available: 'status-available', reserved: 'status-reserved', occupied: 'status-occupied' }[status] || 'status-available')
 const getSeatStatusText = (status) => ({ available: '空闲中', reserved: '预约中', occupied: '使用中' }[status] || '空闲中')
 
-const setSeatStatusByName = (name, statusMap) => statusMap[name] || 'available'
+const normalizeLocationName = (name = '') => String(name).replace(/\s+/g, '').trim()
+const setSeatStatusByName = (name, statusMap) => statusMap[normalizeLocationName(name)] || statusMap[name] || 'available'
 
 const refreshSeatStatus = async () => {
   try {
     const res = await wx.cloud.callFunction({ name: 'game-service', data: { action: 'getSeatStatus', data: {} } })
-    const statusMap = res?.result?.data?.statusByLocation || {}
+    const rawStatusMap = res?.result?.data?.statusByLocation || {}
+    const statusMap = {}
+    Object.keys(rawStatusMap).forEach((key) => {
+      statusMap[normalizeLocationName(key)] = rawStatusMap[key]
+    })
 
     floor2Left.value = floor2Left.value.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }))
     floor2Bottom.value = floor2Bottom.value.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }))
@@ -177,6 +184,25 @@ const handleRefresh = async () => {
 
 onShow(() => {
   handleRefresh()
+  stopAutoRefresh()
+  seatRefreshTimer = setInterval(() => {
+    refreshSeatStatus()
+  }, SEAT_REFRESH_INTERVAL)
+})
+
+const stopAutoRefresh = () => {
+  if (seatRefreshTimer) {
+    clearInterval(seatRefreshTimer)
+    seatRefreshTimer = null
+  }
+}
+
+onHide(() => {
+  stopAutoRefresh()
+})
+
+onUnload(() => {
+  stopAutoRefresh()
 })
 
 const goToCreateWithPreset = (seat) => {
