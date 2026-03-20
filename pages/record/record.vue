@@ -38,8 +38,8 @@
         <view class="card-title">近7天立直麻将战绩</view>
         <view class="card-sub">按时间倒序展示</view>
 
-        <view v-if="records.length === 0" class="empty">暂无战绩</view>
-        <view v-for="item in records" :key="item._id" class="record-item" @tap="openDetail(item)">
+        <view v-if="visibleRecords.length === 0" class="empty">暂无战绩</view>
+        <view v-for="item in visibleRecords" :key="item._id" class="record-item" @tap="openDetail(item)">
           <view class="record-head">
             <text class="time">{{ formatTime(item.createdAt) }}</text>
             <text class="detail-link">查看详情</text>
@@ -49,6 +49,7 @@
             <text class="score">{{ player.score }}</text>
           </view>
         </view>
+        <view v-if="canLoadMore" class="more-btn" @tap="loadMoreRecords">更多</view>
       </view>
     </scroll-view>
   </view>
@@ -58,7 +59,8 @@
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 
-const records = ref([])
+const allRecords = ref([])
+const displayCount = ref(10)
 const emptyPlayers = () => ([
   { keyword: '', userId: '', nickname: '', score: '' },
   { keyword: '', userId: '', nickname: '', score: '' },
@@ -74,6 +76,8 @@ let timer = null
 const toNumber = (v) => Number(v || 0)
 const totalScore = computed(() => form.value.players.reduce((sum, p) => sum + toNumber(p.score), 0))
 const scoreValid = computed(() => totalScore.value === 100000 || totalScore.value === 1000)
+const visibleRecords = computed(() => allRecords.value.slice(0, displayCount.value))
+const canLoadMore = computed(() => allRecords.value.length > displayCount.value)
 
 const formatTime = (t) => {
   if (!t) return '-'
@@ -88,8 +92,13 @@ const loadRecords = async () => {
     data: { action: 'getMahjongRecords', data: {} }
   })
   if (res.result?.code === 0) {
-    records.value = res.result.data.list || []
+    allRecords.value = res.result.data.list || []
+    displayCount.value = 10
   }
+}
+
+const loadMoreRecords = () => {
+  displayCount.value += 10
 }
 
 const onSearch = (index) => {
@@ -200,5 +209,6 @@ onShow(loadRecords)
 .sum { margin-top: 16rpx; font-size: 24rpx; color: #ef4444; }
 .sum.ok { color: #16a34a; }
 .btn { margin-top: 16rpx; height: 72rpx; border-radius: 10rpx; background: #07c160; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 26rpx; }
+.more-btn { margin-top: 16rpx; height: 68rpx; border-radius: 10rpx; background: #eef2ff; color:#4338ca; display:flex; align-items:center; justify-content:center; font-size: 24rpx; }
 .empty { margin-top: 16rpx; color: #9ca3af; font-size: 24rpx; }
 </style>

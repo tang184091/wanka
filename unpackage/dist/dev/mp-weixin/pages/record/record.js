@@ -3,7 +3,8 @@ const common_vendor = require("../../common/vendor.js");
 const _sfc_main = {
   __name: "record",
   setup(__props) {
-    const records = common_vendor.ref([]);
+    const allRecords = common_vendor.ref([]);
+    const displayCount = common_vendor.ref(10);
     const emptyPlayers = () => [
       { keyword: "", userId: "", nickname: "", score: "" },
       { keyword: "", userId: "", nickname: "", score: "" },
@@ -17,6 +18,8 @@ const _sfc_main = {
     const toNumber = (v) => Number(v || 0);
     const totalScore = common_vendor.computed(() => form.value.players.reduce((sum, p) => sum + toNumber(p.score), 0));
     const scoreValid = common_vendor.computed(() => totalScore.value === 1e5 || totalScore.value === 1e3);
+    const visibleRecords = common_vendor.computed(() => allRecords.value.slice(0, displayCount.value));
+    const canLoadMore = common_vendor.computed(() => allRecords.value.length > displayCount.value);
     const formatTime = (t) => {
       if (!t)
         return "-";
@@ -31,8 +34,12 @@ const _sfc_main = {
         data: { action: "getMahjongRecords", data: {} }
       });
       if (((_a = res.result) == null ? void 0 : _a.code) === 0) {
-        records.value = res.result.data.list || [];
+        allRecords.value = res.result.data.list || [];
+        displayCount.value = 10;
       }
+    };
+    const loadMoreRecords = () => {
+      displayCount.value += 10;
     };
     const onSearch = (index) => {
       searchingIndex.value = index;
@@ -134,9 +141,9 @@ const _sfc_main = {
         e: common_vendor.o(submit, "9a"),
         f: common_vendor.o(goToYakuman, "9c"),
         g: common_vendor.o(goToHonor, "e0"),
-        h: records.value.length === 0
-      }, records.value.length === 0 ? {} : {}, {
-        i: common_vendor.f(records.value, (item, k0, i0) => {
+        h: visibleRecords.value.length === 0
+      }, visibleRecords.value.length === 0 ? {} : {}, {
+        i: common_vendor.f(visibleRecords.value, (item, k0, i0) => {
           return {
             a: common_vendor.t(formatTime(item.createdAt)),
             b: common_vendor.f(item.players, (player, index, i1) => {
@@ -149,8 +156,11 @@ const _sfc_main = {
             c: item._id,
             d: common_vendor.o(($event) => openDetail(item), item._id)
           };
-        })
-      });
+        }),
+        j: canLoadMore.value
+      }, canLoadMore.value ? {
+        k: common_vendor.o(loadMoreRecords, "b5")
+      } : {});
     };
   }
 };

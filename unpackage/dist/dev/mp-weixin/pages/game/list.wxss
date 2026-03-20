@@ -19,10 +19,6 @@
 .nav-left.data-v-54b926a2 {
   width: 80rpx;
 }
-.back-icon.data-v-54b926a2 {
-  width: 40rpx;
-  height: 40rpx;
-}
 .nav-title.data-v-54b926a2 {
   font-size: 36rpx;
   font-weight: bold;
@@ -36,9 +32,10 @@
   display: flex;
   justify-content: flex-end;
 }
-.refresh-icon.data-v-54b926a2 {
-  width: 40rpx;
-  height: 40rpx;
+.nav-text-btn.data-v-54b926a2 {
+  font-size: 28rpx;
+  color: #374151;
+  line-height: 1;
 }
 
 /* 筛选标签 */
@@ -101,12 +98,6 @@
   justify-content: center;
   padding: 100rpx 40rpx;
   text-align: center;
-}
-.empty-image.data-v-54b926a2 {
-  width: 300rpx;
-  height: 300rpx;
-  margin-bottom: 40rpx;
-  opacity: 0.5;
 }
 .empty-text.data-v-54b926a2 {
   font-size: 32rpx;
@@ -181,6 +172,10 @@
 .tag-videogame.data-v-54b926a2 {
   background-color: #fff7e6;
   color: #fa8c16;
+}
+.tag-cardgame.data-v-54b926a2 {
+  background-color: #ecfeff;
+  color: #0891b2;
 }
 .tag-competition.data-v-54b926a2 {
   background-color: #f3e8ff;

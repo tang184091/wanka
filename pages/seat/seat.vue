@@ -4,7 +4,12 @@
       <view class="layout-card">
         <view class="layout-header">
           <text class="layout-title">座位详情</text>
-          <view class="refresh-btn" :class="{ disabled: refreshing }" @tap="handleRefresh">{{ refreshing ? '刷新中...' : '刷新' }}</view>
+          <view class="header-actions">
+            <picker mode="date" :value="selectedDate" @change="onDateChange">
+              <view class="date-picker">{{ selectedDateLabel }}</view>
+            </picker>
+            <view class="refresh-btn" :class="{ disabled: refreshing }" @tap="handleRefresh">{{ refreshing ? '刷新中...' : '刷新' }}</view>
+          </view>
         </view>
 
         <view class="floor-card">
@@ -101,11 +106,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { onShow, onHide, onUnload } from '@dcloudio/uni-app'
 import UserService from '@/utils/user.js'
 
 const refreshing = ref(false)
+const today = new Date()
+const selectedDate = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`)
+const selectedDateLabel = computed(() => `日期：${selectedDate.value}`)
 let seatRefreshTimer = null
 const SEAT_REFRESH_INTERVAL = 10000
 
@@ -150,7 +158,10 @@ const setSeatStatusByName = (name, statusMap) => statusMap[normalizeLocationName
 
 const refreshSeatStatus = async () => {
   try {
-    const res = await wx.cloud.callFunction({ name: 'game-service', data: { action: 'getSeatStatus', data: {} } })
+    const res = await wx.cloud.callFunction({
+      name: 'game-service',
+      data: { action: 'getSeatStatus', data: { date: selectedDate.value } }
+    })
     const rawStatusMap = res?.result?.data?.statusByLocation || {}
     const statusMap = {}
     Object.keys(rawStatusMap).forEach((key) => {
@@ -180,6 +191,11 @@ const handleRefresh = async () => {
   } finally {
     refreshing.value = false
   }
+}
+
+const onDateChange = async (e) => {
+  selectedDate.value = e.detail.value
+  await handleRefresh()
 }
 
 onShow(() => {
@@ -220,11 +236,12 @@ const goToCreateWithPreset = (seat) => {
   const typeProjectMap = {
     mahjong: '立直麻将局',
     boardgame: '桌游局',
-    videogame: '电玩局'
+    videogame: '电玩局',
+    cardgame: '打牌局'
   }
 
   uni.navigateTo({
-    url: `/pages/create/create?type=${encodeURIComponent(seat.type)}&location=${encodeURIComponent(seat.name)}&project=${encodeURIComponent(typeProjectMap[seat.type] || '娱乐局')}`
+    url: `/pages/create/create?type=${encodeURIComponent(seat.type)}&location=${encodeURIComponent(seat.name)}&project=${encodeURIComponent(typeProjectMap[seat.type] || '娱乐局')}&date=${encodeURIComponent(selectedDate.value)}`
   })
 }
 
@@ -250,6 +267,8 @@ const onSeatTap = (seat) => {
 .seat-scroll { height: 100vh; }
 .layout-card { margin: 20rpx; background: #f8f9fa; border-radius: 18rpx; border: 1rpx solid #e5e7eb; padding: 16rpx; }
 .layout-header { margin-bottom: 18rpx; display: flex; justify-content: space-between; align-items: center; }
+.header-actions { display: flex; align-items: center; gap: 12rpx; }
+.date-picker { min-width: 210rpx; height: 48rpx; border-radius: 24rpx; background: #fff; border: 1rpx solid #d1d5db; color: #374151; display: flex; align-items: center; justify-content: center; font-size: 22rpx; padding: 0 16rpx; box-sizing: border-box; }
 .layout-title { font-size: 26rpx; color: #6b7280; font-weight: 700; }
 .refresh-btn { min-width: 110rpx; height: 48rpx; border-radius: 24rpx; background: #07c160; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx; }
 .refresh-btn.disabled { background: #9ca3af; }

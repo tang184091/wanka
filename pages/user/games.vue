@@ -4,7 +4,7 @@
     <view class="nav-bar">
       <!-- 只保留一个返回箭头 -->
       <view class="nav-left" @tap="goBack">
-        <image src="/static/icons/back.png" class="back-icon" />
+        <text class="nav-text-btn">返回</text>
       </view>
       <view class="nav-title">游戏/设备管理</view>
       <view class="nav-right" @tap="saveGames">
@@ -20,7 +20,6 @@
           <text class="item-count">({{ myGames.length }}/10)</text>
         </view>
         <view v-if="myGames.length === 0" class="empty-games">
-          <image src="/static/empty-games-list.png" class="empty-image" />
           <text class="empty-text">暂无游戏/设备，点击下方添加</text>
         </view>
         <view v-else class="games-list">
@@ -76,7 +75,7 @@
             >
               <view class="form-picker">
                 <text>{{ gameTypes[newGame.typeIndex].name }}</text>
-                <image src="/static/icons/arrow-right.png" class="arrow-right" />
+                <text class="arrow-right">›</text>
               </view>
             </picker>
           </view>
@@ -302,9 +301,10 @@ onMounted(() => {
   width: 80rpx;
 }
 
-.back-icon {
-  width: 40rpx;
-  height: 40rpx;
+.nav-text-btn {
+  font-size: 28rpx;
+  color: #374151;
+  line-height: 1;
 }
 
 .nav-title {
@@ -380,13 +380,6 @@ onMounted(() => {
   align-items: center;
   padding: 40rpx 0;
   flex: 1; /* 占据可用空间 */
-}
-
-.empty-image {
-  width: 200rpx;
-  height: 200rpx;
-  margin-bottom: 20rpx;
-  opacity: 0.5;
 }
 
 .empty-text {
@@ -569,9 +562,9 @@ onMounted(() => {
 }
 
 .arrow-right {
-  width: 24rpx;
-  height: 24rpx;
-  opacity: 0.5;
+  font-size: 28rpx;
+  color: #9ca3af;
+  line-height: 1;
 }
 
 /* 关键修复：表单输入框 - 解决压缩问题 */

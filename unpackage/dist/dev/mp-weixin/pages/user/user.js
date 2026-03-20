@@ -1,6 +1,5 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const common_assets = require("../../common/assets.js");
 const utils_user = require("../../utils/user.js");
 const utils_store = require("../../utils/store.js");
 const _sfc_main = {
@@ -10,17 +9,17 @@ const _sfc_main = {
     const userStats = common_vendor.ref(null);
     const loadUserStats = async () => {
       if (!userInfo.value) {
-        common_vendor.index.__f__("log", "at pages/user/user.vue:176", "用户未登录，跳过加载统计");
+        common_vendor.index.__f__("log", "at pages/user/user.vue:169", "用户未登录，跳过加载统计");
         return;
       }
       try {
-        common_vendor.index.__f__("log", "at pages/user/user.vue:181", "开始加载用户统计...");
+        common_vendor.index.__f__("log", "at pages/user/user.vue:174", "开始加载用户统计...");
         const stats = await utils_user.UserService.fetchUserStats();
         if (stats) {
           userStats.value = stats;
-          common_vendor.index.__f__("log", "at pages/user/user.vue:188", "用户统计加载成功:", stats);
+          common_vendor.index.__f__("log", "at pages/user/user.vue:181", "用户统计加载成功:", stats);
         } else {
-          common_vendor.index.__f__("log", "at pages/user/user.vue:190", "用户统计为空，使用默认值");
+          common_vendor.index.__f__("log", "at pages/user/user.vue:183", "用户统计为空，使用默认值");
           userStats.value = {
             createdGames: 0,
             joinedGames: 0,
@@ -28,7 +27,7 @@ const _sfc_main = {
           };
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/user/user.vue:198", "加载用户统计失败:", error);
+        common_vendor.index.__f__("error", "at pages/user/user.vue:191", "加载用户统计失败:", error);
         userStats.value = {
           createdGames: 0,
           joinedGames: 0,
@@ -53,11 +52,11 @@ const _sfc_main = {
       return textMap[type] || "立直麻将";
     };
     const handleLogin = () => {
-      common_vendor.index.__f__("log", "at pages/user/user.vue:230", "开始微信登录流程");
+      common_vendor.index.__f__("log", "at pages/user/user.vue:223", "开始微信登录流程");
       common_vendor.index.getUserProfile({
         desc: "用于完善会员资料",
         success: async (userRes) => {
-          common_vendor.index.__f__("log", "at pages/user/user.vue:236", "✅ 获取用户信息成功:", userRes.userInfo.nickName);
+          common_vendor.index.__f__("log", "at pages/user/user.vue:229", "✅ 获取用户信息成功:", userRes.userInfo.nickName);
           const userInfoData = {
             nickname: userRes.userInfo.nickName,
             avatar: userRes.userInfo.avatarUrl,
@@ -79,11 +78,11 @@ const _sfc_main = {
             common_vendor.index.showToast({ title: "获取登录凭证失败", icon: "none" });
             return;
           }
-          common_vendor.index.__f__("log", "at pages/user/user.vue:265", "✅ 获取微信code成功");
+          common_vendor.index.__f__("log", "at pages/user/user.vue:258", "✅ 获取微信code成功");
           try {
             const loginResult = await utils_user.UserService.cloudLoginWithCaptcha(loginRes.code, userInfoData);
             if (loginResult.success) {
-              common_vendor.index.__f__("log", "at pages/user/user.vue:272", "✅ 云函数登录成功");
+              common_vendor.index.__f__("log", "at pages/user/user.vue:265", "✅ 云函数登录成功");
               utils_user.UserService.saveUserData(
                 loginResult.userInfo,
                 loginResult.token,
@@ -100,7 +99,7 @@ const _sfc_main = {
               throw new Error(loginResult.error || "登录失败");
             }
           } catch (error) {
-            common_vendor.index.__f__("error", "at pages/user/user.vue:295", "登录失败:", error);
+            common_vendor.index.__f__("error", "at pages/user/user.vue:288", "登录失败:", error);
             common_vendor.index.showToast({
               title: "登录失败: " + error.message,
               icon: "none",
@@ -111,7 +110,7 @@ const _sfc_main = {
           }
         },
         fail: (err) => {
-          common_vendor.index.__f__("error", "at pages/user/user.vue:306", "获取用户信息失败:", err);
+          common_vendor.index.__f__("error", "at pages/user/user.vue:299", "获取用户信息失败:", err);
           common_vendor.index.showToast({
             title: "获取用户信息失败: " + err.errMsg,
             icon: "none"
@@ -125,20 +124,20 @@ const _sfc_main = {
         content: "确定要退出登录吗？",
         success: async (res) => {
           if (res.confirm) {
-            common_vendor.index.__f__("log", "at pages/user/user.vue:322", "用户确认退出登录");
+            common_vendor.index.__f__("log", "at pages/user/user.vue:315", "用户确认退出登录");
             common_vendor.index.showLoading({ title: "退出中...", mask: true });
             try {
               utils_user.UserService.logout();
-              common_vendor.index.__f__("log", "at pages/user/user.vue:331", "✅ UserService.logout() 执行完成 - 已清除存储");
+              common_vendor.index.__f__("log", "at pages/user/user.vue:324", "✅ UserService.logout() 执行完成 - 已清除存储");
               if (utils_store.userActions && utils_store.userActions.logout) {
                 utils_store.userActions.logout();
-                common_vendor.index.__f__("log", "at pages/user/user.vue:337", "✅ userActions.logout() 执行完成 - 已更新全局状态");
+                common_vendor.index.__f__("log", "at pages/user/user.vue:330", "✅ userActions.logout() 执行完成 - 已更新全局状态");
               } else {
-                common_vendor.index.__f__("warn", "at pages/user/user.vue:339", "userActions.logout 未找到，全局状态可能未更新");
+                common_vendor.index.__f__("warn", "at pages/user/user.vue:332", "userActions.logout 未找到，全局状态可能未更新");
               }
               userInfo.value = null;
               userStats.value = null;
-              common_vendor.index.__f__("log", "at pages/user/user.vue:345", "✅ 本地响应式数据已清空");
+              common_vendor.index.__f__("log", "at pages/user/user.vue:338", "✅ 本地响应式数据已清空");
               common_vendor.index.hideLoading();
               common_vendor.index.showToast({
                 title: "已退出登录",
@@ -146,11 +145,11 @@ const _sfc_main = {
                 duration: 1500
               });
               setTimeout(() => {
-                common_vendor.index.__f__("log", "at pages/user/user.vue:357", "退出登录完成，页面状态已更新");
+                common_vendor.index.__f__("log", "at pages/user/user.vue:350", "退出登录完成，页面状态已更新");
               }, 100);
             } catch (error) {
               common_vendor.index.hideLoading();
-              common_vendor.index.__f__("error", "at pages/user/user.vue:362", "退出登录过程中出错:", error);
+              common_vendor.index.__f__("error", "at pages/user/user.vue:355", "退出登录过程中出错:", error);
               common_vendor.index.showToast({
                 title: "退出登录失败: " + error.message,
                 icon: "none",
@@ -162,14 +161,14 @@ const _sfc_main = {
       });
     };
     const checkLoginStatus = () => {
-      common_vendor.index.__f__("log", "at pages/user/user.vue:376", "执行登录状态检查");
+      common_vendor.index.__f__("log", "at pages/user/user.vue:369", "执行登录状态检查");
       const isLoggedIn = utils_user.UserService.isLoggedIn();
-      common_vendor.index.__f__("log", "at pages/user/user.vue:379", "登录状态检查结果:", isLoggedIn ? "已登录" : "未登录");
+      common_vendor.index.__f__("log", "at pages/user/user.vue:372", "登录状态检查结果:", isLoggedIn ? "已登录" : "未登录");
       if (isLoggedIn) {
         const currentUser = utils_user.UserService.getCurrentUser();
         const currentStats = utils_user.UserService.getUserStats();
-        common_vendor.index.__f__("log", "at pages/user/user.vue:385", "获取到的用户信息:", currentUser);
-        common_vendor.index.__f__("log", "at pages/user/user.vue:386", "获取到的用户统计（本地）:", currentStats);
+        common_vendor.index.__f__("log", "at pages/user/user.vue:378", "获取到的用户信息:", currentUser);
+        common_vendor.index.__f__("log", "at pages/user/user.vue:379", "获取到的用户统计（本地）:", currentStats);
         userInfo.value = currentUser;
         if (currentStats) {
           userStats.value = currentStats;
@@ -187,9 +186,9 @@ const _sfc_main = {
       }
     };
     const setupUserListeners = () => {
-      common_vendor.index.__f__("log", "at pages/user/user.vue:412", "设置全局事件监听器");
+      common_vendor.index.__f__("log", "at pages/user/user.vue:405", "设置全局事件监听器");
       common_vendor.index.$on("user:login", async (data) => {
-        common_vendor.index.__f__("log", "at pages/user/user.vue:416", "监听到用户登录事件:", data);
+        common_vendor.index.__f__("log", "at pages/user/user.vue:409", "监听到用户登录事件:", data);
         userInfo.value = data.userInfo;
         if (data.stats) {
           userStats.value = data.stats;
@@ -203,30 +202,30 @@ const _sfc_main = {
         loadUserStats();
       });
       common_vendor.index.$on("user:logout", () => {
-        common_vendor.index.__f__("log", "at pages/user/user.vue:436", "监听到用户退出事件");
+        common_vendor.index.__f__("log", "at pages/user/user.vue:429", "监听到用户退出事件");
         userInfo.value = null;
         userStats.value = null;
       });
       common_vendor.index.$on("user:updated", (updatedUser) => {
-        common_vendor.index.__f__("log", "at pages/user/user.vue:444", "监听到用户信息更新:", updatedUser);
+        common_vendor.index.__f__("log", "at pages/user/user.vue:437", "监听到用户信息更新:", updatedUser);
         userInfo.value = updatedUser;
       });
       common_vendor.index.$on("game:stats-changed", () => {
-        common_vendor.index.__f__("log", "at pages/user/user.vue:450", "监听到对局数据变化，刷新统计");
+        common_vendor.index.__f__("log", "at pages/user/user.vue:443", "监听到对局数据变化，刷新统计");
         loadUserStats();
       });
     };
     common_vendor.onShow(() => {
-      common_vendor.index.__f__("log", "at pages/user/user.vue:457", "用户中心页面显示，刷新统计");
+      common_vendor.index.__f__("log", "at pages/user/user.vue:450", "用户中心页面显示，刷新统计");
       loadUserStats();
     });
     common_vendor.onMounted(() => {
-      common_vendor.index.__f__("log", "at pages/user/user.vue:463", "个人中心页面加载");
+      common_vendor.index.__f__("log", "at pages/user/user.vue:456", "个人中心页面加载");
       setupUserListeners();
       checkLoginStatus();
     });
     const removeUserListeners = () => {
-      common_vendor.index.__f__("log", "at pages/user/user.vue:474", "移除全局事件监听器");
+      common_vendor.index.__f__("log", "at pages/user/user.vue:467", "移除全局事件监听器");
       common_vendor.index.$off("user:login");
       common_vendor.index.$off("user:logout");
       common_vendor.index.$off("user:updated");
@@ -253,17 +252,17 @@ const _sfc_main = {
             mask: true
           });
           try {
-            common_vendor.index.__f__("log", "at pages/user/user.vue:509", "开始上传头像到云存储...");
+            common_vendor.index.__f__("log", "at pages/user/user.vue:502", "开始上传头像到云存储...");
             const uploadResult = await utils_user.UserService.uploadImage(tempFilePath);
-            common_vendor.index.__f__("log", "at pages/user/user.vue:513", "头像上传成功，云存储文件ID:", uploadResult);
+            common_vendor.index.__f__("log", "at pages/user/user.vue:506", "头像上传成功，云存储文件ID:", uploadResult);
             if (!uploadResult) {
               throw new Error("头像上传失败");
             }
             const fileID = uploadResult;
             const avatarUrl = fileID;
-            common_vendor.index.__f__("log", "at pages/user/user.vue:523", "调用云函数更新用户头像，URL:", avatarUrl);
+            common_vendor.index.__f__("log", "at pages/user/user.vue:516", "调用云函数更新用户头像，URL:", avatarUrl);
             const updatedUser = await utils_user.UserService.updateUserAvatar(avatarUrl);
-            common_vendor.index.__f__("log", "at pages/user/user.vue:528", "云函数返回的更新后用户:", updatedUser);
+            common_vendor.index.__f__("log", "at pages/user/user.vue:521", "云函数返回的更新后用户:", updatedUser);
             if (!updatedUser || !updatedUser.avatar) {
               throw new Error("头像更新失败，返回数据异常");
             }
@@ -279,7 +278,7 @@ const _sfc_main = {
               duration: 1500
             });
           } catch (error) {
-            common_vendor.index.__f__("error", "at pages/user/user.vue:551", "头像更新失败:", error);
+            common_vendor.index.__f__("error", "at pages/user/user.vue:544", "头像更新失败:", error);
             common_vendor.index.showToast({
               title: "头像更新失败: " + error.message,
               icon: "none",
@@ -290,7 +289,7 @@ const _sfc_main = {
           }
         },
         fail: (err) => {
-          common_vendor.index.__f__("error", "at pages/user/user.vue:563", "选择图片失败:", err);
+          common_vendor.index.__f__("error", "at pages/user/user.vue:556", "选择图片失败:", err);
           common_vendor.index.showToast({
             title: "选择图片失败",
             icon: "none",
@@ -334,11 +333,11 @@ const _sfc_main = {
               mask: true
             });
             try {
-              common_vendor.index.__f__("log", "at pages/user/user.vue:615", "开始更新用户昵称:", newNickname);
+              common_vendor.index.__f__("log", "at pages/user/user.vue:608", "开始更新用户昵称:", newNickname);
               const updatedUser = await utils_user.UserService.updateUserInfo({
                 nickname: newNickname
               });
-              common_vendor.index.__f__("log", "at pages/user/user.vue:622", "云函数返回的更新后用户:", updatedUser);
+              common_vendor.index.__f__("log", "at pages/user/user.vue:615", "云函数返回的更新后用户:", updatedUser);
               if (!updatedUser || !updatedUser.nickname) {
                 throw new Error("昵称更新失败，返回数据异常");
               }
@@ -354,7 +353,7 @@ const _sfc_main = {
                 duration: 1500
               });
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/user/user.vue:645", "昵称更新失败:", error);
+              common_vendor.index.__f__("error", "at pages/user/user.vue:638", "昵称更新失败:", error);
               common_vendor.index.showToast({
                 title: "昵称更新失败: " + error.message,
                 icon: "none",
@@ -462,41 +461,28 @@ const _sfc_main = {
         p: common_vendor.t(userStats.value.joinedGames || 0),
         q: common_vendor.t(userStats.value.completedGames || 0)
       } : {}) : {}, {
-        r: common_assets._imports_0$1,
-        s: userStats.value
+        r: userStats.value
       }, userStats.value ? {
-        t: common_vendor.t(userStats.value.createdGames || 0)
+        s: common_vendor.t(userStats.value.createdGames || 0)
       } : {}, {
-        v: common_assets._imports_5$1,
-        w: common_vendor.o(($event) => goToMyGames("created"), "5e"),
-        x: common_assets._imports_2$1,
-        y: userStats.value
+        t: common_vendor.o(($event) => goToMyGames("created"), "5e"),
+        v: userStats.value
       }, userStats.value ? {
-        z: common_vendor.t(userStats.value.joinedGames || 0)
+        w: common_vendor.t(userStats.value.joinedGames || 0)
       } : {}, {
-        A: common_assets._imports_5$1,
-        B: common_vendor.o(($event) => goToMyGames("joined"), "d9"),
-        C: common_assets._imports_3$2,
-        D: common_assets._imports_5$1,
-        E: common_vendor.o(($event) => goToMyGames("history"), "97"),
-        F: userInfo.value && userInfo.value.isAdmin
+        x: common_vendor.o(($event) => goToMyGames("joined"), "b3"),
+        y: common_vendor.o(($event) => goToMyGames("history"), "d6"),
+        z: userInfo.value && userInfo.value.isAdmin
       }, userInfo.value && userInfo.value.isAdmin ? {
-        G: common_assets._imports_4$1,
-        H: common_assets._imports_5$1,
-        I: common_vendor.o(goToAdmin, "c9")
+        A: common_vendor.o(goToAdmin, "ad")
       } : {}, {
-        J: common_assets._imports_5,
-        K: common_assets._imports_5$1,
-        L: common_vendor.o(goToSettings, "f2"),
-        M: common_assets._imports_4,
-        N: common_assets._imports_5$1,
-        O: common_vendor.o(goToAbout, "be"),
-        P: !userInfo.value
+        B: common_vendor.o(goToSettings, "55"),
+        C: common_vendor.o(goToAbout, "03"),
+        D: !userInfo.value
       }, !userInfo.value ? {
-        Q: common_assets._imports_7,
-        R: common_vendor.o(handleLogin, "5f")
+        E: common_vendor.o(handleLogin, "9d")
       } : {
-        S: common_vendor.o(handleLogout, "b2")
+        F: common_vendor.o(handleLogout, "da")
       });
     };
   }

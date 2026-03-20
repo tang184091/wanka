@@ -5,17 +5,33 @@
       <view class="form-section">
         <view class="section-title">活动类型</view>
         <view class="type-options">
-          <view 
-            v-for="type in gameTypes" 
-            :key="type.id"
-            class="type-option"
-            :class="{ active: formData.type === type.id }"
-            @tap="selectType(type.id)"
-          >
-            <view class="type-icon">
-              <image :src="type.icon" class="type-icon-img" />
+          <view class="type-row">
+            <view
+              v-for="type in firstRowTypes"
+              :key="type.id"
+              class="type-option"
+              :class="{ active: formData.type === type.id }"
+              @tap="selectType(type.id)"
+            >
+              <view class="type-icon">
+                <image :src="type.icon" class="type-icon-img" :class="`type-icon-${type.id}`" mode="aspectFit" />
+              </view>
+              <text class="type-name">{{ type.name }}</text>
             </view>
-            <text class="type-name">{{ type.name }}</text>
+          </view>
+          <view class="type-row second-row">
+            <view
+              v-for="type in secondRowTypes"
+              :key="type.id"
+              class="type-option"
+              :class="{ active: formData.type === type.id }"
+              @tap="selectType(type.id)"
+            >
+              <view class="type-icon">
+                <image :src="type.icon" class="type-icon-img" :class="`type-icon-${type.id}`" mode="aspectFit" />
+              </view>
+              <text class="type-name">{{ type.name }}</text>
+            </view>
           </view>
         </view>
       </view>
@@ -64,7 +80,7 @@
             >
               <view class="picker-input">
                 <text class="time-text">{{ dateDisplay || '选择日期' }}</text>
-                <image src="/static/icons/arrow-right.png" class="arrow-right" />
+                <text class="arrow-right">›</text>
               </view>
             </picker>
             <picker 
@@ -77,7 +93,7 @@
             >
               <view class="picker-input">
                 <text class="time-text">{{ timeDisplay || '选择时间' }}</text>
-                <image src="/static/icons/arrow-right.png" class="arrow-right" />
+                <text class="arrow-right">›</text>
               </view>
             </picker>
           </view>
@@ -101,7 +117,7 @@
               <text class="time-text" :class="{ 'placeholder-text': !selectedLocationName }">
                 {{ selectedLocationName || '请选择活动地点' }}
               </text>
-              <image src="/static/icons/arrow-right.png" class="arrow-right" />
+              <text class="arrow-right">›</text>
             </view>
           </picker>
           <view class="location-hint">地点由门店统一维护</view>
@@ -145,9 +161,9 @@
             class="form-textarea"
             placeholder="可补充活动规则、注意事项等"
             placeholder-class="placeholder"
-            maxlength="200"
+            maxlength="500"
           />
-          <view class="form-tips">{{ formData.description.length }}/200</view>
+          <view class="form-tips">{{ formData.description.length }}/500</view>
         </view>
       </view>
 
@@ -177,34 +193,42 @@ import { onLoad } from '@dcloudio/uni-app'
 import { gameActions } from '@/utils/store.js'
 import UserService from '@/utils/user.js'
 import constants from '@/utils/constants.js'
+import * as icons from '@/utils/icons.js'
 
 // 响应式数据
 const gameTypes = ref([
   { 
     id: 'mahjong', 
     name: '立直麻将', 
-    icon: '/static/icons/mahjong.png',
+    icon: icons.mahjong,
     minPlayers: constants.GAME_TYPES.mahjong.minPlayers,
     maxPlayers: constants.GAME_TYPES.mahjong.maxPlayers
   },
   { 
     id: 'boardgame', 
     name: '桌游', 
-    icon: '/static/icons/boardgame.png',
+    icon: icons.boardgame,
     minPlayers: constants.GAME_TYPES.boardgame.minPlayers,
     maxPlayers: constants.GAME_TYPES.boardgame.maxPlayers
   },
   { 
     id: 'videogame', 
     name: '电玩', 
-    icon: '/static/icons/videogame.png',
+    icon: icons.videogame,
     minPlayers: constants.GAME_TYPES.videogame.minPlayers,
     maxPlayers: constants.GAME_TYPES.videogame.maxPlayers
   },
   {
+    id: 'cardgame',
+    name: '打牌',
+    icon: icons.tcggame,
+    minPlayers: constants.GAME_TYPES.cardgame.minPlayers,
+    maxPlayers: constants.GAME_TYPES.cardgame.maxPlayers
+  },
+  {
     id: 'competition',
     name: '比赛',
-    icon: '/static/icons/activity-create.png',
+    icon: icons.champion,
     minPlayers: constants.GAME_TYPES.competition.minPlayers,
     maxPlayers: constants.GAME_TYPES.competition.maxPlayers
   }
@@ -251,6 +275,9 @@ const maxPlayers = computed(() => {
   return type?.maxPlayers || 4
 })
 
+const firstRowTypes = computed(() => gameTypes.value.slice(0, 3))
+const secondRowTypes = computed(() => gameTypes.value.slice(3))
+
 const canSubmit = computed(() => {
   return formData.value.title && 
          formData.value.project && 
@@ -284,6 +311,17 @@ const applyPrefill = (options = {}) => {
 
   if (options.location) {
     formData.value.location = decodeURIComponent(options.location)
+  }
+
+  if (options.date) {
+    const presetDate = decodeURIComponent(options.date)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(presetDate)) {
+      dateValue.value = presetDate
+      if (!timeValue.value) {
+        timeValue.value = '19:00'
+      }
+      updateFormDateTime()
+    }
   }
 }
 
@@ -428,10 +466,11 @@ const selectType = (type) => {
 // 获取具体项目placeholder
 const getProjectPlaceholder = () => {
   const placeholders = {
-    mahjong: '请输入规则，如：三麻，抽血局',
+    mahjong: '请输入规则，如：三麻，东风场',
     boardgame: '请输入具体桌游，如：《历史巨轮》',
     videogame: '请输入具体游戏/设备，如：Switch《马里奥赛车》',
-    competition: '请输入比赛名称，如：春季店赛'
+    cardgame: '请输入TCG项目，如：游戏王、符文战场',
+    competition: '请输入比赛名称，如：年赛'
   }
   return placeholders[formData.value.type] || '请输入具体项目'
 }
@@ -767,18 +806,27 @@ watch(() => formData.value.time, (newTime) => {
 /* 类型选择样式 */
 .type-options {
   display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 10rpx;
+}
+
+.type-row {
+  display: flex;
   justify-content: space-between;
   gap: 12rpx;
-  margin-bottom: 10rpx;
+}
+
+.type-row.second-row {
+  justify-content: center;
 }
 
 .type-option {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20rpx;
   border-radius: 16rpx;
-  width: 25%;
+  width: 30%;
   box-sizing: border-box;
   padding: 14rpx 8rpx;
   transition: all 0.3s;
@@ -811,6 +859,10 @@ watch(() => formData.value.time, (newTime) => {
 .type-icon-img {
   width: 44rpx;
   height: 44rpx;
+}
+
+.type-icon-cardgame {
+  transform: translateX(3rpx);
 }
 
 .type-name {
@@ -922,9 +974,9 @@ watch(() => formData.value.time, (newTime) => {
 }
 
 .arrow-right {
-  width: 24rpx;
-  height: 24rpx;
-  opacity: 0.5;
+  font-size: 28rpx;
+  color: #9ca3af;
+  line-height: 1;
 }
 
 /* 人数选择器样式 */

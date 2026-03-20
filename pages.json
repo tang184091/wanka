@@ -1,10 +1,19 @@
 {
+  "lazyCodeLoading": "requiredComponents",
   "pages": [
     {
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "玩咖约局",
         "enablePullDownRefresh": true,
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/wiki/list",
+      "style": {
+        "navigationBarTitleText": "百科",
         "navigationBarBackgroundColor": "#07c160",
         "navigationBarTextStyle": "white"
       }
@@ -138,6 +147,14 @@
       }
     },
     {
+      "path": "pages/admin/guide",
+      "style": {
+        "navigationBarTitleText": "管理员功能说明",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/admin/records",
       "style": {
         "navigationBarTitleText": "战绩管理",
@@ -149,6 +166,38 @@
       "path": "pages/admin/games",
       "style": {
         "navigationBarTitleText": "组局管理",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/wiki/detail",
+      "style": {
+        "navigationBarTitleText": "词条详情",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/wiki/submit",
+      "style": {
+        "navigationBarTitleText": "投稿词条",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/admin/wiki",
+      "style": {
+        "navigationBarTitleText": "百科管理",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/admin/user-manage",
+      "style": {
+        "navigationBarTitleText": "用户昵称头像管理",
         "navigationBarBackgroundColor": "#07c160",
         "navigationBarTextStyle": "white"
       }
@@ -186,6 +235,12 @@
         "text": "战绩",
         "iconPath": "static/tabbar/record.png",
         "selectedIconPath": "static/tabbar/record-active.png"
+      },
+      {
+        "pagePath": "pages/wiki/list",
+        "text": "百科",
+        "iconPath": "static/tabbar/wiki.png",
+        "selectedIconPath": "static/tabbar/wiki-active.png"
       },
       {
         "pagePath": "pages/user/user",

@@ -1,9 +1,9 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const common_assets = require("../../common/assets.js");
 require("../../utils/store.js");
 const utils_user = require("../../utils/user.js");
 const utils_constants = require("../../utils/constants.js");
+const common_assets = require("../../common/assets.js");
 const _sfc_main = {
   __name: "create",
   setup(__props) {
@@ -11,28 +11,35 @@ const _sfc_main = {
       {
         id: "mahjong",
         name: "立直麻将",
-        icon: "/static/icons/mahjong.png",
+        icon: common_assets.mahjong,
         minPlayers: utils_constants.constants.GAME_TYPES.mahjong.minPlayers,
         maxPlayers: utils_constants.constants.GAME_TYPES.mahjong.maxPlayers
       },
       {
         id: "boardgame",
         name: "桌游",
-        icon: "/static/icons/boardgame.png",
+        icon: common_assets.boardgame,
         minPlayers: utils_constants.constants.GAME_TYPES.boardgame.minPlayers,
         maxPlayers: utils_constants.constants.GAME_TYPES.boardgame.maxPlayers
       },
       {
         id: "videogame",
         name: "电玩",
-        icon: "/static/icons/videogame.png",
+        icon: common_assets.videogame,
         minPlayers: utils_constants.constants.GAME_TYPES.videogame.minPlayers,
         maxPlayers: utils_constants.constants.GAME_TYPES.videogame.maxPlayers
       },
       {
+        id: "cardgame",
+        name: "打牌",
+        icon: common_assets.tcggame,
+        minPlayers: utils_constants.constants.GAME_TYPES.cardgame.minPlayers,
+        maxPlayers: utils_constants.constants.GAME_TYPES.cardgame.maxPlayers
+      },
+      {
         id: "competition",
         name: "比赛",
-        icon: "/static/icons/activity-create.png",
+        icon: common_assets.champion,
         minPlayers: utils_constants.constants.GAME_TYPES.competition.minPlayers,
         maxPlayers: utils_constants.constants.GAME_TYPES.competition.maxPlayers
       }
@@ -67,6 +74,8 @@ const _sfc_main = {
       const type = gameTypes.value.find((t) => t.id === formData.value.type);
       return (type == null ? void 0 : type.maxPlayers) || 4;
     });
+    const firstRowTypes = common_vendor.computed(() => gameTypes.value.slice(0, 3));
+    const secondRowTypes = common_vendor.computed(() => gameTypes.value.slice(3));
     const canSubmit = common_vendor.computed(() => {
       return formData.value.title && formData.value.project && formData.value.time && formData.value.location && formData.value.maxPlayers >= minPlayers.value && formData.value.maxPlayers <= maxPlayers.value && !timeError.value;
     });
@@ -89,9 +98,19 @@ const _sfc_main = {
       if (options.location) {
         formData.value.location = decodeURIComponent(options.location);
       }
+      if (options.date) {
+        const presetDate = decodeURIComponent(options.date);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(presetDate)) {
+          dateValue.value = presetDate;
+          if (!timeValue.value) {
+            timeValue.value = "19:00";
+          }
+          updateFormDateTime();
+        }
+      }
     };
     common_vendor.onLoad((options) => {
-      common_vendor.index.__f__("log", "at pages/create/create.vue:292", "页面参数:", options);
+      common_vendor.index.__f__("log", "at pages/create/create.vue:330", "页面参数:", options);
       if (options.edit && options.id) {
         isEditMode.value = true;
         gameId.value = options.id;
@@ -114,7 +133,7 @@ const _sfc_main = {
             data: { gameId: id }
           }
         });
-        common_vendor.index.__f__("log", "at pages/create/create.vue:322", "加载对局详情结果:", result);
+        common_vendor.index.__f__("log", "at pages/create/create.vue:360", "加载对局详情结果:", result);
         if (result.result && result.result.code === 0 && result.result.data) {
           const game = result.result.data;
           originalData.value = { ...game };
@@ -140,7 +159,7 @@ const _sfc_main = {
           throw new Error("加载对局详情失败");
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/create/create.vue:357", "加载对局详情失败:", error);
+        common_vendor.index.__f__("error", "at pages/create/create.vue:395", "加载对局详情失败:", error);
         common_vendor.index.showToast({
           title: "加载失败",
           icon: "none",
@@ -189,10 +208,11 @@ const _sfc_main = {
     };
     const getProjectPlaceholder = () => {
       const placeholders = {
-        mahjong: "请输入规则，如：三麻，抽血局",
+        mahjong: "请输入规则，如：三麻，东风场",
         boardgame: "请输入具体桌游，如：《历史巨轮》",
         videogame: "请输入具体游戏/设备，如：Switch《马里奥赛车》",
-        competition: "请输入比赛名称，如：春季店赛"
+        cardgame: "请输入TCG项目，如：游戏王、符文战场",
+        competition: "请输入比赛名称，如：年赛"
       };
       return placeholders[formData.value.type] || "请输入具体项目";
     };
@@ -297,10 +317,10 @@ const _sfc_main = {
           maxPlayers: formData.value.maxPlayers,
           description: formData.value.description || ""
         };
-        common_vendor.index.__f__("log", "at pages/create/create.vue:597", "✅ 准备提交的 gameData:", gameData);
-        common_vendor.index.__f__("log", "at pages/create/create.vue:598", "📝 当前模式:", isEditMode.value ? "编辑模式" : "创建模式");
+        common_vendor.index.__f__("log", "at pages/create/create.vue:636", "✅ 准备提交的 gameData:", gameData);
+        common_vendor.index.__f__("log", "at pages/create/create.vue:637", "📝 当前模式:", isEditMode.value ? "编辑模式" : "创建模式");
         if (isEditMode.value) {
-          common_vendor.index.__f__("log", "at pages/create/create.vue:602", "🔄 调用 updateGame，gameId:", gameId.value);
+          common_vendor.index.__f__("log", "at pages/create/create.vue:641", "🔄 调用 updateGame，gameId:", gameId.value);
           const result = await common_vendor.wx$1.cloud.callFunction({
             name: "game-service",
             data: {
@@ -311,7 +331,7 @@ const _sfc_main = {
               }
             }
           });
-          common_vendor.index.__f__("log", "at pages/create/create.vue:615", "✅ updateGame 返回结果:", result);
+          common_vendor.index.__f__("log", "at pages/create/create.vue:654", "✅ updateGame 返回结果:", result);
           if (result.result && result.result.code === 0) {
             common_vendor.index.hideLoading();
             common_vendor.index.showToast({
@@ -346,7 +366,7 @@ const _sfc_main = {
             tags: currentUser.tags || [],
             gender: currentUser.gender || 0
           };
-          common_vendor.index.__f__("log", "at pages/create/create.vue:664", "✅ 当前用户信息:", userInfo);
+          common_vendor.index.__f__("log", "at pages/create/create.vue:703", "✅ 当前用户信息:", userInfo);
           const result = await common_vendor.wx$1.cloud.callFunction({
             name: "game-service",
             data: {
@@ -357,7 +377,7 @@ const _sfc_main = {
               }
             }
           });
-          common_vendor.index.__f__("log", "at pages/create/create.vue:677", "✅ createGame 返回结果:", result);
+          common_vendor.index.__f__("log", "at pages/create/create.vue:716", "✅ createGame 返回结果:", result);
           if (result.result && result.result.code === 0) {
             common_vendor.index.hideLoading();
             common_vendor.index.showToast({
@@ -375,7 +395,7 @@ const _sfc_main = {
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/create/create.vue:700", "❌ 操作失败:", error);
+        common_vendor.index.__f__("error", "at pages/create/create.vue:739", "❌ 操作失败:", error);
         let errorMessage = error.message || (isEditMode.value ? "更新失败，请重试" : "创建失败，请重试");
         if (errorMessage.includes("Cannot destructure")) {
           errorMessage = "参数格式错误，请检查调用方式";
@@ -408,51 +428,59 @@ const _sfc_main = {
     });
     return (_ctx, _cache) => {
       return common_vendor.e({
-        a: common_vendor.f(gameTypes.value, (type, k0, i0) => {
+        a: common_vendor.f(firstRowTypes.value, (type, k0, i0) => {
           return {
             a: type.icon,
-            b: common_vendor.t(type.name),
-            c: type.id,
-            d: formData.value.type === type.id ? 1 : "",
-            e: common_vendor.o(($event) => selectType(type.id), type.id)
+            b: common_vendor.n(`type-icon-${type.id}`),
+            c: common_vendor.t(type.name),
+            d: type.id,
+            e: formData.value.type === type.id ? 1 : "",
+            f: common_vendor.o(($event) => selectType(type.id), type.id)
           };
         }),
-        b: formData.value.title,
-        c: common_vendor.o(($event) => formData.value.title = $event.detail.value, "b2"),
-        d: common_vendor.t(formData.value.title.length),
-        e: getProjectPlaceholder(),
-        f: formData.value.project,
-        g: common_vendor.o(($event) => formData.value.project = $event.detail.value, "5a"),
-        h: common_vendor.t(formData.value.project.length),
-        i: common_vendor.t(dateDisplay.value || "选择日期"),
-        j: common_assets._imports_5$1,
+        b: common_vendor.f(secondRowTypes.value, (type, k0, i0) => {
+          return {
+            a: type.icon,
+            b: common_vendor.n(`type-icon-${type.id}`),
+            c: common_vendor.t(type.name),
+            d: type.id,
+            e: formData.value.type === type.id ? 1 : "",
+            f: common_vendor.o(($event) => selectType(type.id), type.id)
+          };
+        }),
+        c: formData.value.title,
+        d: common_vendor.o(($event) => formData.value.title = $event.detail.value, "72"),
+        e: common_vendor.t(formData.value.title.length),
+        f: getProjectPlaceholder(),
+        g: formData.value.project,
+        h: common_vendor.o(($event) => formData.value.project = $event.detail.value, "53"),
+        i: common_vendor.t(formData.value.project.length),
+        j: common_vendor.t(dateDisplay.value || "选择日期"),
         k: dateValue.value,
         l: currentDate.value,
         m: endDate.value,
-        n: common_vendor.o(bindDateChange, "90"),
+        n: common_vendor.o(bindDateChange, "2c"),
         o: common_vendor.t(timeDisplay.value || "选择时间"),
-        p: common_assets._imports_5$1,
-        q: timeValue.value,
-        r: common_vendor.o(bindTimeChange, "22"),
-        s: timeError.value
+        p: timeValue.value,
+        q: common_vendor.o(bindTimeChange, "c9"),
+        r: timeError.value
       }, timeError.value ? {} : {}, {
-        t: common_vendor.t(selectedLocationName.value || "请选择活动地点"),
-        v: !selectedLocationName.value ? 1 : "",
-        w: common_assets._imports_5$1,
-        x: locationOptions.value,
-        y: locationPickerValue.value,
-        z: common_vendor.o(bindLocationChange, "b0"),
-        A: formData.value.maxPlayers <= minPlayers.value ? 1 : "",
-        B: common_vendor.o(decreaseNumber, "eb"),
-        C: common_vendor.t(formData.value.maxPlayers),
-        D: formData.value.maxPlayers >= maxPlayers.value ? 1 : "",
-        E: common_vendor.o(increaseNumber, "cc"),
-        F: common_vendor.t(getPlayerRangeText()),
-        G: formData.value.description,
-        H: common_vendor.o(($event) => formData.value.description = $event.detail.value, "3a"),
-        I: common_vendor.t(formData.value.description.length),
-        J: !canSubmit.value ? 1 : "",
-        K: common_vendor.o(handleSubmit, "0f")
+        s: common_vendor.t(selectedLocationName.value || "请选择活动地点"),
+        t: !selectedLocationName.value ? 1 : "",
+        v: locationOptions.value,
+        w: locationPickerValue.value,
+        x: common_vendor.o(bindLocationChange, "8b"),
+        y: formData.value.maxPlayers <= minPlayers.value ? 1 : "",
+        z: common_vendor.o(decreaseNumber, "fe"),
+        A: common_vendor.t(formData.value.maxPlayers),
+        B: formData.value.maxPlayers >= maxPlayers.value ? 1 : "",
+        C: common_vendor.o(increaseNumber, "81"),
+        D: common_vendor.t(getPlayerRangeText()),
+        E: formData.value.description,
+        F: common_vendor.o(($event) => formData.value.description = $event.detail.value, "16"),
+        G: common_vendor.t(formData.value.description.length),
+        H: !canSubmit.value ? 1 : "",
+        I: common_vendor.o(handleSubmit, "73")
       });
     };
   }

@@ -8,6 +8,7 @@ const gameActions = require('./lib/game-actions')
 const seatActions = require('./lib/seat-actions')
 const recordActions = require('./lib/record-actions')
 const adminActions = require('./lib/admin-actions')
+const wikiActions = require('./lib/wiki-actions')
 
 exports.main = async (event) => {
   const { action, data } = event || {}
@@ -50,9 +51,9 @@ exports.main = async (event) => {
 
       // 座位状态
       case 'getSeatStatus':
-        return await seatActions.getSeatStatus()
+        return await seatActions.getSeatStatus(data)
       case 'getSeatStatusOverrides':
-        return await seatActions.getSeatStatusOverrides()
+        return await seatActions.getSeatStatusOverrides(data)
       case 'setSeatStatusOverrides':
         return await seatActions.setSeatStatusOverrides(data, wxContext)
 
@@ -71,6 +72,20 @@ exports.main = async (event) => {
         return await recordActions.getHonorList()
       case 'createHonorRecord':
         return await recordActions.createHonorRecord(data, wxContext)
+      case 'updateHonorRecord':
+        return await recordActions.updateHonorRecord(data, wxContext)
+      case 'getWikiList':
+        return await wikiActions.getWikiList(data, wxContext)
+      case 'getWikiDetail':
+        return await wikiActions.getWikiDetail(data, wxContext)
+      case 'submitWiki':
+        return await wikiActions.submitWiki(data, wxContext)
+      case 'adminCreateWiki':
+        return await wikiActions.adminCreateWiki(data, wxContext)
+      case 'adminUpdateWiki':
+        return await wikiActions.adminUpdateWiki(data, wxContext)
+      case 'adminDeleteWiki':
+        return await wikiActions.adminDeleteWiki(data, wxContext)
 
       // 管理员
       case 'adminDeleteMahjongRecord':

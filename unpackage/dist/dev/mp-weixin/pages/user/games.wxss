@@ -21,9 +21,10 @@
 .nav-left.data-v-69e18c5c {
   width: 80rpx;
 }
-.back-icon.data-v-69e18c5c {
-  width: 40rpx;
-  height: 40rpx;
+.nav-text-btn.data-v-69e18c5c {
+  font-size: 28rpx;
+  color: #374151;
+  line-height: 1;
 }
 .nav-title.data-v-69e18c5c {
   font-size: 36rpx;
@@ -94,12 +95,6 @@
   align-items: center;
   padding: 40rpx 0;
   flex: 1; /* 占据可用空间 */
-}
-.empty-image.data-v-69e18c5c {
-  width: 200rpx;
-  height: 200rpx;
-  margin-bottom: 20rpx;
-  opacity: 0.5;
 }
 .empty-text.data-v-69e18c5c {
   font-size: 28rpx;
@@ -265,9 +260,9 @@
   background-color: #f0f0f0;
 }
 .arrow-right.data-v-69e18c5c {
-  width: 24rpx;
-  height: 24rpx;
-  opacity: 0.5;
+  font-size: 28rpx;
+  color: #9ca3af;
+  line-height: 1;
 }
 
 /* 关键修复：表单输入框 - 解决压缩问题 */

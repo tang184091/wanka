@@ -8,7 +8,7 @@
 
     <!-- 错误状态 -->
     <view v-else-if="error" class="error-container">
-      <image src="/static/error.png" class="error-image" />
+      <image src="/static/empty.png" class="error-image" />
       <text class="error-text">{{ error }}</text>
       <view class="error-actions">
         <view class="retry-btn" @tap="loadGameDetail">重试</view>
@@ -104,18 +104,15 @@
         <view class="section-title">创建者</view>
         <view class="creator-info">
           <image 
-            :src="gameDetail.creatorInfo.avatar || '/static/images/default-avatar.png'" 
+            :src="creatorAvatarSrc" 
             class="creator-avatar" 
-            @error="handleAvatarError"
+            @error="handleAvatarError('creator')"
           />
           <view class="creator-detail">
             <view class="creator-name-row">
               <text class="creator-name">{{ gameDetail.creatorInfo.nickname || '未知用户' }}</text>
               <view v-if="gameDetail.creatorInfo.gender" class="gender-badge">
-                <image 
-                  :src="gameDetail.creatorInfo.gender === 1 ? '/static/icons/male.png' : '/static/icons/female.png'" 
-                  class="gender-icon" 
-                />
+                <text class="gender-text">{{ gameDetail.creatorInfo.gender === 1 ? '男' : '女' }}</text>
               </view>
             </view>
             <!-- 修改点1：模板中调用 getTagDisplay 函数 -->
@@ -150,16 +147,15 @@
           <view class="player-item creator">
             <view class="player-avatar-container">
               <image 
-                :src="gameDetail.creatorInfo?.avatar || '/static/images/default-avatar.png'" 
+                :src="creatorAvatarSrc" 
                 class="player-avatar" 
-                @error="handleAvatarError"
+                @error="handleAvatarError('creator')"
               />
               <view class="creator-badge">创建者</view>
             </view>
             <view class="player-info">
               <text class="player-name">{{ gameDetail.creatorInfo?.nickname || '未知用户' }}</text>
               <view class="player-status">
-                <image src="/static/icons/creator.png" class="status-icon" />
                 <text class="status-text">已加入</text>
               </view>
             </view>
@@ -172,14 +168,13 @@
             class="player-item"
           >
             <image 
-              :src="player.avatar || '/static/images/default-avatar.png'" 
+              :src="getParticipantAvatarSrc(player, index)" 
               class="player-avatar" 
-              @error="handleAvatarError"
+              @error="handleAvatarError(getParticipantAvatarKey(player, index))"
             />
             <view class="player-info">
               <text class="player-name">{{ player.nickname || '玩家' + (index + 1) }}</text>
               <view class="player-status">
-                <image src="/static/icons/join.png" class="status-icon" />
                 <text class="status-text">已加入</text>
               </view>
             </view>
@@ -211,9 +206,6 @@
             :key="index"
             class="activity-item"
           >
-            <view class="activity-icon">
-              <image :src="getActivityIcon(activity.type)" class="activity-icon-img" />
-            </view>
             <view class="activity-content">
               <text class="activity-text">{{ activity.text || '未知操作' }}</text>
               <text class="activity-time">{{ formatRelativeTime(activity.createdAt) }}</text>
@@ -230,10 +222,10 @@
     <view v-if="!loading && !error && gameDetail.status === 'pending'" class="action-bar">
       <view class="action-buttons">
         <!-- 分享按钮 -->
-        <view class="share-btn" @tap="handleShare">
+        <button class="share-btn share-button" open-type="share">
           <image src="/static/icons/share-green.png" class="share-icon" />
           <text class="share-text">分享</text>
-        </view>
+        </button>
 
         <!-- 动态按钮 -->
         <template v-if="!gameDetail.isJoined">
@@ -242,7 +234,6 @@
             class="join-btn"
             @tap="handleJoin"
           >
-            <image src="/static/icons/join-white.png" class="btn-icon" />
             <text class="btn-text">立即加入</text>
           </view>
           
@@ -250,7 +241,6 @@
             v-else
             class="full-btn disabled"
           >
-            <image src="/static/icons/full.png" class="btn-icon" />
             <text class="btn-text">已满员</text>
           </view>
         </template>
@@ -260,7 +250,6 @@
             class="quit-btn"
             @tap="handleQuit"
           >
-            <image src="/static/icons/quit-white.png" class="btn-icon" />
             <text class="btn-text">退出组局</text>
           </view>
         </template>
@@ -268,11 +257,9 @@
         <template v-else>
           <view class="creator-actions">
             <view class="edit-btn" @tap="handleEdit">
-              <image src="/static/icons/edit.png" class="btn-icon" />
               <text class="btn-text">编辑</text>
             </view>
             <view class="cancel-btn" @tap="handleCancel">
-              <image src="/static/icons/cancel-red.png" class="btn-icon" />
               <text class="btn-text">取消</text>
             </view>
           </view>
@@ -282,7 +269,6 @@
 
     <!-- 已取消提示 -->
     <view v-if="!loading && !error && gameDetail.status === 'cancelled'" class="cancelled-banner">
-      <image src="/static/icons/cancelled.png" class="cancelled-icon" />
       <text class="cancelled-text">此组局已取消</text>
     </view>
   </view>
@@ -291,6 +277,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+import constants from '@/utils/constants.js'
 
 // 响应式数据
 const gameDetail = ref({
@@ -308,8 +295,70 @@ const refreshing = ref(false)
 const error = ref('')
 const gameId = ref('')
 const currentUser = ref(null)
+const creatorAvatarError = ref(false)
+const participantAvatarErrors = ref({})
+
+const LOCAL_DEFAULT_AVATAR = '/static/empty.png'
+const LOCAL_SHARE_IMAGE = '/static/empty.png'
+
+const isCloudFileId = (value) => typeof value === 'string' && value.startsWith('cloud://')
+const isHttpUrl = (value) => typeof value === 'string' && /^https?:\/\//.test(value)
+
+const normalizeAvatarUrl = (avatar, tempUrlMap = {}) => {
+  if (!avatar) return LOCAL_DEFAULT_AVATAR
+  if (isCloudFileId(avatar)) {
+    return tempUrlMap[avatar] || LOCAL_DEFAULT_AVATAR
+  }
+  if (isHttpUrl(avatar) || avatar.startsWith('/')) {
+    return avatar
+  }
+  return LOCAL_DEFAULT_AVATAR
+}
+
+const getParticipantAvatarKey = (player, index) => {
+  return player?.id || player?._id || player?.openid || `player-${index}`
+}
+
+const getParticipantAvatarSrc = (player, index) => {
+  const key = getParticipantAvatarKey(player, index)
+  if (participantAvatarErrors.value[key]) {
+    return LOCAL_DEFAULT_AVATAR
+  }
+  return player?.avatar || LOCAL_DEFAULT_AVATAR
+}
+
+const creatorAvatarSrc = computed(() => {
+  if (creatorAvatarError.value) return LOCAL_DEFAULT_AVATAR
+  return gameDetail.value?.creatorInfo?.avatar || LOCAL_DEFAULT_AVATAR
+})
+
+const getCloudTempUrlMap = async (fileList = []) => {
+  const uniqueFileList = [...new Set(fileList.filter(Boolean))]
+  if (!uniqueFileList.length) return {}
+
+  try {
+    const res = await wx.cloud.getTempFileURL({ fileList: uniqueFileList })
+    const tempUrlMap = {}
+    const entries = res?.fileList || []
+    entries.forEach((item) => {
+      if (!item?.fileID) return
+      if (item.status === 0 && item.tempFileURL) {
+        tempUrlMap[item.fileID] = item.tempFileURL
+      }
+    })
+    return tempUrlMap
+  } catch (err) {
+    console.error('获取云文件临时链接失败:', err)
+    return {}
+  }
+}
 
 onLoad(async (options) => {
+  uni.showShareMenu({
+    withShareTicket: true,
+    menus: ['shareAppMessage', 'shareTimeline']
+  })
+
   if (options.id) {
     gameId.value = options.id
     console.log('开始加载组局详情，ID:', gameId.value)
@@ -353,6 +402,8 @@ const getCurrentUser = async () => {
 const loadGameDetail = async () => {
   loading.value = true
   error.value = ''
+  creatorAvatarError.value = false
+  participantAvatarErrors.value = {}
   
   try {
     console.log('调用game-service获取详情，参数:', { gameId: gameId.value })
@@ -368,30 +419,40 @@ const loadGameDetail = async () => {
     console.log('获取组局详情结果:', res)
     
     if (res.result && res.result.code === 0) {
-      const game = res.result.data
+      const game = res.result.data || {}
+      const participants = Array.isArray(game.participants) ? game.participants : []
+      const cloudFileIds = [
+        game?.creatorInfo?.avatar || constants.DEFAULT_AVATAR,
+        ...participants.map((player) => player?.avatar)
+      ].filter((value) => isCloudFileId(value))
+      const cloudTempUrlMap = await getCloudTempUrlMap(cloudFileIds)
       
       // 计算是否已加入
       let isJoined = false
       if (currentUser.value) {
-        isJoined = game.participants?.some(p => p.id === currentUser.value.id) || false
+        isJoined = participants.some(p => p.id === currentUser.value.id)
       }
       
       // 计算是否是创建者
       const isCreator = currentUser.value && (game.creatorId === currentUser.value.id)
       
       // 计算是否已满员
-      const currentPlayers = (game.participants || []).length + 1
+      const currentPlayers = participants.length + 1
       const isFull = currentPlayers >= (game.maxPlayers || 4)
       
       gameDetail.value = {
         ...game,
         id: game._id || game.id,
-        creatorInfo: game.creatorInfo || { 
-          nickname: '未知用户', 
-          avatar: '/static/images/default-avatar.png',
-          tags: []
+        creatorInfo: {
+          ...(game.creatorInfo || {}),
+          nickname: game?.creatorInfo?.nickname || '未知用户',
+          tags: game?.creatorInfo?.tags || [],
+          avatar: normalizeAvatarUrl(game?.creatorInfo?.avatar || constants.DEFAULT_AVATAR, cloudTempUrlMap)
         },
-        participants: game.participants || [],
+        participants: participants.map((player) => ({
+          ...player,
+          avatar: normalizeAvatarUrl(player?.avatar, cloudTempUrlMap)
+        })),
         activities: game.activities || [],
         currentPlayers: currentPlayers,
         isFull: isFull,
@@ -436,6 +497,7 @@ const getTypeClass = (type) => {
     'mahjong': 'tag-mahjong',
     'boardgame': 'tag-boardgame',
     'videogame': 'tag-videogame',
+    'cardgame': 'tag-cardgame',
     'competition': 'tag-competition',
     'sports': 'tag-sports',
     'other': 'tag-other'
@@ -449,6 +511,7 @@ const getTypeText = (type) => {
     'mahjong': '立直麻将',
     'boardgame': '桌游',
     'videogame': '电玩',
+    'cardgame': '打牌',
     'competition': '比赛',
     'sports': '运动',
     'other': '其他'
@@ -465,18 +528,6 @@ const getStatusText = (game) => {
   } else {
     return `缺${(game.maxPlayers || 4) - (game.currentPlayers || 1)}人`
   }
-}
-
-// 获取活动图标
-const getActivityIcon = (type) => {
-  const iconMap = {
-    'create': '/static/icons/create.png',
-    'join': '/static/icons/join.png',
-    'quit': '/static/icons/quit.png',
-    'cancel': '/static/icons/cancel.png',
-    'update': '/static/icons/update.png'
-  }
-  return iconMap[type] || '/static/icons/default-activity.png'
 }
 
 // 格式化日期时间
@@ -561,9 +612,16 @@ const formatRelativeTime = (datetime) => {
 }
 
 // 处理头像加载失败
-const handleAvatarError = (e) => {
-  console.log('头像加载失败:', e)
-  e.detail.target.src = '/static/images/default-avatar.png'
+const handleAvatarError = (key) => {
+  console.log('头像加载失败:', key)
+  if (key === 'creator') {
+    creatorAvatarError.value = true
+    return
+  }
+  participantAvatarErrors.value = {
+    ...participantAvatarErrors.value,
+    [key]: true
+  }
 }
 
 // 加入组局
@@ -721,28 +779,6 @@ const handleQuit = async () => {
   })
 }
 
-// 分享
-const handleShare = () => {
-  uni.showActionSheet({
-    itemList: ['分享给好友', '分享到朋友圈'],
-    success: (res) => {
-      if (res.tapIndex === 0) {
-        // 小程序分享会自动触发onShareAppMessage
-        uni.showShareMenu({
-          withShareTicket: true
-        })
-      } else if (res.tapIndex === 1) {
-        // 分享到朋友圈
-        uni.showModal({
-          title: '提示',
-          content: '请点击右上角菜单，选择"分享到朋友圈"',
-          showCancel: false
-        })
-      }
-    }
-  })
-}
-
 // 编辑
 const handleEdit = () => {
   if (!currentUser.value || !gameDetail.value.isCreator) {
@@ -859,7 +895,7 @@ onShareAppMessage(() => {
   return {
     title: `${gameDetail.value.title} - 玩咖约局`,
     path: `/pages/detail/detail?id=${gameId.value}`,
-    imageUrl: gameDetail.value.creatorInfo?.avatar || '/static/images/share-default.jpg'
+    imageUrl: LOCAL_SHARE_IMAGE
   }
 })
 
@@ -868,7 +904,7 @@ onShareTimeline(() => {
   return {
     title: `玩咖约局：${gameDetail.value.title}`,
     query: `id=${gameId.value}`,
-    imageUrl: gameDetail.value.creatorInfo?.avatar || '/static/images/share-default.jpg'
+    imageUrl: LOCAL_SHARE_IMAGE
   }
 })
 </script>
@@ -1020,6 +1056,7 @@ onShareTimeline(() => {
 .tag-mahjong { background-color: #ff6b6b; }
 .tag-boardgame { background-color: #4dabf7; }
 .tag-videogame { background-color: #69db7c; }
+.tag-cardgame { background-color: #0ea5e9; }
 .tag-competition { background-color: #8b5cf6; }
 .tag-sports { background-color: #ff922b; }
 .tag-other { background-color: #adb5bd; }
@@ -1187,9 +1224,11 @@ onShareTimeline(() => {
   background-color: #e6f7ff;
 }
 
-.gender-icon {
-  width: 20rpx;
-  height: 20rpx;
+.gender-text {
+  font-size: 20rpx;
+  color: #1f2937;
+  line-height: 1;
+  font-weight: 600;
 }
 
 .creator-tags {
@@ -1323,13 +1362,6 @@ onShareTimeline(() => {
 .player-status {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-}
-
-.status-icon {
-  width: 24rpx;
-  height: 24rpx;
-  opacity: 0.7;
 }
 
 .status-text {
@@ -1405,22 +1437,6 @@ onShareTimeline(() => {
   border-bottom: none;
 }
 
-.activity-icon {
-  width: 40rpx;
-  height: 40rpx;
-  margin-right: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-.activity-icon-img {
-  width: 100%;
-  height: 100%;
-}
-
 .activity-content {
   flex: 1;
   display: flex;
@@ -1458,11 +1474,6 @@ onShareTimeline(() => {
   box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
 }
 
-.cancelled-icon {
-  width: 36rpx;
-  height: 36rpx;
-}
-
 .cancelled-text {
   font-size: 28rpx;
   font-weight: 500;
@@ -1498,6 +1509,14 @@ onShareTimeline(() => {
   flex-shrink: 0;
   transition: all 0.3s;
 }
+.share-button {
+  border: 0;
+  margin: 0;
+  line-height: normal;
+}
+.share-button::after {
+  border: 0;
+}
 
 .share-btn:active {
   background-color: #e9ecef;
@@ -1532,11 +1551,6 @@ onShareTimeline(() => {
   font-weight: 500;
   transition: all 0.3s;
   gap: 10rpx;
-}
-
-.btn-icon {
-  width: 36rpx;
-  height: 36rpx;
 }
 
 .btn-text {
@@ -1604,9 +1618,6 @@ onShareTimeline(() => {
   box-shadow: none;
 }
 
-.full-btn.disabled .btn-icon {
-  opacity: 0.6;
-}
 
 /* 安全区域 */
 .safe-area-bottom {

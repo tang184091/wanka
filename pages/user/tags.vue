@@ -3,7 +3,7 @@
     <!-- 导航栏 -->
     <view class="nav-bar">
       <view class="nav-left" @tap="goBack">
-        <image src="/static/icons/back.png" class="back-icon" />
+        <text class="nav-text-btn">返回</text>
       </view>
       <view class="nav-title">标签管理</view>
       <view class="nav-right" @tap="saveTags">
@@ -91,9 +91,9 @@ import UserService from '@/utils/user.js'
 
 // 系统推荐标签
 const systemTags = ref([
-  { id: 1, name: '立直麻将素人' },
-  { id: 2, name: '你同我认真打' },
-  { id: 3, name: '乱冲下次不和你玩了' },
+  { id: 1, name: '玩咖萌新' },
+  { id: 2, name: '功利玩家' },
+  { id: 3, name: '你别乱冲' },
   { id: 4, name: '狙击七段' },
   { id: 5, name: '周末有空' },
   { id: 6, name: '工作日晚上' },
@@ -291,9 +291,10 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.back-icon {
-  width: 40rpx;
-  height: 40rpx;
+.nav-text-btn {
+  font-size: 28rpx;
+  color: #374151;
+  line-height: 1;
 }
 
 .nav-title {
@@ -355,9 +356,9 @@ onMounted(() => {
 
 /* 标签列表 */
 .tags-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20rpx;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16rpx;
   width: 100%;
   box-sizing: border-box;
 }
@@ -366,45 +367,47 @@ onMounted(() => {
   position: relative;
   background-color: #f0f0f0;
   color: #666;
-  padding: 15rpx 30rpx;
-  border-radius: 30rpx;
-  font-size: 28rpx;
+  height: 72rpx;
+  border-radius: 12rpx;
+  font-size: 24rpx;
   transition: all 0.3s;
   border: 2rpx solid transparent;
-  flex-shrink: 0; /* 不压缩 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-sizing: border-box;
+  padding: 0 12rpx;
 }
 
 .tag-item.selected {
   background-color: #e6f7ff;
   color: #1890ff;
   border-color: #1890ff;
-  padding-right: 50rpx;
 }
 
 .tag-text {
-  font-size: 28rpx;
+  font-size: 24rpx;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200rpx;
+  max-width: 100%;
   display: block;
+  text-align: center;
 }
 
 .tag-check {
   position: absolute;
-  right: 15rpx;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 30rpx;
-  height: 30rpx;
+  right: 6rpx;
+  top: 6rpx;
+  width: 24rpx;
+  height: 24rpx;
   background-color: #1890ff;
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20rpx;
+  font-size: 16rpx;
   font-weight: bold;
   flex-shrink: 0;
 }

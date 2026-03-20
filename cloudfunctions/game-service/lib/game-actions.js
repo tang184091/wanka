@@ -22,6 +22,7 @@ async function createGame(data, wxContext) {
     mahjong: [3, 4],
     boardgame: [2, 10],
     videogame: [2, 8],
+    cardgame: [2, 8],
     competition: [4, 32]
   }
   const [minAllowed, maxAllowed] = playerRange[type] || [2, 20]
@@ -69,26 +70,44 @@ async function getGameList(data, wxContext) {
   const cond = { status }
   if (type && type !== 'all') cond.type = type
 
-  const query = db.collection('games').where(cond)
-  const [totalRes, listRes] = await Promise.all([
-    query.count(),
-    query.orderBy('time', 'asc').skip((page - 1) * pageSize).limit(pageSize).get()
-  ])
+  const query = db.collection('games').where(cond).orderBy('time', 'asc')
+  const countRes = await query.count()
+  const totalRaw = countRes.total || 0
+  const rawList = []
+  const batchSize = 100
+
+  for (let offset = 0; offset < totalRaw; offset += batchSize) {
+    const res = await query.skip(offset).limit(batchSize).get()
+    rawList.push(...(res.data || []))
+  }
+
+  const nowTs = Date.now()
+  const activeList = rawList.filter((game) => {
+    if (!game?.time) return true
+    const ts = new Date(game.time).getTime()
+    if (Number.isNaN(ts)) return true
+    return ts > nowTs
+  })
+
+  const start = (Number(page) - 1) * Number(pageSize)
+  const end = start + Number(pageSize)
+  const pageList = activeList.slice(start, end)
 
   const user = await getCurrentUser(wxContext)
   const viewerUserId = user ? user._id : ''
 
   const list = []
-  for (const game of listRes.data || []) {
+  for (const game of pageList) {
     list.push(await enrichGame(game, viewerUserId))
   }
 
+  const total = activeList.length
   return success({
     list,
-    total: totalRes.total || 0,
+    total,
     page,
     pageSize,
-    hasMore: page * pageSize < (totalRes.total || 0)
+    hasMore: Number(page) * Number(pageSize) < total
   }, '获取成功')
 }
 
@@ -131,8 +150,14 @@ async function updateGame(data, wxContext) {
   if (updates.maxPlayers) {
     const maxPlayers = Number(updates.maxPlayers)
     const gameType = updates.type || gameRes.data.type
-    const maxAllowed = gameType === 'competition' ? 32 : 20
-    const minAllowed = gameType === 'competition' ? 4 : 2
+    const playerRange = {
+      mahjong: [3, 4],
+      boardgame: [2, 10],
+      videogame: [2, 8],
+      cardgame: [2, 8],
+      competition: [4, 32]
+    }
+    const [minAllowed, maxAllowed] = playerRange[gameType] || [2, 20]
     if (maxPlayers < minAllowed || maxPlayers > maxAllowed) {
       return fail(400, `参与人数必须在${minAllowed}-${maxAllowed}人之间`)
     }

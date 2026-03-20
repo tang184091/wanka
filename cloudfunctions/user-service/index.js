@@ -44,6 +44,10 @@ exports.main = async (event) => {
         return await updateUserGames(data, wxContext)
       case 'updateUserAvatar':
         return await updateUserAvatar(data, wxContext)
+      case 'adminUpdateUserProfile':
+        return await adminUpdateUserProfile(data, wxContext)
+      case 'adminUpdateUserTags':
+        return await adminUpdateUserTags(data, wxContext)
       case 'getUserStats':
         return await getUserStats(data)
       case 'searchUsers':
@@ -278,6 +282,85 @@ async function updateUserAvatar(data, wxContext) {
   })
 
   return success({ avatar: avatarUrl }, '头像更新成功')
+}
+
+async function adminUpdateUserProfile(data, wxContext) {
+  const currentUser = await getCurrentUser(wxContext)
+  if (!currentUser) return fail(401, '璇峰厛鐧诲綍')
+  if (!isAdminUser(currentUser)) return fail(403, '浠呯鐞嗗憳鍙搷浣?')
+
+  const targetUserId = String(data?.userId || '').trim()
+  if (!targetUserId) return fail(400, '缂哄皯鐢ㄦ埛ID')
+
+  const nickname = data?.nickname
+  const avatarUrl = data?.avatarUrl
+  const avatarSize = Number(data?.avatarSize || 0)
+  const updates = {}
+
+  if (typeof nickname !== 'undefined') {
+    const text = String(nickname || '').trim()
+    if (!text) return fail(400, '鏄电О涓嶈兘涓虹┖')
+    updates.nickname = text.slice(0, 32)
+  }
+
+  if (typeof avatarUrl !== 'undefined') {
+    const url = String(avatarUrl || '').trim()
+    if (!url) return fail(400, '澶村儚URL涓嶈兘涓虹┖')
+    if (!url.startsWith('cloud://') && !url.startsWith('http')) {
+      return fail(400, '澶村儚URL鏍煎紡涓嶆纭?')
+    }
+    if (avatarSize > 2 * 1024 * 1024) {
+      return fail(400, '澶村儚澶у皬涓嶈兘瓒呰繃2MB')
+    }
+    updates.avatar = url
+  }
+
+  if (!Object.keys(updates).length) return fail(400, '娌℃湁鍙洿鏂扮殑鍐呭')
+
+  updates.updatedAt = new Date()
+  updates.adminUpdatedBy = currentUser._id
+
+  await db.collection('users').doc(targetUserId).update({ data: updates })
+  const userRes = await db.collection('users').doc(targetUserId).get()
+  if (!userRes.data) return fail(404, '鐢ㄦ埛涓嶅瓨鍦?')
+
+  return success(toUserDto(userRes.data), '鏇存柊鎴愬姛')
+}
+
+async function adminUpdateUserTags(data, wxContext) {
+  const currentUser = await getCurrentUser(wxContext)
+  if (!currentUser) return fail(401, '请先登录')
+  if (!isAdminUser(currentUser)) return fail(403, '仅管理员可操作')
+
+  const targetUserId = String(data?.userId || '').trim()
+  if (!targetUserId) return fail(400, '缺少用户ID')
+
+  const tags = Array.isArray(data?.tags) ? data.tags : null
+  if (!tags) return fail(400, '标签格式错误')
+  if (tags.length > 20) return fail(400, '标签数量不能超过20个')
+
+  const normalizedTags = []
+  for (let i = 0; i < tags.length; i++) {
+    const tag = tags[i] || {}
+    const name = String(tag.name || '').trim().slice(0, 12)
+    if (!name) continue
+    normalizedTags.push({
+      id: tag.id || (10000 + i),
+      name
+    })
+  }
+
+  await db.collection('users').doc(targetUserId).update({
+    data: {
+      tags: normalizedTags,
+      updatedAt: new Date(),
+      adminUpdatedBy: currentUser._id
+    }
+  })
+
+  const userRes = await db.collection('users').doc(targetUserId).get()
+  if (!userRes.data) return fail(404, '用户不存在')
+  return success(toUserDto(userRes.data), '标签更新成功')
 }
 
 async function getMe(wxContext) {

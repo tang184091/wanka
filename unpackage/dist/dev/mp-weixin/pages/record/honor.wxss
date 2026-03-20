@@ -15,11 +15,19 @@
 }
 .card-head.data-v-d6d8b840 { display:flex; justify-content:space-between; align-items:center; margin-bottom:8rpx;
 }
-.badge.data-v-d6d8b840 { font-size: 22rpx; padding: 4rpx 12rpx; border-radius: 999rpx; color:#fff;
+.badge.data-v-d6d8b840 { font-size: 22rpx; padding: 4rpx 12rpx; border-radius: 999rpx;
 }
-.badge-match.data-v-d6d8b840 { background:#7c3aed;
+.badge-match.data-v-d6d8b840 { color:#fff;
 }
-.badge-rank.data-v-d6d8b840 { background:#2563eb;
+.badge-rank.data-v-d6d8b840 { color:#fff;
+}
+.badge-legend.data-v-d6d8b840 { background: linear-gradient(135deg,#f59e0b,#fcd34d); color:#7c2d12;
+}
+.badge-epic.data-v-d6d8b840 { background: linear-gradient(135deg,#7c3aed,#8b5cf6); color:#fff;
+}
+.badge-rare.data-v-d6d8b840 { background: linear-gradient(135deg,#2563eb,#38bdf8); color:#fff;
+}
+.badge-common.data-v-d6d8b840 { background:#fff; color:#111827; border:1rpx solid #111827;
 }
 .time.data-v-d6d8b840 { font-size: 22rpx; color:#6b7280;
 }

@@ -211,6 +211,15 @@ async function getHonorList() {
   }
 }
 
+function normalizeHonorRarity(rawRarity) {
+  const value = String(rawRarity || '').trim().toLowerCase()
+  if (value === 'legend' || value === 'gold') return 'legend'
+  if (value === 'epic' || value === 'purple') return 'epic'
+  if (value === 'rare' || value === 'blue' || value === 'silver') return 'rare'
+  if (value === 'common' || value === 'normal') return 'common'
+  return ''
+}
+
 async function createHonorRecord(data, wxContext) {
   const currentUser = await getCurrentUser(wxContext)
   if (!currentUser) return fail(401, '请先登录')
@@ -219,11 +228,14 @@ async function createHonorRecord(data, wxContext) {
   const payload = data || {}
   const type = String(payload.type || '').trim()
   const achievedAt = new Date(payload.achievedAt || Date.now())
+  const rarity = normalizeHonorRarity(payload.rarity || 'epic')
+  if (!rarity) return fail(400, '荣誉稀有度不合法')
   if (!['tournament', 'rank'].includes(type)) return fail(400, '荣誉类型不合法')
   if (Number.isNaN(achievedAt.getTime())) return fail(400, '达成日期格式错误')
 
   const base = {
     type,
+    rarity,
     achievedAt,
     note: String(payload.note || '').trim(),
     uploaderId: currentUser._id,
@@ -277,6 +289,65 @@ async function createHonorRecord(data, wxContext) {
   }
 }
 
+async function updateHonorRecord(data, wxContext) {
+  const currentUser = await getCurrentUser(wxContext)
+  if (!currentUser) return fail(401, '请先登录')
+  if (!isAdminUser(currentUser)) return fail(403, '仅管理员可修改荣誉记录')
+
+  const payload = data || {}
+  const recordId = String(payload.recordId || '').trim()
+  const type = String(payload.type || '').trim()
+  const achievedAt = new Date(payload.achievedAt || Date.now())
+  const rarity = normalizeHonorRarity(payload.rarity || 'epic')
+
+  if (!recordId) return fail(400, '缺少荣誉记录ID')
+  if (!['tournament', 'rank'].includes(type)) return fail(400, '荣誉类型不合法')
+  if (Number.isNaN(achievedAt.getTime())) return fail(400, '达成日期格式错误')
+  if (!rarity) return fail(400, '荣誉稀有度不合法')
+
+  const updateData = {
+    type,
+    rarity,
+    achievedAt,
+    note: String(payload.note || '').trim(),
+    updaterId: currentUser._id,
+    updaterNickname: currentUser.nickname || '未知用户',
+    updatedAt: new Date()
+  }
+
+  if (type === 'tournament') {
+    const championNickname = String(payload.championNickname || '').trim()
+    const participantCount = Number(payload.participantCount || 0)
+    if (!championNickname || participantCount < 4 || participantCount > 32) {
+      return fail(400, '比赛信息不完整，人数需在4-32之间')
+    }
+    updateData.title = String(payload.title || '店内比赛').trim()
+    updateData.championNickname = championNickname
+    updateData.participantCount = participantCount
+    updateData.playerNickname = _.remove()
+    updateData.rankName = _.remove()
+  } else {
+    const playerNickname = String(payload.playerNickname || '').trim()
+    const rankName = String(payload.rankName || '').trim()
+    if (!playerNickname || !rankName) return fail(400, '段位荣誉信息不完整')
+    updateData.playerNickname = playerNickname
+    updateData.rankName = rankName
+    updateData.title = _.remove()
+    updateData.championNickname = _.remove()
+    updateData.participantCount = _.remove()
+  }
+
+  try {
+    await db.collection('honor_records').doc(recordId).update({ data: updateData })
+    return success({ id: recordId }, '修改成功')
+  } catch (error) {
+    if (isCollectionNotExistsError(error)) {
+      return fail(500, '缺少 honor_records 集合，请先在云开发数据库中创建该集合')
+    }
+    throw error
+  }
+}
+
 module.exports = {
   fillPlayerNicknames,
   getMahjongRecords,
@@ -286,5 +357,6 @@ module.exports = {
   createYakumanRecord,
   getHonorList,
   createHonorRecord,
+  updateHonorRecord,
   YAKUMAN_TYPES
 }

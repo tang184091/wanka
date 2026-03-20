@@ -6,6 +6,9 @@ const _sfc_main = {
   __name: "seat",
   setup(__props) {
     const refreshing = common_vendor.ref(false);
+    const today = /* @__PURE__ */ new Date();
+    const selectedDate = common_vendor.ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`);
+    const selectedDateLabel = common_vendor.computed(() => `日期：${selectedDate.value}`);
     let seatRefreshTimer = null;
     const floor2Left = common_vendor.ref([
       { id: "f2-bg-1", name: "桌游房1", type: "boardgame", status: "available", capacity: 8, device: "桌游桌" },
@@ -43,7 +46,10 @@ const _sfc_main = {
     const refreshSeatStatus = async () => {
       var _a, _b;
       try {
-        const res = await common_vendor.wx$1.cloud.callFunction({ name: "game-service", data: { action: "getSeatStatus", data: {} } });
+        const res = await common_vendor.wx$1.cloud.callFunction({
+          name: "game-service",
+          data: { action: "getSeatStatus", data: { date: selectedDate.value } }
+        });
         const rawStatusMap = ((_b = (_a = res == null ? void 0 : res.result) == null ? void 0 : _a.data) == null ? void 0 : _b.statusByLocation) || {};
         const statusMap = {};
         Object.keys(rawStatusMap).forEach((key) => {
@@ -58,7 +64,7 @@ const _sfc_main = {
         interArcade2.value = { ...interArcade2.value, status: setSeatStatusByName(interArcade2.value.name, statusMap) };
         arcadeRoom.value = { ...arcadeRoom.value, status: setSeatStatusByName(arcadeRoom.value.name, statusMap) };
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/seat/seat.vue:170", "获取座位状态失败:", error);
+        common_vendor.index.__f__("error", "at pages/seat/seat.vue:181", "获取座位状态失败:", error);
       }
     };
     const handleRefresh = async () => {
@@ -71,6 +77,10 @@ const _sfc_main = {
       } finally {
         refreshing.value = false;
       }
+    };
+    const onDateChange = async (e) => {
+      selectedDate.value = e.detail.value;
+      await handleRefresh();
     };
     common_vendor.onShow(() => {
       handleRefresh();
@@ -108,10 +118,11 @@ const _sfc_main = {
       const typeProjectMap = {
         mahjong: "立直麻将局",
         boardgame: "桌游局",
-        videogame: "电玩局"
+        videogame: "电玩局",
+        cardgame: "打牌局"
       };
       common_vendor.index.navigateTo({
-        url: `/pages/create/create?type=${encodeURIComponent(seat.type)}&location=${encodeURIComponent(seat.name)}&project=${encodeURIComponent(typeProjectMap[seat.type] || "娱乐局")}`
+        url: `/pages/create/create?type=${encodeURIComponent(seat.type)}&location=${encodeURIComponent(seat.name)}&project=${encodeURIComponent(typeProjectMap[seat.type] || "娱乐局")}&date=${encodeURIComponent(selectedDate.value)}`
       });
     };
     const onSeatTap = (seat) => {
@@ -137,77 +148,80 @@ const _sfc_main = {
     };
     return (_ctx, _cache) => {
       return {
-        a: common_vendor.t(refreshing.value ? "刷新中..." : "刷新"),
-        b: refreshing.value ? 1 : "",
-        c: common_vendor.o(handleRefresh, "87"),
-        d: common_vendor.t(arcadeRoom.value.name),
-        e: common_vendor.t(getSeatStatusText(arcadeRoom.value.status)),
-        f: common_vendor.n(getSeatStatusClass(arcadeRoom.value.status)),
-        g: common_vendor.o(($event) => onSeatTap(arcadeRoom.value), "9e"),
-        h: common_vendor.t(interArcade1.value.name),
-        i: common_vendor.t(getSeatStatusText(interArcade1.value.status)),
-        j: common_vendor.n(getSeatStatusClass(interArcade1.value.status)),
-        k: common_vendor.o(($event) => onSeatTap(interArcade1.value), "b1"),
-        l: common_vendor.t(interArcade2.value.name),
-        m: common_vendor.t(getSeatStatusText(interArcade2.value.status)),
-        n: common_vendor.n(getSeatStatusClass(interArcade2.value.status)),
-        o: common_vendor.o(($event) => onSeatTap(interArcade2.value), "a2"),
-        p: common_vendor.t(interDesk.value.name),
-        q: common_vendor.t(getSeatStatusText(interDesk.value.status)),
-        r: common_vendor.n(getSeatStatusClass(interDesk.value.status)),
-        s: common_vendor.o(($event) => onSeatTap(interDesk.value), "3d"),
-        t: common_vendor.t(hallDeskRows.value[2][1].name),
-        v: common_vendor.t(getSeatStatusText(hallDeskRows.value[2][1].status)),
-        w: common_vendor.n(getSeatStatusClass(hallDeskRows.value[2][1].status)),
-        x: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[2][1]), "2e"),
-        y: common_vendor.t(hallDeskRows.value[2][0].name),
-        z: common_vendor.t(getSeatStatusText(hallDeskRows.value[2][0].status)),
-        A: common_vendor.n(getSeatStatusClass(hallDeskRows.value[2][0].status)),
-        B: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[2][0]), "3c"),
-        C: common_vendor.t(arcadeHall.value.name),
-        D: common_vendor.t(getSeatStatusText(arcadeHall.value.status)),
-        E: common_vendor.n(getSeatStatusClass(arcadeHall.value.status)),
-        F: common_vendor.o(($event) => onSeatTap(arcadeHall.value), "11"),
-        G: common_vendor.t(hallDeskRows.value[0][0].name),
-        H: common_vendor.t(getSeatStatusText(hallDeskRows.value[0][0].status)),
-        I: common_vendor.n(getSeatStatusClass(hallDeskRows.value[0][0].status)),
-        J: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[0][0]), "f9"),
-        K: common_vendor.t(hallDeskRows.value[0][1].name),
-        L: common_vendor.t(getSeatStatusText(hallDeskRows.value[0][1].status)),
-        M: common_vendor.n(getSeatStatusClass(hallDeskRows.value[0][1].status)),
-        N: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[0][1]), "2b"),
-        O: common_vendor.t(hallDeskRows.value[1][0].name),
-        P: common_vendor.t(getSeatStatusText(hallDeskRows.value[1][0].status)),
-        Q: common_vendor.n(getSeatStatusClass(hallDeskRows.value[1][0].status)),
-        R: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[1][0]), "c1"),
-        S: common_vendor.t(hallDeskRows.value[1][1].name),
-        T: common_vendor.t(getSeatStatusText(hallDeskRows.value[1][1].status)),
-        U: common_vendor.n(getSeatStatusClass(hallDeskRows.value[1][1].status)),
-        V: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[1][1]), "59"),
-        W: common_vendor.t(floor2Bottom.value[1].name),
-        X: common_vendor.t(getSeatStatusText(floor2Bottom.value[1].status)),
-        Y: common_vendor.n(getSeatStatusClass(floor2Bottom.value[1].status)),
-        Z: common_vendor.o(($event) => onSeatTap(floor2Bottom.value[1]), "76"),
-        aa: common_vendor.t(floor2Bottom.value[0].name),
-        ab: common_vendor.t(getSeatStatusText(floor2Bottom.value[0].status)),
-        ac: common_vendor.n(getSeatStatusClass(floor2Bottom.value[0].status)),
-        ad: common_vendor.o(($event) => onSeatTap(floor2Bottom.value[0]), "26"),
-        ae: common_vendor.t(floor2Left.value[3].name),
-        af: common_vendor.t(getSeatStatusText(floor2Left.value[3].status)),
-        ag: common_vendor.n(getSeatStatusClass(floor2Left.value[3].status)),
-        ah: common_vendor.o(($event) => onSeatTap(floor2Left.value[3]), "f4"),
-        ai: common_vendor.t(floor2Left.value[2].name),
-        aj: common_vendor.t(getSeatStatusText(floor2Left.value[2].status)),
-        ak: common_vendor.n(getSeatStatusClass(floor2Left.value[2].status)),
-        al: common_vendor.o(($event) => onSeatTap(floor2Left.value[2]), "e6"),
-        am: common_vendor.t(floor2Left.value[1].name),
-        an: common_vendor.t(getSeatStatusText(floor2Left.value[1].status)),
-        ao: common_vendor.n(getSeatStatusClass(floor2Left.value[1].status)),
-        ap: common_vendor.o(($event) => onSeatTap(floor2Left.value[1]), "6a"),
-        aq: common_vendor.t(floor2Left.value[0].name),
-        ar: common_vendor.t(getSeatStatusText(floor2Left.value[0].status)),
-        as: common_vendor.n(getSeatStatusClass(floor2Left.value[0].status)),
-        at: common_vendor.o(($event) => onSeatTap(floor2Left.value[0]), "34")
+        a: common_vendor.t(selectedDateLabel.value),
+        b: selectedDate.value,
+        c: common_vendor.o(onDateChange, "1d"),
+        d: common_vendor.t(refreshing.value ? "刷新中..." : "刷新"),
+        e: refreshing.value ? 1 : "",
+        f: common_vendor.o(handleRefresh, "75"),
+        g: common_vendor.t(arcadeRoom.value.name),
+        h: common_vendor.t(getSeatStatusText(arcadeRoom.value.status)),
+        i: common_vendor.n(getSeatStatusClass(arcadeRoom.value.status)),
+        j: common_vendor.o(($event) => onSeatTap(arcadeRoom.value), "a0"),
+        k: common_vendor.t(interArcade1.value.name),
+        l: common_vendor.t(getSeatStatusText(interArcade1.value.status)),
+        m: common_vendor.n(getSeatStatusClass(interArcade1.value.status)),
+        n: common_vendor.o(($event) => onSeatTap(interArcade1.value), "85"),
+        o: common_vendor.t(interArcade2.value.name),
+        p: common_vendor.t(getSeatStatusText(interArcade2.value.status)),
+        q: common_vendor.n(getSeatStatusClass(interArcade2.value.status)),
+        r: common_vendor.o(($event) => onSeatTap(interArcade2.value), "e2"),
+        s: common_vendor.t(interDesk.value.name),
+        t: common_vendor.t(getSeatStatusText(interDesk.value.status)),
+        v: common_vendor.n(getSeatStatusClass(interDesk.value.status)),
+        w: common_vendor.o(($event) => onSeatTap(interDesk.value), "57"),
+        x: common_vendor.t(hallDeskRows.value[2][1].name),
+        y: common_vendor.t(getSeatStatusText(hallDeskRows.value[2][1].status)),
+        z: common_vendor.n(getSeatStatusClass(hallDeskRows.value[2][1].status)),
+        A: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[2][1]), "57"),
+        B: common_vendor.t(hallDeskRows.value[2][0].name),
+        C: common_vendor.t(getSeatStatusText(hallDeskRows.value[2][0].status)),
+        D: common_vendor.n(getSeatStatusClass(hallDeskRows.value[2][0].status)),
+        E: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[2][0]), "d0"),
+        F: common_vendor.t(arcadeHall.value.name),
+        G: common_vendor.t(getSeatStatusText(arcadeHall.value.status)),
+        H: common_vendor.n(getSeatStatusClass(arcadeHall.value.status)),
+        I: common_vendor.o(($event) => onSeatTap(arcadeHall.value), "dc"),
+        J: common_vendor.t(hallDeskRows.value[0][0].name),
+        K: common_vendor.t(getSeatStatusText(hallDeskRows.value[0][0].status)),
+        L: common_vendor.n(getSeatStatusClass(hallDeskRows.value[0][0].status)),
+        M: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[0][0]), "01"),
+        N: common_vendor.t(hallDeskRows.value[0][1].name),
+        O: common_vendor.t(getSeatStatusText(hallDeskRows.value[0][1].status)),
+        P: common_vendor.n(getSeatStatusClass(hallDeskRows.value[0][1].status)),
+        Q: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[0][1]), "a5"),
+        R: common_vendor.t(hallDeskRows.value[1][0].name),
+        S: common_vendor.t(getSeatStatusText(hallDeskRows.value[1][0].status)),
+        T: common_vendor.n(getSeatStatusClass(hallDeskRows.value[1][0].status)),
+        U: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[1][0]), "60"),
+        V: common_vendor.t(hallDeskRows.value[1][1].name),
+        W: common_vendor.t(getSeatStatusText(hallDeskRows.value[1][1].status)),
+        X: common_vendor.n(getSeatStatusClass(hallDeskRows.value[1][1].status)),
+        Y: common_vendor.o(($event) => onSeatTap(hallDeskRows.value[1][1]), "5d"),
+        Z: common_vendor.t(floor2Bottom.value[1].name),
+        aa: common_vendor.t(getSeatStatusText(floor2Bottom.value[1].status)),
+        ab: common_vendor.n(getSeatStatusClass(floor2Bottom.value[1].status)),
+        ac: common_vendor.o(($event) => onSeatTap(floor2Bottom.value[1]), "dd"),
+        ad: common_vendor.t(floor2Bottom.value[0].name),
+        ae: common_vendor.t(getSeatStatusText(floor2Bottom.value[0].status)),
+        af: common_vendor.n(getSeatStatusClass(floor2Bottom.value[0].status)),
+        ag: common_vendor.o(($event) => onSeatTap(floor2Bottom.value[0]), "d4"),
+        ah: common_vendor.t(floor2Left.value[3].name),
+        ai: common_vendor.t(getSeatStatusText(floor2Left.value[3].status)),
+        aj: common_vendor.n(getSeatStatusClass(floor2Left.value[3].status)),
+        ak: common_vendor.o(($event) => onSeatTap(floor2Left.value[3]), "d8"),
+        al: common_vendor.t(floor2Left.value[2].name),
+        am: common_vendor.t(getSeatStatusText(floor2Left.value[2].status)),
+        an: common_vendor.n(getSeatStatusClass(floor2Left.value[2].status)),
+        ao: common_vendor.o(($event) => onSeatTap(floor2Left.value[2]), "ff"),
+        ap: common_vendor.t(floor2Left.value[1].name),
+        aq: common_vendor.t(getSeatStatusText(floor2Left.value[1].status)),
+        ar: common_vendor.n(getSeatStatusClass(floor2Left.value[1].status)),
+        as: common_vendor.o(($event) => onSeatTap(floor2Left.value[1]), "56"),
+        at: common_vendor.t(floor2Left.value[0].name),
+        av: common_vendor.t(getSeatStatusText(floor2Left.value[0].status)),
+        aw: common_vendor.n(getSeatStatusClass(floor2Left.value[0].status)),
+        ax: common_vendor.o(($event) => onSeatTap(floor2Left.value[0]), "8f")
       };
     };
   }

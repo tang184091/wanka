@@ -15,10 +15,7 @@
           <view class="user-basic">
             <text class="user-nickname">{{ userInfo.nickname || '未知用户' }}</text>
             <view v-if="userInfo.gender" class="user-gender">
-              <image 
-                :src="userInfo.gender === 1 ? '/static/icons/male.png' : '/static/icons/female.png'" 
-                class="gender-icon" 
-              />
+              <text class="gender-text">{{ userInfo.gender === 1 ? '男' : '女' }}</text>
             </view>
           </view>
         </view>
@@ -76,11 +73,11 @@
             <view class="game-time">{{ formatDateTime(game.time) }}</view>
             <view class="game-info">
               <view class="info-item">
-                <image src="/static/icons/location.png" class="info-icon" />
+                <image :src="icons.location" class="info-icon" />
                 <text class="info-text">{{ game.location || '未设置地点' }}</text>
               </view>
               <view class="info-item">
-                <image src="/static/icons/people.png" class="info-icon" />
+                <image :src="icons.people" class="info-icon" />
                 <text class="info-text">{{ game.currentPlayers || 0 }}/{{ game.maxPlayers }}人</text>
               </view>
             </view>
@@ -111,11 +108,11 @@
             <view class="game-time">{{ formatDateTime(game.time) }}</view>
             <view class="game-info">
               <view class="info-item">
-                <image src="/static/icons/location.png" class="info-icon" />
+                <image :src="icons.location" class="info-icon" />
                 <text class="info-text">{{ game.location || '未设置地点' }}</text>
               </view>
               <view class="info-item">
-                <image src="/static/icons/people.png" class="info-icon" />
+                <image :src="icons.people" class="info-icon" />
                 <text class="info-text">{{ game.currentPlayers || 0 }}/{{ game.maxPlayers }}人</text>
               </view>
             </view>
@@ -134,6 +131,7 @@ import { ref, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import constants from '@/utils/constants.js'
 import { gameActions } from '@/utils/store.js'
+import * as icons from '@/utils/icons.js'
 
 // 响应式数据
 const loading = ref(true)

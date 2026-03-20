@@ -11,11 +11,27 @@ const _sfc_main = {
       const pad = (n) => `${n}`.padStart(2, "0");
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     };
+    const getTypeClass = (type) => {
+      return type === "rank" ? "badge-rank" : "badge-match";
+    };
+    const getRarityClass = (rarity) => {
+      if (rarity === "legend" || rarity === "gold")
+        return "badge-legend";
+      if (rarity === "epic" || rarity === "purple")
+        return "badge-epic";
+      if (rarity === "rare" || rarity === "blue" || rarity === "silver")
+        return "badge-rare";
+      return "badge-common";
+    };
     const loadData = async () => {
       var _a;
       const listRes = await common_vendor.wx$1.cloud.callFunction({ name: "game-service", data: { action: "getHonorList", data: {} } });
-      if (((_a = listRes.result) == null ? void 0 : _a.code) === 0)
-        list.value = listRes.result.data.list || [];
+      if (((_a = listRes.result) == null ? void 0 : _a.code) === 0) {
+        list.value = (listRes.result.data.list || []).map((item) => ({
+          ...item,
+          rarity: ["legend", "epic", "rare", "common", "gold", "purple", "blue", "silver"].includes(item.rarity) ? item.rarity : "epic"
+        }));
+      }
     };
     common_vendor.onShow(loadData);
     return (_ctx, _cache) => {
@@ -25,33 +41,34 @@ const _sfc_main = {
         b: common_vendor.f(list.value, (item, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(item.type === "tournament" ? "比赛" : "段位"),
-            b: common_vendor.n(item.type === "tournament" ? "badge-match" : "badge-rank"),
-            c: common_vendor.t(formatTime(item.achievedAt)),
-            d: item.type === "tournament"
+            b: common_vendor.n(getTypeClass(item.type)),
+            c: common_vendor.n(getRarityClass(item.rarity)),
+            d: common_vendor.t(formatTime(item.achievedAt)),
+            e: item.type === "tournament"
           }, item.type === "tournament" ? {
-            e: common_vendor.t(item.championNickname || "-")
+            f: common_vendor.t(item.championNickname || "-")
           } : {}, {
-            f: item.type === "tournament"
+            g: item.type === "tournament"
           }, item.type === "tournament" ? {
-            g: common_vendor.t(item.participantCount || "-")
+            h: common_vendor.t(item.participantCount || "-")
           } : {}, {
-            h: item.type === "tournament"
+            i: item.type === "tournament"
           }, item.type === "tournament" ? {
-            i: common_vendor.t(item.title || "店内比赛")
+            j: common_vendor.t(item.title || "店内比赛")
           } : {}, {
-            j: item.type === "rank"
+            k: item.type === "rank"
           }, item.type === "rank" ? {
-            k: common_vendor.t(item.playerNickname || "-")
+            l: common_vendor.t(item.playerNickname || "-")
           } : {}, {
-            l: item.type === "rank"
+            m: item.type === "rank"
           }, item.type === "rank" ? {
-            m: common_vendor.t(item.rankName || "-")
+            n: common_vendor.t(item.rankName || "-")
           } : {}, {
-            n: item.note
+            o: item.note
           }, item.note ? {
-            o: common_vendor.t(item.note)
+            p: common_vendor.t(item.note)
           } : {}, {
-            p: item._id
+            q: item._id || item.id
           });
         })
       });

@@ -3,11 +3,11 @@
     <!-- 导航栏 -->
     <view class="nav-bar">
       <view class="nav-left" @tap="goBack">
-        <image src="/static/icons/back.png" class="back-icon" />
+        <text class="nav-text-btn">返回</text>
       </view>
       <view class="nav-title">我的组局</view>
       <view class="nav-right" @tap="refreshPage">
-        <image src="/static/icons/refresh.png" class="refresh-icon" />
+        <text class="nav-text-btn">刷新</text>
       </view>
     </view>
 
@@ -38,7 +38,6 @@
     >
       <!-- 空状态 -->
       <view v-if="!loading && filteredGames.length === 0" class="empty-state">
-        <image :src="getEmptyImage()" class="empty-image" />
         <text class="empty-text">{{ getEmptyText() }}</text>
         <view v-if="activeTab === 'all' || activeTab === 'created'" class="empty-btn" @tap="goToCreate">
           创建第一个组局
@@ -90,11 +89,11 @@
                   <!-- 活动信息 -->
                   <view class="game-info">
                     <view class="info-item">
-                      <image src="/static/icons/time.png" class="info-icon" />
+                      <image :src="icons.time" class="info-icon" />
                       <text class="info-text">{{ formatGameTime(game.time) }}</text>
                     </view>
                     <view v-if="game.location" class="info-item">
-                      <image src="/static/icons/location.png" class="info-icon" />
+                      <image :src="icons.location" class="info-icon" />
                       <text class="info-text">{{ game.location }}</text>
                     </view>
                   </view>
@@ -110,7 +109,7 @@
                         class="avatar-wrapper"
                         :style="{ 'z-index': 10 - index }"
                       >
-                        <image :src="player.avatar || '/static/avatar/default.png'" class="player-avatar" />
+                    <image :src="player.avatar || '/static/empty.png'" class="player-avatar" />
                       </view>
                       <view v-if="game.currentPlayers > 4" class="more-players">
                         +{{ game.currentPlayers - 4 }}
@@ -162,6 +161,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import UserService from '@/utils/user.js'
+import * as icons from '@/utils/icons.js'
 
 // 响应式数据
 const tabs = ref([
@@ -598,6 +598,7 @@ const getTypeClass = (type) => {
     'mahjong': 'tag-mahjong',
     'boardgame': 'tag-boardgame',
     'videogame': 'tag-videogame',
+    'cardgame': 'tag-cardgame',
     'competition': 'tag-competition'
   }
   return classMap[type] || 'tag-mahjong'
@@ -609,6 +610,7 @@ const getTypeText = (type) => {
     'mahjong': '立直麻将',
     'boardgame': '桌游',
     'videogame': '电玩',
+    'cardgame': '打牌',
     'competition': '比赛'
   }
   return textMap[type] || '立直麻将'
@@ -653,18 +655,6 @@ const formatGameTime = (datetime) => {
     // 过去时间
     return `${date.getMonth() + 1}月${date.getDate()}日`
   }
-}
-
-// 获取空状态图片
-const getEmptyImage = () => {
-  const images = {
-    'all': '/static/empty-games.png',
-    'created': '/static/empty-created.png',
-    'joined': '/static/empty-joined.png',
-    'pending': '/static/empty-pending.png',
-    'completed': '/static/empty-completed.png'
-  }
-  return images[activeTab.value] || '/static/empty-games.png'
 }
 
 // 获取空状态文本
@@ -1037,11 +1027,6 @@ const reviewGame = (game) => {
   width: 80rpx;
 }
 
-.back-icon {
-  width: 40rpx;
-  height: 40rpx;
-}
-
 .nav-title {
   font-size: 36rpx;
   font-weight: bold;
@@ -1057,9 +1042,10 @@ const reviewGame = (game) => {
   justify-content: flex-end;
 }
 
-.refresh-icon {
-  width: 40rpx;
-  height: 40rpx;
+.nav-text-btn {
+  font-size: 28rpx;
+  color: #374151;
+  line-height: 1;
 }
 
 /* 筛选标签 */
@@ -1127,13 +1113,6 @@ const reviewGame = (game) => {
   justify-content: center;
   padding: 100rpx 40rpx;
   text-align: center;
-}
-
-.empty-image {
-  width: 300rpx;
-  height: 300rpx;
-  margin-bottom: 40rpx;
-  opacity: 0.5;
 }
 
 .empty-text {
@@ -1220,6 +1199,11 @@ const reviewGame = (game) => {
 .tag-videogame {
   background-color: #fff7e6;
   color: #fa8c16;
+}
+
+.tag-cardgame {
+  background-color: #ecfeff;
+  color: #0891b2;
 }
 
 .tag-competition {

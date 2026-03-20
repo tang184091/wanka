@@ -45,5 +45,7 @@
 }
 .btn.data-v-ef6850c5 { margin-top: 16rpx; height: 72rpx; border-radius: 10rpx; background: #07c160; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 26rpx;
 }
+.more-btn.data-v-ef6850c5 { margin-top: 16rpx; height: 68rpx; border-radius: 10rpx; background: #eef2ff; color:#4338ca; display:flex; align-items:center; justify-content:center; font-size: 24rpx;
+}
 .empty.data-v-ef6850c5 { margin-top: 16rpx; color: #9ca3af; font-size: 24rpx;
 }

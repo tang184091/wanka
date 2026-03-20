@@ -9,6 +9,10 @@
 }
 .layout-title.data-v-dbc77958 { font-size: 26rpx; color: #6b7280; font-weight: 700;
 }
+.header-actions.data-v-dbc77958 { display: flex; align-items: center; gap: 12rpx;
+}
+.date-picker.data-v-dbc77958 { min-width: 210rpx; height: 48rpx; border-radius: 24rpx; background: #fff; border: 1rpx solid #d1d5db; color: #374151; display: flex; align-items: center; justify-content: center; font-size: 22rpx; padding: 0 16rpx; box-sizing: border-box;
+}
 .tip.data-v-dbc77958 { font-size: 22rpx; color: #6b7280; margin-bottom: 10rpx;
 }
 .refresh-btn.data-v-dbc77958 { min-width: 110rpx; height: 48rpx; border-radius: 24rpx; background: #07c160; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx;
@@ -84,6 +88,10 @@
 .save-btn.data-v-dbc77958 { margin-top: 8rpx; height: 64rpx; border-radius: 10rpx; background: #16a34a; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 24rpx;
 }
 .save-btn.disabled.data-v-dbc77958 { opacity: .55;
+}
+.reset-btn.data-v-dbc77958 { margin-top: 8rpx; height: 64rpx; border-radius: 10rpx; background: #dc2626; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 24rpx;
+}
+.reset-btn.disabled.data-v-dbc77958 { opacity: .55;
 }
 .manage-card.data-v-dbc77958 { margin-top: 16rpx; background: #fff; border-radius: 12rpx; padding: 14rpx; border: 1rpx solid #e5e7eb;
 }

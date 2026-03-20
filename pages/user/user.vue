@@ -86,32 +86,29 @@
     <view class="menu-list">
       <view class="menu-item" @tap="goToMyGames('created')">
         <view class="menu-left">
-          <image src="/static/icons/created.png" class="menu-icon" />
           <text class="menu-text">我发起的</text>
         </view>
         <view class="menu-right">
           <text class="menu-count" v-if="userStats">{{ userStats.createdGames || 0 }}</text>
-          <image src="/static/icons/arrow-right.png" class="arrow-icon" />
+          <text class="menu-arrow">›</text>
         </view>
       </view>
 
       <view class="menu-item" @tap="goToMyGames('joined')">
         <view class="menu-left">
-          <image src="/static/icons/joined.png" class="menu-icon" />
           <text class="menu-text">我参与的</text>
         </view>
         <view class="menu-right">
           <text class="menu-count" v-if="userStats">{{ userStats.joinedGames || 0 }}</text>
-          <image src="/static/icons/arrow-right.png" class="arrow-icon" />
+          <text class="menu-arrow">›</text>
         </view>
       </view>
 
       <view class="menu-item" @tap="goToMyGames('history')">
         <view class="menu-left">
-          <image src="/static/icons/history.png" class="menu-icon" />
           <text class="menu-text">历史记录</text>
         </view>
-        <image src="/static/icons/arrow-right.png" class="arrow-icon" />
+        <text class="menu-arrow">›</text>
       </view>
 
       <view class="menu-divider"></view>
@@ -119,33 +116,29 @@
 
       <view class="menu-item" v-if="userInfo && userInfo.isAdmin" @tap="goToAdmin">
         <view class="menu-left">
-          <image src="/static/icons/admin.png" class="menu-icon" />
           <text class="menu-text">管理员功能</text>
         </view>
-        <image src="/static/icons/arrow-right.png" class="arrow-icon" />
+        <text class="menu-arrow">›</text>
       </view>
 
       <view class="menu-item" @tap="goToSettings">
         <view class="menu-left">
-          <image src="/static/icons/settings.png" class="menu-icon" />
           <text class="menu-text">设置</text>
         </view>
-        <image src="/static/icons/arrow-right.png" class="arrow-icon" />
+        <text class="menu-arrow">›</text>
       </view>
 
       <view class="menu-item" @tap="goToAbout">
         <view class="menu-left">
-          <image src="/static/icons/about.png" class="menu-icon" />
           <text class="menu-text">关于我们</text>
         </view>
-        <image src="/static/icons/arrow-right.png" class="arrow-icon" />
+        <text class="menu-arrow">›</text>
       </view>
     </view>
 
     <!-- 登录按钮（未登录时显示） -->
     <view class="login-btn-container" v-if="!userInfo">
       <view class="login-btn" @tap="handleLogin">
-        <image src="/static/icons/wechat.png" class="wechat-icon" />
         <text class="login-text">微信一键登录</text>
       </view>
       <text class="login-tip">登录后可以创建和加入组局</text>
@@ -976,12 +969,6 @@ const goToAbout = () => {
   align-items: center;
 }
 
-.menu-icon {
-  width: 40rpx;
-  height: 40rpx;
-  margin-right: 20rpx;
-}
-
 .menu-text {
   font-size: 32rpx;
   color: #333;
@@ -998,10 +985,10 @@ const goToAbout = () => {
   margin-right: 20rpx;
 }
 
-.arrow-icon {
-  width: 24rpx;
-  height: 24rpx;
-  opacity: 0.5;
+.menu-arrow {
+  font-size: 28rpx;
+  color: #9ca3af;
+  line-height: 1;
 }
 
 .menu-divider {
@@ -1034,12 +1021,6 @@ const goToAbout = () => {
 
 .login-btn:active {
   background-color: #06ad56;
-}
-
-.wechat-icon {
-  width: 40rpx;
-  height: 40rpx;
-  margin-right: 15rpx;
 }
 
 .login-text {

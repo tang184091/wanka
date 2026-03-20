@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/wiki/list",
     "pages/seat/seat",
     "pages/user/user",
     "pages/create/create",
@@ -17,8 +18,13 @@
     "pages/admin/yakuman",
     "pages/record/honor",
     "pages/admin/honor",
+    "pages/admin/guide",
     "pages/admin/records",
-    "pages/admin/games"
+    "pages/admin/games",
+    "pages/wiki/detail",
+    "pages/wiki/submit",
+    "pages/admin/wiki",
+    "pages/admin/user-manage"
   ],
   "window": {
     "navigationBarTextStyle": "white",
@@ -51,6 +57,12 @@
         "selectedIconPath": "static/tabbar/record-active.png"
       },
       {
+        "pagePath": "pages/wiki/list",
+        "text": "百科",
+        "iconPath": "static/tabbar/wiki.png",
+        "selectedIconPath": "static/tabbar/wiki-active.png"
+      },
+      {
         "pagePath": "pages/user/user",
         "text": "我的",
         "iconPath": "static/tabbar/user.png",
@@ -59,6 +71,7 @@
     ],
     "position": "bottom"
   },
+  "lazyCodeLoading": "requiredComponents",
   "permission": {
     "scope.userLocation": {
       "desc": "你的位置信息将用于组局地点展示"

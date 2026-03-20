@@ -21,15 +21,39 @@
 }
 .textarea.data-v-ba19e650 { min-height:120rpx;
 }
-.btn.data-v-ba19e650 { margin-top:14rpx; height:68rpx; border-radius:10rpx; background:#07c160; color:#fff; display:flex; align-items:center; justify-content:center;
+.actions.data-v-ba19e650 { margin-top:14rpx; display:flex; gap:12rpx;
+}
+.btn.data-v-ba19e650 { flex:1; height:68rpx; border-radius:10rpx; display:flex; align-items:center; justify-content:center; font-size:24rpx;
+}
+.btn.primary.data-v-ba19e650 { background:#07c160; color:#fff;
+}
+.btn.ghost.data-v-ba19e650 { background:#eef2ff; color:#4338ca;
 }
 .row.data-v-ba19e650 { display:flex; justify-content:space-between; align-items:center; padding:12rpx 0; border-bottom:1rpx solid #f1f5f9;
 }
 .info.data-v-ba19e650 { flex:1; padding-right:12rpx;
 }
-.line.data-v-ba19e650 { font-size:22rpx; color:#111827; display:block;
+.line.data-v-ba19e650 { display:flex; align-items:center; gap:10rpx; font-size:22rpx; color:#111827;
 }
-.sub.data-v-ba19e650 { color:#6b7280;
+.line.text.data-v-ba19e650 { margin-top:8rpx; display:block;
 }
-.del.data-v-ba19e650 { min-width:88rpx; height:52rpx; border-radius:8rpx; background:#ef4444; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22rpx;
+.badge.data-v-ba19e650 { font-size:20rpx; padding:4rpx 12rpx; border-radius:999rpx; color:#fff;
+}
+.badge-legend.data-v-ba19e650 { background:linear-gradient(135deg,#f59e0b,#fcd34d); color:#7c2d12;
+}
+.badge-epic.data-v-ba19e650 { background:linear-gradient(135deg,#7c3aed,#8b5cf6); color:#fff;
+}
+.badge-rare.data-v-ba19e650 { background:linear-gradient(135deg,#2563eb,#38bdf8); color:#fff;
+}
+.badge-common.data-v-ba19e650 { background:#fff; color:#111827; border:1rpx solid #111827;
+}
+.time.data-v-ba19e650 { font-size:22rpx; color:#6b7280;
+}
+.ops.data-v-ba19e650 { display:flex; align-items:center; gap:10rpx;
+}
+.op.data-v-ba19e650 { min-width:88rpx; height:52rpx; border-radius:8rpx; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22rpx;
+}
+.edit.data-v-ba19e650 { background:#2563eb;
+}
+.del.data-v-ba19e650 { background:#ef4444;
 }

@@ -3,8 +3,8 @@ const constants = {
   // 默认头像
   DEFAULT_AVATAR: "cloud://cloud1-6glnv3cs9b44417a.636c-cloud1-6glnv3cs9b44417a-1407540580/default-avatar.png",
   // 默认图片
-  EMPTY_STATE_IMAGE: "/static/empty-games.png",
-  EMPTY_PLAYERS_IMAGE: "/static/empty-players.png",
+  EMPTY_STATE_IMAGE: "/static/empty.png",
+  EMPTY_PLAYERS_IMAGE: "/static/empty.png",
   // 分页大小
   PAGE_SIZE: 10,
   // 游戏类型
@@ -24,6 +24,12 @@ const constants = {
     "videogame": {
       name: "电玩",
       color: "#fa8c16",
+      minPlayers: 2,
+      maxPlayers: 8
+    },
+    "cardgame": {
+      name: "打牌",
+      color: "#0ea5e9",
       minPlayers: 2,
       maxPlayers: 8
     },

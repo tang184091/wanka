@@ -7,6 +7,10 @@ const _sfc_main = {
     const refreshing = common_vendor.ref(false);
     const saving = common_vendor.ref(false);
     const statusValues = ["available", "reserved", "occupied"];
+    const sourceByLocation = common_vendor.ref({});
+    const today = /* @__PURE__ */ new Date();
+    const selectedDate = common_vendor.ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`);
+    const selectedDateLabel = common_vendor.computed(() => `日期：${selectedDate.value}`);
     const floor2Left = common_vendor.ref([
       { id: "f2-bg-1", name: "桌游房1", status: "available" },
       { id: "f2-mj-1", name: "立直麻将房1", status: "available" },
@@ -38,7 +42,8 @@ const _sfc_main = {
     const arcadeRoom = common_vendor.ref({ id: "f1-arcade-room", name: "电玩房", status: "available" });
     const getSeatStatusClass = (status) => ({ available: "status-available", reserved: "status-reserved", occupied: "status-occupied" })[status] || "status-available";
     const getSeatStatusText = (status) => ({ available: "空闲中", reserved: "预约中", occupied: "使用中" })[status] || "空闲中";
-    const setSeatStatusByName = (name, statusMap) => statusMap[name] || "available";
+    const normalizeLocationName = (name = "") => String(name).replace(/\s+/g, "").trim();
+    const setSeatStatusByName = (name, statusMap) => statusMap[normalizeLocationName(name)] || statusMap[name] || "available";
     const redirectNonAdmin = () => {
       common_vendor.index.showToast({ title: "仅管理员可访问", icon: "none" });
       setTimeout(() => {
@@ -57,7 +62,7 @@ const _sfc_main = {
       await common_vendor.wx$1.cloud.callFunction({ name: "game-service", data: { action: "getAdminManageData", data: {} } });
     };
     const refreshData = async () => {
-      var _a, _b;
+      var _a, _b, _c, _d;
       if (refreshing.value)
         return;
       refreshing.value = true;
@@ -65,8 +70,20 @@ const _sfc_main = {
         await checkAdmin();
         if (!isAdmin.value)
           return;
-        const res = await common_vendor.wx$1.cloud.callFunction({ name: "game-service", data: { action: "getSeatStatus", data: {} } });
-        const statusMap = ((_b = (_a = res == null ? void 0 : res.result) == null ? void 0 : _a.data) == null ? void 0 : _b.statusByLocation) || {};
+        const res = await common_vendor.wx$1.cloud.callFunction({
+          name: "game-service",
+          data: { action: "getSeatStatus", data: { date: selectedDate.value } }
+        });
+        const rawStatusMap = ((_b = (_a = res == null ? void 0 : res.result) == null ? void 0 : _a.data) == null ? void 0 : _b.statusByLocation) || {};
+        const rawSourceMap = ((_d = (_c = res == null ? void 0 : res.result) == null ? void 0 : _c.data) == null ? void 0 : _d.sourceByLocation) || {};
+        const statusMap = {};
+        const sourceMap = {};
+        Object.keys(rawStatusMap).forEach((key) => {
+          const normalized = normalizeLocationName(key);
+          statusMap[normalized] = rawStatusMap[key];
+          sourceMap[normalized] = rawSourceMap[key] || "";
+        });
+        sourceByLocation.value = sourceMap;
         floor2Left.value = floor2Left.value.map((item) => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }));
         floor2Bottom.value = floor2Bottom.value.map((item) => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }));
         hallDeskRows.value = hallDeskRows.value.map((row) => row.map((item) => ({ ...item, status: setSeatStatusByName(item.name, statusMap) })));
@@ -77,7 +94,7 @@ const _sfc_main = {
         arcadeRoom.value = { ...arcadeRoom.value, status: setSeatStatusByName(arcadeRoom.value.name, statusMap) };
         await loadManageData();
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/admin/admin.vue:238", "刷新管理员数据失败:", error);
+        common_vendor.index.__f__("error", "at pages/admin/admin.vue:292", "刷新管理员数据失败:", error);
         common_vendor.index.showToast({ title: "刷新失败", icon: "none" });
       } finally {
         refreshing.value = false;
@@ -88,6 +105,11 @@ const _sfc_main = {
       return statusValues[(idx + 1) % statusValues.length];
     };
     const onAdminSeatTap = (seat) => {
+      const locationKey = normalizeLocationName(seat.name);
+      if (sourceByLocation.value[locationKey] === "game") {
+        common_vendor.index.showToast({ title: "该座位有小程序预约，需取消组局后释放", icon: "none" });
+        return;
+      }
       seat.status = cycleStatus(seat.status);
     };
     const collectOverrides = () => {
@@ -115,7 +137,10 @@ const _sfc_main = {
       try {
         const res = await common_vendor.wx$1.cloud.callFunction({
           name: "game-service",
-          data: { action: "setSeatStatusOverrides", data: { overrides: collectOverrides() } }
+          data: {
+            action: "setSeatStatusOverrides",
+            data: { date: selectedDate.value, overrides: collectOverrides() }
+          }
         });
         if (((_a = res == null ? void 0 : res.result) == null ? void 0 : _a.code) === 0) {
           common_vendor.index.showToast({ title: "保存成功", icon: "success" });
@@ -124,11 +149,49 @@ const _sfc_main = {
           common_vendor.index.showToast({ title: ((_b = res == null ? void 0 : res.result) == null ? void 0 : _b.message) || "保存失败", icon: "none" });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/admin/admin.vue:288", "保存管理员座位状态失败:", error);
+        common_vendor.index.__f__("error", "at pages/admin/admin.vue:350", "保存管理员座位状态失败:", error);
         common_vendor.index.showToast({ title: "保存失败", icon: "none" });
       } finally {
         saving.value = false;
       }
+    };
+    const resetManualOverrides = () => {
+      if (!isAdmin.value || saving.value)
+        return;
+      common_vendor.index.showModal({
+        title: "确认清空",
+        content: `将清空 ${selectedDate.value} 的手工座位状态，仅保留小程序组局预约。`,
+        success: async (res) => {
+          var _a, _b;
+          if (!res.confirm)
+            return;
+          saving.value = true;
+          try {
+            const result = await common_vendor.wx$1.cloud.callFunction({
+              name: "game-service",
+              data: {
+                action: "setSeatStatusOverrides",
+                data: { date: selectedDate.value, overrides: {}, clearOccupied: true }
+              }
+            });
+            if (((_a = result == null ? void 0 : result.result) == null ? void 0 : _a.code) === 0) {
+              common_vendor.index.showToast({ title: "已清空", icon: "success" });
+              await refreshData();
+            } else {
+              common_vendor.index.showToast({ title: ((_b = result == null ? void 0 : result.result) == null ? void 0 : _b.message) || "清空失败", icon: "none" });
+            }
+          } catch (error) {
+            common_vendor.index.__f__("error", "at pages/admin/admin.vue:380", "清空手工状态失败:", error);
+            common_vendor.index.showToast({ title: "清空失败", icon: "none" });
+          } finally {
+            saving.value = false;
+          }
+        }
+      });
+    };
+    const onDateChange = async (e) => {
+      selectedDate.value = e.detail.value;
+      await refreshData();
     };
     const goYakumanManage = () => {
       if (!isAdmin.value)
@@ -150,91 +213,114 @@ const _sfc_main = {
         return redirectNonAdmin();
       common_vendor.index.navigateTo({ url: "/pages/admin/honor" });
     };
+    const goWikiManage = () => {
+      if (!isAdmin.value)
+        return redirectNonAdmin();
+      common_vendor.index.navigateTo({ url: "/pages/admin/wiki" });
+    };
+    const goUserManage = () => {
+      if (!isAdmin.value)
+        return redirectNonAdmin();
+      common_vendor.index.navigateTo({ url: "/pages/admin/user-manage" });
+    };
+    const goAdminGuide = () => {
+      if (!isAdmin.value)
+        return redirectNonAdmin();
+      common_vendor.index.navigateTo({ url: "/pages/admin/guide" });
+    };
     common_vendor.onShow(() => {
       refreshData();
     });
     return (_ctx, _cache) => {
       return common_vendor.e({
-        a: common_vendor.t(refreshing.value ? "刷新中..." : "刷新"),
-        b: refreshing.value ? 1 : "",
-        c: common_vendor.o(refreshData, "d6"),
-        d: !isAdmin.value
+        a: common_vendor.t(selectedDateLabel.value),
+        b: selectedDate.value,
+        c: common_vendor.o(onDateChange, "1d"),
+        d: common_vendor.t(refreshing.value ? "刷新中..." : "刷新"),
+        e: refreshing.value ? 1 : "",
+        f: common_vendor.o(refreshData, "d8"),
+        g: !isAdmin.value
       }, !isAdmin.value ? {} : {
-        e: common_vendor.t(arcadeRoom.value.name),
-        f: common_vendor.t(getSeatStatusText(arcadeRoom.value.status)),
-        g: common_vendor.n(getSeatStatusClass(arcadeRoom.value.status)),
-        h: common_vendor.o(($event) => onAdminSeatTap(arcadeRoom.value), "f5"),
-        i: common_vendor.t(interArcade1.value.name),
-        j: common_vendor.t(getSeatStatusText(interArcade1.value.status)),
-        k: common_vendor.n(getSeatStatusClass(interArcade1.value.status)),
-        l: common_vendor.o(($event) => onAdminSeatTap(interArcade1.value), "31"),
-        m: common_vendor.t(interArcade2.value.name),
-        n: common_vendor.t(getSeatStatusText(interArcade2.value.status)),
-        o: common_vendor.n(getSeatStatusClass(interArcade2.value.status)),
-        p: common_vendor.o(($event) => onAdminSeatTap(interArcade2.value), "b0"),
-        q: common_vendor.t(interDesk.value.name),
-        r: common_vendor.t(getSeatStatusText(interDesk.value.status)),
-        s: common_vendor.n(getSeatStatusClass(interDesk.value.status)),
-        t: common_vendor.o(($event) => onAdminSeatTap(interDesk.value), "99"),
-        v: common_vendor.t(hallDeskRows.value[2][1].name),
-        w: common_vendor.t(getSeatStatusText(hallDeskRows.value[2][1].status)),
-        x: common_vendor.n(getSeatStatusClass(hallDeskRows.value[2][1].status)),
-        y: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[2][1]), "6b"),
-        z: common_vendor.t(hallDeskRows.value[2][0].name),
-        A: common_vendor.t(getSeatStatusText(hallDeskRows.value[2][0].status)),
-        B: common_vendor.n(getSeatStatusClass(hallDeskRows.value[2][0].status)),
-        C: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[2][0]), "ca"),
-        D: common_vendor.t(arcadeHall.value.name),
-        E: common_vendor.t(getSeatStatusText(arcadeHall.value.status)),
-        F: common_vendor.n(getSeatStatusClass(arcadeHall.value.status)),
-        G: common_vendor.o(($event) => onAdminSeatTap(arcadeHall.value), "d9"),
-        H: common_vendor.t(hallDeskRows.value[0][0].name),
-        I: common_vendor.t(getSeatStatusText(hallDeskRows.value[0][0].status)),
-        J: common_vendor.n(getSeatStatusClass(hallDeskRows.value[0][0].status)),
-        K: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[0][0]), "c9"),
-        L: common_vendor.t(hallDeskRows.value[0][1].name),
-        M: common_vendor.t(getSeatStatusText(hallDeskRows.value[0][1].status)),
-        N: common_vendor.n(getSeatStatusClass(hallDeskRows.value[0][1].status)),
-        O: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[0][1]), "41"),
-        P: common_vendor.t(hallDeskRows.value[1][0].name),
-        Q: common_vendor.t(getSeatStatusText(hallDeskRows.value[1][0].status)),
-        R: common_vendor.n(getSeatStatusClass(hallDeskRows.value[1][0].status)),
-        S: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[1][0]), "8d"),
-        T: common_vendor.t(hallDeskRows.value[1][1].name),
-        U: common_vendor.t(getSeatStatusText(hallDeskRows.value[1][1].status)),
-        V: common_vendor.n(getSeatStatusClass(hallDeskRows.value[1][1].status)),
-        W: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[1][1]), "e0"),
-        X: common_vendor.t(floor2Bottom.value[1].name),
-        Y: common_vendor.t(getSeatStatusText(floor2Bottom.value[1].status)),
-        Z: common_vendor.n(getSeatStatusClass(floor2Bottom.value[1].status)),
-        aa: common_vendor.o(($event) => onAdminSeatTap(floor2Bottom.value[1]), "35"),
-        ab: common_vendor.t(floor2Bottom.value[0].name),
-        ac: common_vendor.t(getSeatStatusText(floor2Bottom.value[0].status)),
-        ad: common_vendor.n(getSeatStatusClass(floor2Bottom.value[0].status)),
-        ae: common_vendor.o(($event) => onAdminSeatTap(floor2Bottom.value[0]), "3a"),
-        af: common_vendor.t(floor2Left.value[3].name),
-        ag: common_vendor.t(getSeatStatusText(floor2Left.value[3].status)),
-        ah: common_vendor.n(getSeatStatusClass(floor2Left.value[3].status)),
-        ai: common_vendor.o(($event) => onAdminSeatTap(floor2Left.value[3]), "c1"),
-        aj: common_vendor.t(floor2Left.value[2].name),
-        ak: common_vendor.t(getSeatStatusText(floor2Left.value[2].status)),
-        al: common_vendor.n(getSeatStatusClass(floor2Left.value[2].status)),
-        am: common_vendor.o(($event) => onAdminSeatTap(floor2Left.value[2]), "9b"),
-        an: common_vendor.t(floor2Left.value[1].name),
-        ao: common_vendor.t(getSeatStatusText(floor2Left.value[1].status)),
-        ap: common_vendor.n(getSeatStatusClass(floor2Left.value[1].status)),
-        aq: common_vendor.o(($event) => onAdminSeatTap(floor2Left.value[1]), "53"),
-        ar: common_vendor.t(floor2Left.value[0].name),
-        as: common_vendor.t(getSeatStatusText(floor2Left.value[0].status)),
-        at: common_vendor.n(getSeatStatusClass(floor2Left.value[0].status)),
-        av: common_vendor.o(($event) => onAdminSeatTap(floor2Left.value[0]), "7f"),
-        aw: common_vendor.t(saving.value ? "保存中..." : "保存所有修改"),
-        ax: saving.value ? 1 : "",
-        ay: common_vendor.o(saveOverrides, "f7"),
-        az: common_vendor.o(goYakumanManage, "5f"),
-        aA: common_vendor.o(goRecordManage, "88"),
-        aB: common_vendor.o(goGameManage, "66"),
-        aC: common_vendor.o(goHonorManage, "00")
+        h: common_vendor.t(arcadeRoom.value.name),
+        i: common_vendor.t(getSeatStatusText(arcadeRoom.value.status)),
+        j: common_vendor.n(getSeatStatusClass(arcadeRoom.value.status)),
+        k: common_vendor.o(($event) => onAdminSeatTap(arcadeRoom.value), "97"),
+        l: common_vendor.t(interArcade1.value.name),
+        m: common_vendor.t(getSeatStatusText(interArcade1.value.status)),
+        n: common_vendor.n(getSeatStatusClass(interArcade1.value.status)),
+        o: common_vendor.o(($event) => onAdminSeatTap(interArcade1.value), "1b"),
+        p: common_vendor.t(interArcade2.value.name),
+        q: common_vendor.t(getSeatStatusText(interArcade2.value.status)),
+        r: common_vendor.n(getSeatStatusClass(interArcade2.value.status)),
+        s: common_vendor.o(($event) => onAdminSeatTap(interArcade2.value), "8e"),
+        t: common_vendor.t(interDesk.value.name),
+        v: common_vendor.t(getSeatStatusText(interDesk.value.status)),
+        w: common_vendor.n(getSeatStatusClass(interDesk.value.status)),
+        x: common_vendor.o(($event) => onAdminSeatTap(interDesk.value), "9c"),
+        y: common_vendor.t(hallDeskRows.value[2][1].name),
+        z: common_vendor.t(getSeatStatusText(hallDeskRows.value[2][1].status)),
+        A: common_vendor.n(getSeatStatusClass(hallDeskRows.value[2][1].status)),
+        B: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[2][1]), "85"),
+        C: common_vendor.t(hallDeskRows.value[2][0].name),
+        D: common_vendor.t(getSeatStatusText(hallDeskRows.value[2][0].status)),
+        E: common_vendor.n(getSeatStatusClass(hallDeskRows.value[2][0].status)),
+        F: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[2][0]), "e6"),
+        G: common_vendor.t(arcadeHall.value.name),
+        H: common_vendor.t(getSeatStatusText(arcadeHall.value.status)),
+        I: common_vendor.n(getSeatStatusClass(arcadeHall.value.status)),
+        J: common_vendor.o(($event) => onAdminSeatTap(arcadeHall.value), "02"),
+        K: common_vendor.t(hallDeskRows.value[0][0].name),
+        L: common_vendor.t(getSeatStatusText(hallDeskRows.value[0][0].status)),
+        M: common_vendor.n(getSeatStatusClass(hallDeskRows.value[0][0].status)),
+        N: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[0][0]), "14"),
+        O: common_vendor.t(hallDeskRows.value[0][1].name),
+        P: common_vendor.t(getSeatStatusText(hallDeskRows.value[0][1].status)),
+        Q: common_vendor.n(getSeatStatusClass(hallDeskRows.value[0][1].status)),
+        R: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[0][1]), "a9"),
+        S: common_vendor.t(hallDeskRows.value[1][0].name),
+        T: common_vendor.t(getSeatStatusText(hallDeskRows.value[1][0].status)),
+        U: common_vendor.n(getSeatStatusClass(hallDeskRows.value[1][0].status)),
+        V: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[1][0]), "71"),
+        W: common_vendor.t(hallDeskRows.value[1][1].name),
+        X: common_vendor.t(getSeatStatusText(hallDeskRows.value[1][1].status)),
+        Y: common_vendor.n(getSeatStatusClass(hallDeskRows.value[1][1].status)),
+        Z: common_vendor.o(($event) => onAdminSeatTap(hallDeskRows.value[1][1]), "43"),
+        aa: common_vendor.t(floor2Bottom.value[1].name),
+        ab: common_vendor.t(getSeatStatusText(floor2Bottom.value[1].status)),
+        ac: common_vendor.n(getSeatStatusClass(floor2Bottom.value[1].status)),
+        ad: common_vendor.o(($event) => onAdminSeatTap(floor2Bottom.value[1]), "38"),
+        ae: common_vendor.t(floor2Bottom.value[0].name),
+        af: common_vendor.t(getSeatStatusText(floor2Bottom.value[0].status)),
+        ag: common_vendor.n(getSeatStatusClass(floor2Bottom.value[0].status)),
+        ah: common_vendor.o(($event) => onAdminSeatTap(floor2Bottom.value[0]), "9e"),
+        ai: common_vendor.t(floor2Left.value[3].name),
+        aj: common_vendor.t(getSeatStatusText(floor2Left.value[3].status)),
+        ak: common_vendor.n(getSeatStatusClass(floor2Left.value[3].status)),
+        al: common_vendor.o(($event) => onAdminSeatTap(floor2Left.value[3]), "a9"),
+        am: common_vendor.t(floor2Left.value[2].name),
+        an: common_vendor.t(getSeatStatusText(floor2Left.value[2].status)),
+        ao: common_vendor.n(getSeatStatusClass(floor2Left.value[2].status)),
+        ap: common_vendor.o(($event) => onAdminSeatTap(floor2Left.value[2]), "18"),
+        aq: common_vendor.t(floor2Left.value[1].name),
+        ar: common_vendor.t(getSeatStatusText(floor2Left.value[1].status)),
+        as: common_vendor.n(getSeatStatusClass(floor2Left.value[1].status)),
+        at: common_vendor.o(($event) => onAdminSeatTap(floor2Left.value[1]), "fa"),
+        av: common_vendor.t(floor2Left.value[0].name),
+        aw: common_vendor.t(getSeatStatusText(floor2Left.value[0].status)),
+        ax: common_vendor.n(getSeatStatusClass(floor2Left.value[0].status)),
+        ay: common_vendor.o(($event) => onAdminSeatTap(floor2Left.value[0]), "e3"),
+        az: common_vendor.t(saving.value ? "保存中..." : "保存所有修改"),
+        aA: saving.value ? 1 : "",
+        aB: common_vendor.o(saveOverrides, "86"),
+        aC: saving.value ? 1 : "",
+        aD: common_vendor.o(resetManualOverrides, "7a"),
+        aE: common_vendor.o(goYakumanManage, "97"),
+        aF: common_vendor.o(goRecordManage, "1f"),
+        aG: common_vendor.o(goGameManage, "f0"),
+        aH: common_vendor.o(goHonorManage, "d0"),
+        aI: common_vendor.o(goWikiManage, "ee"),
+        aJ: common_vendor.o(goUserManage, "e9"),
+        aK: common_vendor.o(goAdminGuide, "ac")
       });
     };
   }

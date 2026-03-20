@@ -2,20 +2,37 @@
   <view class="container">
     <!-- 顶部筛选栏 -->
     <view class="filter-bar">
-      <scroll-view class="type-tabs" scroll-x>
+      <view class="type-row top">
         <view
-          v-for="tab in tabs"
+          class="type-tab quarter-btn"
+          :class="{ active: activeTab === 'all' }"
+          @tap="switchTab('all')"
+        >
+          全部
+        </view>
+        <view
+          v-for="tab in firstRowTabs"
           :key="tab.id"
-          class="type-tab"
+          class="type-tab quarter-btn"
           :class="{ active: activeTab === tab.id }"
           @tap="switchTab(tab.id)"
         >
           {{ tab.name }}
         </view>
-      </scroll-view>
+      </view>
 
-      <view class="action-row">
-        <view class="create-btn" @tap="goToCreate">
+      <view class="type-row bottom">
+        <view
+          v-for="tab in secondRowTabs"
+          :key="tab.id"
+          class="type-tab quarter-btn"
+          :class="{ active: activeTab === tab.id }"
+          @tap="switchTab(tab.id)"
+        >
+          {{ tab.name }}
+        </view>
+        <view class="quarter-btn placeholder-btn"></view>
+        <view class="type-tab create-btn quarter-btn" @tap="goToCreate">
           <text>+ 创建</text>
         </view>
       </view>
@@ -37,7 +54,6 @@
 
       <!-- 空状态 -->
       <view v-if="gameList.length === 0 && !loading" class="empty-state">
-        <image src="/static/empty.png" class="empty-image" />
         <text class="empty-text">暂无组局，快来创建一个吧！</text>
         <view class="empty-btn" @tap="goToCreate">
           创建第一个组局
@@ -74,15 +90,15 @@
         <!-- 活动信息 -->
         <view class="game-info">
           <view class="info-item">
-            <image src="/static/icons/time.png" class="info-icon" />
+            <image :src="icons.time" class="info-icon" />
             <text class="info-text">{{ formatTime(game.time) }}</text>
           </view>
           <view class="info-item">
-            <image src="/static/icons/location.png" class="info-icon" />
+            <image :src="icons.location" class="info-icon" />
             <text class="info-text">{{ game.location }}</text>
           </view>
           <view class="info-item">
-            <image src="/static/icons/people.png" class="info-icon" />
+            <image :src="icons.people" class="info-icon" />
             <text class="info-text">{{ game.currentPlayers }}/{{ game.maxPlayers }}人</text>
           </view>
         </view>
@@ -137,13 +153,14 @@
 import { ref, onMounted } from 'vue'
 import { gameActions } from '@/utils/store.js'
 import UserService from '@/utils/user.js'
+import * as icons from '@/utils/icons.js'
 
 // 响应式数据
 const tabs = ref([
-  { id: 'all', name: '全部' },
   { id: 'mahjong', name: '立直麻将' },
   { id: 'boardgame', name: '桌游' },
   { id: 'videogame', name: '电玩' },
+  { id: 'cardgame', name: '打牌' },
   { id: 'competition', name: '比赛' }
 ])
 
@@ -154,6 +171,8 @@ const refreshing = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(10)
+const firstRowTabs = ref(tabs.value.slice(0, 3))
+const secondRowTabs = ref(tabs.value.slice(3, 5))
 
 // 切换标签
 const switchTab = (tabId) => {
@@ -170,6 +189,7 @@ const getTypeClass = (type) => {
     'mahjong': 'tag-mahjong',
     'boardgame': 'tag-boardgame',
     'videogame': 'tag-videogame',
+    'cardgame': 'tag-cardgame',
     'competition': 'tag-competition'
   }
   return classMap[type] || 'tag-mahjong'
@@ -181,6 +201,7 @@ const getTypeText = (type) => {
     'mahjong': '立直麻将',
     'boardgame': '桌游',
     'videogame': '电玩',
+    'cardgame': '打牌',
     'competition': '比赛'
   }
   return textMap[type] || '立直麻将'
@@ -420,24 +441,41 @@ onMounted(() => {
   position: sticky;
   top: 0;
   z-index: 10;
+  gap: 10rpx;
 }
 
-.type-tabs {
+.type-row {
   width: 100%;
-  white-space: nowrap;
-  height: 80rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.type-row.top {
+  justify-content: space-between;
+}
+
+.type-row.bottom {
+  justify-content: flex-start;
 }
 
 .type-tab {
-  display: inline-block;
-  padding: 0 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16rpx;
   height: 60rpx;
-  line-height: 60rpx;
   border-radius: 30rpx;
-  margin-right: 20rpx;
   font-size: 28rpx;
   color: #666;
   background-color: #f5f5f5;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.quarter-btn {
+  width: calc((100% - 48rpx) / 4);
+  flex-shrink: 0;
 }
 
 .type-tab.active {
@@ -445,22 +483,14 @@ onMounted(() => {
   color: white;
 }
 
-.action-row {
-  margin-top: 10rpx;
-  display: flex;
-  justify-content: flex-end;
-}
-
 .create-btn {
-  width: 120rpx;
-  height: 60rpx;
-  line-height: 60rpx;
   background-color: #07c160;
   color: white;
-  border-radius: 30rpx;
-  font-size: 28rpx;
-  text-align: center;
-  flex-shrink: 0;
+  border-color: transparent;
+}
+
+.placeholder-btn {
+  background: transparent;
 }
 
 .create-btn:active {
@@ -469,7 +499,7 @@ onMounted(() => {
 
 /* 组局列表样式 */
 .game-list {
-  height: calc(100vh - 180rpx);
+  height: calc(100vh - 230rpx);
 }
 
 .refresh-tip {
@@ -486,12 +516,6 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 100rpx 0;
-}
-
-.empty-image {
-  width: 300rpx;
-  height: 300rpx;
-  margin-bottom: 40rpx;
 }
 
 .empty-text {
@@ -554,6 +578,11 @@ onMounted(() => {
 .tag-videogame {
   background-color: #fff7e6;
   color: #fa8c16;
+}
+
+.tag-cardgame {
+  background-color: #ecfeff;
+  color: #0891b2;
 }
 
 .tag-competition {

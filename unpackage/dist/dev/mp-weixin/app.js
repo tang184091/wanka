@@ -4,6 +4,7 @@ const common_vendor = require("./common/vendor.js");
 const utils_store = require("./utils/store.js");
 if (!Math) {
   "./pages/index/index.js";
+  "./pages/wiki/list.js";
   "./pages/seat/seat.js";
   "./pages/user/user.js";
   "./pages/create/create.js";
@@ -20,8 +21,13 @@ if (!Math) {
   "./pages/admin/yakuman.js";
   "./pages/record/honor.js";
   "./pages/admin/honor.js";
+  "./pages/admin/guide.js";
   "./pages/admin/records.js";
   "./pages/admin/games.js";
+  "./pages/wiki/detail.js";
+  "./pages/wiki/submit.js";
+  "./pages/admin/wiki.js";
+  "./pages/admin/user-manage.js";
 }
 const _sfc_main = {
   onLaunch: function(options) {

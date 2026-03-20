@@ -4,9 +4,15 @@
       <view class="layout-card">
         <view class="layout-header">
           <text class="layout-title">管理员座位管理</text>
-          <view class="refresh-btn" :class="{ disabled: refreshing }" @tap="refreshData">{{ refreshing ? '刷新中...' : '刷新' }}</view>
+          <view class="header-actions">
+            <picker mode="date" :value="selectedDate" @change="onDateChange">
+              <view class="date-picker">{{ selectedDateLabel }}</view>
+            </picker>
+            <view class="refresh-btn" :class="{ disabled: refreshing }" @tap="refreshData">{{ refreshing ? '刷新中...' : '刷新' }}</view>
+          </view>
+
         </view>
-        <view class="tip">点击座位可修改状态（空闲中 / 预约中 / 使用中）</view>
+        <view class="tip">点击座位可修改状态（空闲中 / 预约中 / 使用中），若存在小程序预约则不可手工覆盖</view>
 
         <view v-if="!isAdmin" class="empty-box">
           <text class="empty-text">仅管理员可访问</text>
@@ -103,6 +109,7 @@
           </view>
 
           <view class="save-btn" :class="{ disabled: saving }" @tap="saveOverrides">{{ saving ? '保存中...' : '保存所有修改' }}</view>
+          <view class="reset-btn" :class="{ disabled: saving }" @tap="resetManualOverrides">清空当日手工状态</view>
 
 
           <view class="manage-card">
@@ -143,6 +150,36 @@
               <view class="delete-btn" style="background:#f59e0b" @tap="goHonorManage">进入</view>
             </view>
           </view>
+
+          <view class="manage-card">
+            <view class="manage-title">百科词条管理</view>
+            <view class="manage-row">
+              <view class="manage-info">
+                <text class="manage-line">上传/修改/删除百科词条（支持文字与多图）</text>
+              </view>
+              <view class="delete-btn" style="background:#f59e0b" @tap="goWikiManage">进入</view>
+            </view>
+          </view>
+
+          <view class="manage-card">
+            <view class="manage-title">用户昵称头像管理</view>
+            <view class="manage-row">
+              <view class="manage-info">
+                <text class="manage-line">按昵称搜索用户并修改头像、昵称</text>
+              </view>
+              <view class="delete-btn" style="background:#f59e0b" @tap="goUserManage">进入</view>
+            </view>
+          </view>
+
+          <view class="manage-card">
+            <view class="manage-title">管理员功能说明</view>
+            <view class="manage-row">
+              <view class="manage-info">
+                <text class="manage-line">查看管理员各功能的使用说明与处理规则</text>
+              </view>
+              <view class="delete-btn" style="background:#f59e0b" @tap="goAdminGuide">进入</view>
+            </view>
+          </view>
         </view>
       </view>
     </scroll-view>
@@ -150,13 +187,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 
 const isAdmin = ref(false)
 const refreshing = ref(false)
 const saving = ref(false)
 const statusValues = ['available', 'reserved', 'occupied']
+const sourceByLocation = ref({})
+const today = new Date()
+const selectedDate = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`)
+const selectedDateLabel = computed(() => `日期：${selectedDate.value}`)
 
 const floor2Left = ref([
   { id: 'f2-bg-1', name: '桌游房1', status: 'available' },
@@ -192,7 +233,8 @@ const arcadeRoom = ref({ id: 'f1-arcade-room', name: '电玩房', status: 'avail
 const getSeatStatusClass = (status) => ({ available: 'status-available', reserved: 'status-reserved', occupied: 'status-occupied' }[status] || 'status-available')
 const getSeatStatusText = (status) => ({ available: '空闲中', reserved: '预约中', occupied: '使用中' }[status] || '空闲中')
 
-const setSeatStatusByName = (name, statusMap) => statusMap[name] || 'available'
+const normalizeLocationName = (name = '') => String(name).replace(/\s+/g, '').trim()
+const setSeatStatusByName = (name, statusMap) => statusMap[normalizeLocationName(name)] || statusMap[name] || 'available'
 
 const redirectNonAdmin = () => {
   uni.showToast({ title: '仅管理员可访问', icon: 'none' })
@@ -220,8 +262,20 @@ const refreshData = async () => {
     await checkAdmin()
     if (!isAdmin.value) return
 
-    const res = await wx.cloud.callFunction({ name: 'game-service', data: { action: 'getSeatStatus', data: {} } })
-    const statusMap = res?.result?.data?.statusByLocation || {}
+    const res = await wx.cloud.callFunction({
+      name: 'game-service',
+      data: { action: 'getSeatStatus', data: { date: selectedDate.value } }
+    })
+    const rawStatusMap = res?.result?.data?.statusByLocation || {}
+    const rawSourceMap = res?.result?.data?.sourceByLocation || {}
+    const statusMap = {}
+    const sourceMap = {}
+    Object.keys(rawStatusMap).forEach((key) => {
+      const normalized = normalizeLocationName(key)
+      statusMap[normalized] = rawStatusMap[key]
+      sourceMap[normalized] = rawSourceMap[key] || ''
+    })
+    sourceByLocation.value = sourceMap
 
     floor2Left.value = floor2Left.value.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }))
     floor2Bottom.value = floor2Bottom.value.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }))
@@ -248,6 +302,11 @@ const cycleStatus = (status) => {
 }
 
 const onAdminSeatTap = (seat) => {
+  const locationKey = normalizeLocationName(seat.name)
+  if (sourceByLocation.value[locationKey] === 'game') {
+    uni.showToast({ title: '该座位有小程序预约，需取消组局后释放', icon: 'none' })
+    return
+  }
   seat.status = cycleStatus(seat.status)
 }
 
@@ -275,7 +334,10 @@ const saveOverrides = async () => {
   try {
     const res = await wx.cloud.callFunction({
       name: 'game-service',
-      data: { action: 'setSeatStatusOverrides', data: { overrides: collectOverrides() } }
+      data: {
+        action: 'setSeatStatusOverrides',
+        data: { date: selectedDate.value, overrides: collectOverrides() }
+      }
     })
 
     if (res?.result?.code === 0) {
@@ -290,6 +352,43 @@ const saveOverrides = async () => {
   } finally {
     saving.value = false
   }
+}
+
+const resetManualOverrides = () => {
+  if (!isAdmin.value || saving.value) return
+  uni.showModal({
+    title: '确认清空',
+    content: `将清空 ${selectedDate.value} 的手工座位状态，仅保留小程序组局预约。`,
+    success: async (res) => {
+      if (!res.confirm) return
+      saving.value = true
+      try {
+        const result = await wx.cloud.callFunction({
+          name: 'game-service',
+          data: {
+            action: 'setSeatStatusOverrides',
+            data: { date: selectedDate.value, overrides: {}, clearOccupied: true }
+          }
+        })
+        if (result?.result?.code === 0) {
+          uni.showToast({ title: '已清空', icon: 'success' })
+          await refreshData()
+        } else {
+          uni.showToast({ title: result?.result?.message || '清空失败', icon: 'none' })
+        }
+      } catch (error) {
+        console.error('清空手工状态失败:', error)
+        uni.showToast({ title: '清空失败', icon: 'none' })
+      } finally {
+        saving.value = false
+      }
+    }
+  })
+}
+
+const onDateChange = async (e) => {
+  selectedDate.value = e.detail.value
+  await refreshData()
 }
 
 const goYakumanManage = () => {
@@ -312,6 +411,21 @@ const goHonorManage = () => {
   uni.navigateTo({ url: '/pages/admin/honor' })
 }
 
+const goWikiManage = () => {
+  if (!isAdmin.value) return redirectNonAdmin()
+  uni.navigateTo({ url: '/pages/admin/wiki' })
+}
+
+const goUserManage = () => {
+  if (!isAdmin.value) return redirectNonAdmin()
+  uni.navigateTo({ url: '/pages/admin/user-manage' })
+}
+
+const goAdminGuide = () => {
+  if (!isAdmin.value) return redirectNonAdmin()
+  uni.navigateTo({ url: '/pages/admin/guide' })
+}
+
 onShow(() => {
   refreshData()
 })
@@ -323,6 +437,8 @@ onShow(() => {
 .layout-card { margin: 20rpx; background: #f8f9fa; border-radius: 18rpx; border: 1rpx solid #e5e7eb; padding: 16rpx; }
 .layout-header { margin-bottom: 10rpx; display: flex; justify-content: space-between; align-items: center; }
 .layout-title { font-size: 26rpx; color: #6b7280; font-weight: 700; }
+.header-actions { display: flex; align-items: center; gap: 12rpx; }
+.date-picker { min-width: 210rpx; height: 48rpx; border-radius: 24rpx; background: #fff; border: 1rpx solid #d1d5db; color: #374151; display: flex; align-items: center; justify-content: center; font-size: 22rpx; padding: 0 16rpx; box-sizing: border-box; }
 .tip { font-size: 22rpx; color: #6b7280; margin-bottom: 10rpx; }
 .refresh-btn { min-width: 110rpx; height: 48rpx; border-radius: 24rpx; background: #07c160; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx; }
 .refresh-btn.disabled { background: #9ca3af; }
@@ -366,6 +482,8 @@ onShow(() => {
 
 .save-btn { margin-top: 8rpx; height: 64rpx; border-radius: 10rpx; background: #16a34a; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 24rpx; }
 .save-btn.disabled { opacity: .55; }
+.reset-btn { margin-top: 8rpx; height: 64rpx; border-radius: 10rpx; background: #dc2626; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 24rpx; }
+.reset-btn.disabled { opacity: .55; }
 
 .manage-card { margin-top: 16rpx; background: #fff; border-radius: 12rpx; padding: 14rpx; border: 1rpx solid #e5e7eb; }
 .manage-title { font-size: 24rpx; font-weight: 700; color: #111827; margin-bottom: 10rpx; }

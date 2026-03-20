@@ -1,14 +1,13 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const common_assets = require("../../common/assets.js");
 const utils_user = require("../../utils/user.js");
 const _sfc_main = {
   __name: "tags",
   setup(__props) {
     const systemTags = common_vendor.ref([
-      { id: 1, name: "立直麻将素人" },
-      { id: 2, name: "你同我认真打" },
-      { id: 3, name: "乱冲下次不和你玩了" },
+      { id: 1, name: "玩咖萌新" },
+      { id: 2, name: "功利玩家" },
+      { id: 3, name: "你别乱冲" },
       { id: 4, name: "狙击七段" },
       { id: 5, name: "周末有空" },
       { id: 6, name: "工作日晚上" },
@@ -127,10 +126,9 @@ const _sfc_main = {
     });
     return (_ctx, _cache) => {
       return {
-        a: common_assets._imports_0$3,
-        b: common_vendor.o(goBack, "de"),
-        c: common_vendor.o(saveTags, "10"),
-        d: common_vendor.f(systemTags.value, (tag, k0, i0) => {
+        a: common_vendor.o(goBack, "de"),
+        b: common_vendor.o(saveTags, "5f"),
+        c: common_vendor.f(systemTags.value, (tag, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(tag.name),
             b: isTagSelected(tag.id)
@@ -140,7 +138,7 @@ const _sfc_main = {
             e: common_vendor.o(($event) => toggleTag(tag.id), tag.id)
           });
         }),
-        e: common_vendor.f(myTags.value, (tag, k0, i0) => {
+        d: common_vendor.f(myTags.value, (tag, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(tag.name),
             b: isTagSelected(tag.id)
@@ -150,7 +148,7 @@ const _sfc_main = {
             e: common_vendor.o(($event) => toggleTag(tag.id), tag.id)
           });
         }),
-        f: common_vendor.f(customTags.value, (tag, index, i0) => {
+        e: common_vendor.f(customTags.value, (tag, index, i0) => {
           return {
             a: customTags.value[index],
             b: common_vendor.o(($event) => customTags.value[index] = $event.detail.value, index),
@@ -158,7 +156,7 @@ const _sfc_main = {
             d: index
           };
         }),
-        g: common_vendor.o(addCustomTag, "03")
+        f: common_vendor.o(addCustomTag, "b1")
       };
     };
   }

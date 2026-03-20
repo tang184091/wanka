@@ -27,17 +27,24 @@
 /* 类型选择样式 */
 .type-options.data-v-98f0e4ec {
   display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 10rpx;
+}
+.type-row.data-v-98f0e4ec {
+  display: flex;
   justify-content: space-between;
   gap: 12rpx;
-  margin-bottom: 10rpx;
+}
+.type-row.second-row.data-v-98f0e4ec {
+  justify-content: center;
 }
 .type-option.data-v-98f0e4ec {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20rpx;
   border-radius: 16rpx;
-  width: 25%;
+  width: 30%;
   box-sizing: border-box;
   padding: 14rpx 8rpx;
   transition: all 0.3s;
@@ -66,6 +73,9 @@
 .type-icon-img.data-v-98f0e4ec {
   width: 44rpx;
   height: 44rpx;
+}
+.type-icon-cardgame.data-v-98f0e4ec {
+  transform: translateX(3rpx);
 }
 .type-name.data-v-98f0e4ec {
   font-size: 24rpx;
@@ -161,9 +171,9 @@
   color: #999;
 }
 .arrow-right.data-v-98f0e4ec {
-  width: 24rpx;
-  height: 24rpx;
-  opacity: 0.5;
+  font-size: 28rpx;
+  color: #9ca3af;
+  line-height: 1;
 }
 
 /* 人数选择器样式 */

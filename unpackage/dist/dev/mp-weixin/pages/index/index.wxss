@@ -15,42 +15,48 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  gap: 10rpx;
 }
-.type-tabs.data-v-1cf27b2a {
+.type-row.data-v-1cf27b2a {
   width: 100%;
-  white-space: nowrap;
-  height: 80rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+.type-row.top.data-v-1cf27b2a {
+  justify-content: space-between;
+}
+.type-row.bottom.data-v-1cf27b2a {
+  justify-content: flex-start;
 }
 .type-tab.data-v-1cf27b2a {
-  display: inline-block;
-  padding: 0 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16rpx;
   height: 60rpx;
-  line-height: 60rpx;
   border-radius: 30rpx;
-  margin-right: 20rpx;
   font-size: 28rpx;
   color: #666;
   background-color: #f5f5f5;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.quarter-btn.data-v-1cf27b2a {
+  width: calc((100% - 48rpx) / 4);
+  flex-shrink: 0;
 }
 .type-tab.active.data-v-1cf27b2a {
   background-color: #07c160;
   color: white;
 }
-.action-row.data-v-1cf27b2a {
-  margin-top: 10rpx;
-  display: flex;
-  justify-content: flex-end;
-}
 .create-btn.data-v-1cf27b2a {
-  width: 120rpx;
-  height: 60rpx;
-  line-height: 60rpx;
   background-color: #07c160;
   color: white;
-  border-radius: 30rpx;
-  font-size: 28rpx;
-  text-align: center;
-  flex-shrink: 0;
+  border-color: transparent;
+}
+.placeholder-btn.data-v-1cf27b2a {
+  background: transparent;
 }
 .create-btn.data-v-1cf27b2a:active {
   background-color: #06ad56;
@@ -58,7 +64,7 @@
 
 /* 组局列表样式 */
 .game-list.data-v-1cf27b2a {
-  height: calc(100vh - 180rpx);
+  height: calc(100vh - 230rpx);
 }
 .refresh-tip.data-v-1cf27b2a {
   text-align: center;
@@ -74,11 +80,6 @@
   align-items: center;
   justify-content: center;
   padding: 100rpx 0;
-}
-.empty-image.data-v-1cf27b2a {
-  width: 300rpx;
-  height: 300rpx;
-  margin-bottom: 40rpx;
 }
 .empty-text.data-v-1cf27b2a {
   font-size: 32rpx;
@@ -131,6 +132,10 @@
 .tag-videogame.data-v-1cf27b2a {
   background-color: #fff7e6;
   color: #fa8c16;
+}
+.tag-cardgame.data-v-1cf27b2a {
+  background-color: #ecfeff;
+  color: #0891b2;
 }
 .tag-competition.data-v-1cf27b2a {
   background-color: #f3e8ff;

@@ -210,11 +210,6 @@
   display: flex;
   align-items: center;
 }
-.menu-icon.data-v-0f7520f0 {
-  width: 40rpx;
-  height: 40rpx;
-  margin-right: 20rpx;
-}
 .menu-text.data-v-0f7520f0 {
   font-size: 32rpx;
   color: #333;
@@ -228,10 +223,10 @@
   color: #999;
   margin-right: 20rpx;
 }
-.arrow-icon.data-v-0f7520f0 {
-  width: 24rpx;
-  height: 24rpx;
-  opacity: 0.5;
+.menu-arrow.data-v-0f7520f0 {
+  font-size: 28rpx;
+  color: #9ca3af;
+  line-height: 1;
 }
 .menu-divider.data-v-0f7520f0 {
   height: 1rpx;
@@ -261,11 +256,6 @@
 }
 .login-btn.data-v-0f7520f0:active {
   background-color: #06ad56;
-}
-.wechat-icon.data-v-0f7520f0 {
-  width: 40rpx;
-  height: 40rpx;
-  margin-right: 15rpx;
 }
 .login-text.data-v-0f7520f0 {
   font-size: 32rpx;

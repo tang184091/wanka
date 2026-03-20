@@ -1,7 +1,7 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const common_assets = require("../../common/assets.js");
 const utils_user = require("../../utils/user.js");
+const common_assets = require("../../common/assets.js");
 const _sfc_main = {
   __name: "list",
   setup(__props) {
@@ -352,6 +352,7 @@ const _sfc_main = {
         "mahjong": "tag-mahjong",
         "boardgame": "tag-boardgame",
         "videogame": "tag-videogame",
+        "cardgame": "tag-cardgame",
         "competition": "tag-competition"
       };
       return classMap[type] || "tag-mahjong";
@@ -361,6 +362,7 @@ const _sfc_main = {
         "mahjong": "立直麻将",
         "boardgame": "桌游",
         "videogame": "电玩",
+        "cardgame": "打牌",
         "competition": "比赛"
       };
       return textMap[type] || "立直麻将";
@@ -396,16 +398,6 @@ const _sfc_main = {
       } else {
         return `${date.getMonth() + 1}月${date.getDate()}日`;
       }
-    };
-    const getEmptyImage = () => {
-      const images = {
-        "all": "/static/empty-games.png",
-        "created": "/static/empty-created.png",
-        "joined": "/static/empty-joined.png",
-        "pending": "/static/empty-pending.png",
-        "completed": "/static/empty-completed.png"
-      };
-      return images[activeTab.value] || "/static/empty-games.png";
     };
     const getEmptyText = () => {
       const texts = {
@@ -479,7 +471,7 @@ const _sfc_main = {
                 throw new Error((result == null ? void 0 : result.errMsg) || "加入失败");
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/game/list.vue:758", "加入游戏失败:", error);
+              common_vendor.index.__f__("error", "at pages/game/list.vue:748", "加入游戏失败:", error);
               common_vendor.index.showToast({
                 title: error.message || "加入失败",
                 icon: "none"
@@ -538,7 +530,7 @@ const _sfc_main = {
                 throw new Error((result == null ? void 0 : result.errMsg) || "退出失败");
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/game/list.vue:826", "退出游戏失败:", error);
+              common_vendor.index.__f__("error", "at pages/game/list.vue:816", "退出游戏失败:", error);
               common_vendor.index.showToast({
                 title: error.message || "退出失败",
                 icon: "none"
@@ -574,7 +566,7 @@ const _sfc_main = {
         events: {
           // 监听编辑页面的事件
           refreshList: async () => {
-            common_vendor.index.__f__("log", "at pages/game/list.vue:867", "收到编辑页面刷新事件");
+            common_vendor.index.__f__("log", "at pages/game/list.vue:857", "收到编辑页面刷新事件");
             common_vendor.index.setStorageSync("needRefreshGameList", true);
             await loadGameList();
             updateTabCounts();
@@ -582,7 +574,7 @@ const _sfc_main = {
         },
         success: (res) => {
           res.eventChannel.on("onGameUpdated", async (data) => {
-            common_vendor.index.__f__("log", "at pages/game/list.vue:878", "编辑页面关闭，收到组局更新事件:", data);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:868", "编辑页面关闭，收到组局更新事件:", data);
             if (data.success) {
               common_vendor.index.setStorageSync("needRefreshGameList", true);
               await loadGameList();
@@ -647,13 +639,13 @@ const _sfc_main = {
                   icon: "success",
                   duration: 2e3
                 });
-                common_vendor.index.__f__("log", "at pages/game/list.vue:952", "组局取消成功，已重新加载列表");
+                common_vendor.index.__f__("log", "at pages/game/list.vue:942", "组局取消成功，已重新加载列表");
               } else {
-                common_vendor.index.__f__("error", "at pages/game/list.vue:955", "取消失败返回结果:", result);
+                common_vendor.index.__f__("error", "at pages/game/list.vue:945", "取消失败返回结果:", result);
                 throw new Error(((_a = result == null ? void 0 : result.result) == null ? void 0 : _a.message) || "取消失败");
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/game/list.vue:960", "取消组局失败:", error);
+              common_vendor.index.__f__("error", "at pages/game/list.vue:950", "取消组局失败:", error);
               common_vendor.index.showToast({
                 title: error.message || "取消失败",
                 icon: "none",
@@ -702,11 +694,9 @@ const _sfc_main = {
     };
     return (_ctx, _cache) => {
       return common_vendor.e({
-        a: common_assets._imports_0$3,
-        b: common_vendor.o(goBack, "55"),
-        c: common_assets._imports_1,
-        d: common_vendor.o(refreshPage, "fb"),
-        e: common_vendor.f(tabs.value, (tab, k0, i0) => {
+        a: common_vendor.o(goBack, "55"),
+        b: common_vendor.o(refreshPage, "cc"),
+        c: common_vendor.f(tabs.value, (tab, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(tab.name),
             b: tab.count
@@ -718,19 +708,18 @@ const _sfc_main = {
             f: common_vendor.o(($event) => switchTab(tab.id), tab.id)
           });
         }),
-        f: !loading.value && filteredGames.value.length === 0
+        d: !loading.value && filteredGames.value.length === 0
       }, !loading.value && filteredGames.value.length === 0 ? common_vendor.e({
-        g: getEmptyImage(),
-        h: common_vendor.t(getEmptyText()),
-        i: activeTab.value === "all" || activeTab.value === "created"
+        e: common_vendor.t(getEmptyText()),
+        f: activeTab.value === "all" || activeTab.value === "created"
       }, activeTab.value === "all" || activeTab.value === "created" ? {
-        j: common_vendor.o(goToCreate, "05")
+        g: common_vendor.o(goToCreate, "4b")
       } : {}, {
-        k: activeTab.value === "joined"
+        h: activeTab.value === "joined"
       }, activeTab.value === "joined" ? {
-        l: common_vendor.o(goToHome, "9b")
+        i: common_vendor.o(goToHome, "ee")
       } : {}) : common_vendor.e({
-        m: common_vendor.f(groupedGames.value, (group, k0, i0) => {
+        j: common_vendor.f(groupedGames.value, (group, k0, i0) => {
           return {
             a: common_vendor.t(group.date),
             b: common_vendor.f(group.games, (game, k1, i1) => {
@@ -746,12 +735,12 @@ const _sfc_main = {
                 h: common_vendor.t(formatGameTime(game.time)),
                 i: game.location
               }, game.location ? {
-                j: common_assets._imports_3,
+                j: common_assets._imports_2,
                 k: common_vendor.t(game.location)
               } : {}, {
                 l: common_vendor.f((game.players || []).slice(0, 4), (player, index, i2) => {
                   return {
-                    a: player.avatar || "/static/avatar/default.png",
+                    a: player.avatar || "/static/empty.png",
                     b: player.id || index,
                     c: 10 - index
                   };
@@ -787,18 +776,18 @@ const _sfc_main = {
             c: group.date
           };
         }),
-        n: common_assets._imports_2,
-        o: loading.value
+        k: common_assets._imports_1,
+        l: loading.value
       }, loading.value ? {} : {}, {
-        p: hasMore.value && !loading.value
+        m: hasMore.value && !loading.value
       }, hasMore.value && !loading.value ? {
-        q: common_vendor.o(onLoadMore, "e9")
+        n: common_vendor.o(onLoadMore, "9f")
       } : {}, {
-        r: !hasMore.value && filteredGames.value.length > 0
+        o: !hasMore.value && filteredGames.value.length > 0
       }, !hasMore.value && filteredGames.value.length > 0 ? {} : {}), {
-        s: refreshing.value,
-        t: common_vendor.o(onRefresh, "79"),
-        v: common_vendor.o(onLoadMore, "32")
+        p: refreshing.value,
+        q: common_vendor.o(onRefresh, "4c"),
+        r: common_vendor.o(onLoadMore, "c4")
       });
     };
   }

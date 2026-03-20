@@ -1,0 +1,19 @@
+
+.page.data-v-89ee8409 { min-height: 100vh; background: #f5f6f8;
+}
+.scroll.data-v-89ee8409 { height: 100vh;
+}
+.card.data-v-89ee8409 { margin: 20rpx; background: #fff; border-radius: 14rpx; padding: 18rpx;
+}
+.title.data-v-89ee8409 { font-size: 34rpx; font-weight: 700; color: #111827; line-height: 1.4;
+}
+.summary.data-v-89ee8409 { margin-top: 10rpx; color: #6b7280; font-size: 24rpx; line-height: 1.6;
+}
+.time.data-v-89ee8409 { margin-top: 12rpx; color: #9ca3af; font-size: 22rpx;
+}
+.section-title.data-v-89ee8409 { font-size: 28rpx; font-weight: 700; color: #111827; margin-bottom: 12rpx;
+}
+.content-image.data-v-89ee8409 { width: 100%; border-radius: 10rpx; margin-bottom: 12rpx; background: #f1f5f9;
+}
+.content.data-v-89ee8409 { font-size: 26rpx; color: #1f2937; line-height: 1.8; white-space: pre-wrap; word-break: break-word;
+}

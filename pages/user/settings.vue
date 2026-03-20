@@ -2,9 +2,10 @@
   <view class="settings-container">
     <view class="nav-bar">
       <view class="nav-left" @tap="goBack">
-        <image src="/static/icons/back.png" class="back-icon" />
+        <text class="nav-text-btn">返回</text>
       </view>
       <view class="nav-title">设置</view>
+      <view class="nav-right"></view>
     </view>
 
     <scroll-view class="settings-scroll" scroll-y>
@@ -13,7 +14,6 @@
         <view class="menu-list">
           <view class="menu-item">
             <view class="menu-left">
-              <image src="/static/icons/notification.png" class="menu-icon" />
               <text class="menu-text">组局提醒</text>
             </view>
             <switch
@@ -25,7 +25,6 @@
 
           <view class="menu-item">
             <view class="menu-left">
-              <image src="/static/icons/message.png" class="menu-icon" />
               <text class="menu-text">消息通知</text>
             </view>
             <switch
@@ -37,7 +36,6 @@
 
           <view class="menu-item">
             <view class="menu-left">
-              <image src="/static/icons/vibration.png" class="menu-icon" />
               <text class="menu-text">振动提醒</text>
             </view>
             <switch
@@ -52,12 +50,28 @@
       <view class="section">
         <view class="section-title">通用设置</view>
         <view class="menu-list">
+          <view class="menu-item" @tap="clearCache">
+            <view class="menu-left">
+              <text class="menu-text">清理缓存</text>
+            </view>
+            <view class="menu-right">
+              <text class="menu-sub">{{ cacheSizeText }}</text>
+              <text class="menu-arrow">›</text>
+            </view>
+          </view>
+
+          <view class="menu-item" @tap="checkForUpdate">
+            <view class="menu-left">
+              <text class="menu-text">检查更新</text>
+            </view>
+            <text class="menu-arrow">›</text>
+          </view>
+
           <view class="menu-item" @tap="about">
             <view class="menu-left">
-              <image src="/static/icons/about.png" class="menu-icon" />
               <text class="menu-text">关于我们</text>
             </view>
-            <image src="/static/icons/arrow-right.png" class="arrow-icon" />
+            <text class="menu-arrow">›</text>
           </view>
         </view>
       </view>
@@ -82,6 +96,7 @@ const notificationSettings = ref({
   message: true,
   vibration: false
 })
+const cacheSizeText = ref('0KB')
 
 const goBack = () => {
   uni.navigateBack()
@@ -118,6 +133,66 @@ const about = () => {
   })
 }
 
+const updateCacheSize = () => {
+  try {
+    const info = uni.getStorageInfoSync()
+    const kb = Math.round((info.currentSize || 0) * 100) / 100
+    cacheSizeText.value = `${kb}KB`
+  } catch (error) {
+    cacheSizeText.value = '--'
+  }
+}
+
+const clearCache = () => {
+  uni.showModal({
+    title: '确认清理',
+    content: '将清理本地缓存（包含设置与本地临时数据），是否继续？',
+    success: (res) => {
+      if (!res.confirm) return
+      try {
+        uni.clearStorageSync()
+        notificationSettings.value = {
+          gameReminder: true,
+          message: true,
+          vibration: false
+        }
+        saveNotificationSettings()
+        updateCacheSize()
+        uni.showToast({ title: '缓存已清理', icon: 'success' })
+      } catch (error) {
+        uni.showToast({ title: '清理失败', icon: 'none' })
+      }
+    }
+  })
+}
+
+const checkForUpdate = () => {
+  // #ifdef MP-WEIXIN
+  const updateManager = wx.getUpdateManager()
+  updateManager.onCheckForUpdate((res) => {
+    if (!res.hasUpdate) {
+      uni.showToast({ title: '已是最新版本', icon: 'none' })
+    }
+  })
+  updateManager.onUpdateReady(() => {
+    uni.showModal({
+      title: '更新提示',
+      content: '新版本已准备好，是否立即重启更新？',
+      success: (res) => {
+        if (res.confirm) updateManager.applyUpdate()
+      }
+    })
+  })
+  updateManager.onUpdateFailed(() => {
+    uni.showToast({ title: '新版本下载失败', icon: 'none' })
+  })
+  // #endif
+
+  // #ifndef MP-WEIXIN
+  uni.showToast({ title: '当前平台不支持自动更新', icon: 'none' })
+  // #endif
+}
+
 const handleLogout = () => {
   uni.showModal({
     title: '确认退出',
@@ -149,6 +224,7 @@ const loadNotificationSettings = () => {
 
 onMounted(() => {
   loadNotificationSettings()
+  updateCacheSize()
 })
 </script>
 
@@ -172,13 +248,20 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
-.nav-left {
+.nav-left,
+.nav-right {
   width: 80rpx;
 }
 
-.back-icon {
-  width: 40rpx;
-  height: 40rpx;
+.nav-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nav-text-btn {
+  font-size: 28rpx;
+  color: #374151;
+  line-height: 1;
 }
 
 .nav-title {
@@ -187,7 +270,6 @@ onMounted(() => {
   color: #333;
   flex: 1;
   text-align: center;
-  margin-right: 80rpx;
 }
 
 .settings-scroll {
@@ -238,10 +320,9 @@ onMounted(() => {
   flex: 1;
 }
 
-.menu-icon {
-  width: 40rpx;
-  height: 40rpx;
-  margin-right: 20rpx;
+.menu-right {
+  display: flex;
+  align-items: center;
 }
 
 .menu-text {
@@ -249,10 +330,16 @@ onMounted(() => {
   color: #333;
 }
 
-.arrow-icon {
-  width: 24rpx;
-  height: 24rpx;
-  opacity: 0.5;
+.menu-sub {
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-right: 12rpx;
+}
+
+.menu-arrow {
+  font-size: 28rpx;
+  color: #9ca3af;
+  line-height: 1;
 }
 
 switch {

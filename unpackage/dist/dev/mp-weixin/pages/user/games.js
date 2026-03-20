@@ -1,6 +1,5 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const common_assets = require("../../common/assets.js");
 const utils_user = require("../../utils/user.js");
 const _sfc_main = {
   __name: "games",
@@ -105,7 +104,7 @@ const _sfc_main = {
           common_vendor.index.navigateBack();
         }, 1500);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/user/games.vue:254", "保存游戏列表失败:", error);
+        common_vendor.index.__f__("error", "at pages/user/games.vue:253", "保存游戏列表失败:", error);
         common_vendor.index.showToast({
           title: "保存失败: " + (error.message || "请重试"),
           icon: "none",
@@ -126,15 +125,12 @@ const _sfc_main = {
     });
     return (_ctx, _cache) => {
       return common_vendor.e({
-        a: common_assets._imports_0$3,
-        b: common_vendor.o(goBack, "0b"),
-        c: common_vendor.o(saveGames, "9e"),
-        d: common_vendor.t(myGames.value.length),
-        e: myGames.value.length === 0
-      }, myGames.value.length === 0 ? {
-        f: common_assets._imports_1$1
-      } : {
-        g: common_vendor.f(myGames.value, (game, index, i0) => {
+        a: common_vendor.o(goBack, "e9"),
+        b: common_vendor.o(saveGames, "d0"),
+        c: common_vendor.t(myGames.value.length),
+        d: myGames.value.length === 0
+      }, myGames.value.length === 0 ? {} : {
+        e: common_vendor.f(myGames.value, (game, index, i0) => {
           return {
             a: common_vendor.t(getGameTypeText(game.type)),
             b: common_vendor.n(getGameTypeClass(game.type)),
@@ -146,19 +142,18 @@ const _sfc_main = {
             h: index
           };
         }),
-        h: gameTypes.value
+        f: gameTypes.value
       }, {
-        i: common_vendor.t(gameTypes.value[newGame.value.typeIndex].name),
-        j: common_assets._imports_5$1,
-        k: gameTypes.value,
-        l: newGame.value.typeIndex,
-        m: common_vendor.o(onNewGameTypeChange, "20"),
-        n: common_vendor.o(addNewGame, "fa"),
-        o: newGame.value.name,
-        p: common_vendor.o(($event) => newGame.value.name = $event.detail.value, "0b"),
-        q: common_vendor.t(myGames.value.length >= 10 ? "已达上限" : "添加到我的列表"),
-        r: myGames.value.length >= 10 ? 1 : "",
-        s: common_vendor.o(addNewGame, "6d")
+        g: common_vendor.t(gameTypes.value[newGame.value.typeIndex].name),
+        h: gameTypes.value,
+        i: newGame.value.typeIndex,
+        j: common_vendor.o(onNewGameTypeChange, "98"),
+        k: common_vendor.o(addNewGame, "6d"),
+        l: newGame.value.name,
+        m: common_vendor.o(($event) => newGame.value.name = $event.detail.value, "9b"),
+        n: common_vendor.t(myGames.value.length >= 10 ? "已达上限" : "添加到我的列表"),
+        o: myGames.value.length >= 10 ? 1 : "",
+        p: common_vendor.o(addNewGame, "af")
       });
     };
   }

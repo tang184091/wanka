@@ -1,16 +1,16 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const common_assets = require("../../common/assets.js");
 const utils_store = require("../../utils/store.js");
 const utils_user = require("../../utils/user.js");
+const common_assets = require("../../common/assets.js");
 const _sfc_main = {
   __name: "index",
   setup(__props) {
     const tabs = common_vendor.ref([
-      { id: "all", name: "全部" },
       { id: "mahjong", name: "立直麻将" },
       { id: "boardgame", name: "桌游" },
       { id: "videogame", name: "电玩" },
+      { id: "cardgame", name: "打牌" },
       { id: "competition", name: "比赛" }
     ]);
     const activeTab = common_vendor.ref("all");
@@ -20,6 +20,8 @@ const _sfc_main = {
     const hasMore = common_vendor.ref(true);
     const currentPage = common_vendor.ref(1);
     const pageSize = common_vendor.ref(10);
+    const firstRowTabs = common_vendor.ref(tabs.value.slice(0, 3));
+    const secondRowTabs = common_vendor.ref(tabs.value.slice(3, 5));
     const switchTab = (tabId) => {
       activeTab.value = tabId;
       currentPage.value = 1;
@@ -32,6 +34,7 @@ const _sfc_main = {
         "mahjong": "tag-mahjong",
         "boardgame": "tag-boardgame",
         "videogame": "tag-videogame",
+        "cardgame": "tag-cardgame",
         "competition": "tag-competition"
       };
       return classMap[type] || "tag-mahjong";
@@ -41,6 +44,7 @@ const _sfc_main = {
         "mahjong": "立直麻将",
         "boardgame": "桌游",
         "videogame": "电玩",
+        "cardgame": "打牌",
         "competition": "比赛"
       };
       return textMap[type] || "立直麻将";
@@ -68,7 +72,7 @@ const _sfc_main = {
         return;
       loading.value = true;
       try {
-        common_vendor.index.__f__("log", "at pages/index/index.vue:216", "开始加载组局列表...");
+        common_vendor.index.__f__("log", "at pages/index/index.vue:237", "开始加载组局列表...");
         const params = {
           page: currentPage.value,
           pageSize: pageSize.value
@@ -76,9 +80,9 @@ const _sfc_main = {
         if (activeTab.value !== "all") {
           params.type = activeTab.value;
         }
-        common_vendor.index.__f__("log", "at pages/index/index.vue:227", "调用参数:", params);
+        common_vendor.index.__f__("log", "at pages/index/index.vue:248", "调用参数:", params);
         const games = await utils_store.gameActions.getGameList(params);
-        common_vendor.index.__f__("log", "at pages/index/index.vue:231", "获取到的组局列表:", games);
+        common_vendor.index.__f__("log", "at pages/index/index.vue:252", "获取到的组局列表:", games);
         if (games && Array.isArray(games)) {
           const currentUser = utils_user.UserService.getCurrentUser();
           if (currentUser) {
@@ -96,12 +100,12 @@ const _sfc_main = {
           }
           hasMore.value = games.length >= pageSize.value;
         } else {
-          common_vendor.index.__f__("warn", "at pages/index/index.vue:256", "返回数据格式异常:", games);
+          common_vendor.index.__f__("warn", "at pages/index/index.vue:277", "返回数据格式异常:", games);
           gameList.value = [];
           hasMore.value = false;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:262", "加载组局列表失败，完整错误:", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:283", "加载组局列表失败，完整错误:", error);
         if (currentPage.value === 1) {
           gameList.value = [];
         }
@@ -202,7 +206,7 @@ const _sfc_main = {
                 throw new Error((result == null ? void 0 : result.message) || "加入失败");
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/index/index.vue:386", "加入组局失败:", error);
+              common_vendor.index.__f__("error", "at pages/index/index.vue:407", "加入组局失败:", error);
               common_vendor.index.showToast({
                 title: error.message || "加入失败",
                 icon: "none",
@@ -216,12 +220,14 @@ const _sfc_main = {
       });
     };
     common_vendor.onMounted(() => {
-      common_vendor.index.__f__("log", "at pages/index/index.vue:402", "首页加载，开始获取组局列表");
+      common_vendor.index.__f__("log", "at pages/index/index.vue:423", "首页加载，开始获取组局列表");
       loadGameList();
     });
     return (_ctx, _cache) => {
       return common_vendor.e({
-        a: common_vendor.f(tabs.value, (tab, k0, i0) => {
+        a: activeTab.value === "all" ? 1 : "",
+        b: common_vendor.o(($event) => switchTab("all"), "97"),
+        c: common_vendor.f(firstRowTabs.value, (tab, k0, i0) => {
           return {
             a: common_vendor.t(tab.name),
             b: tab.id,
@@ -229,15 +235,22 @@ const _sfc_main = {
             d: common_vendor.o(($event) => switchTab(tab.id), tab.id)
           };
         }),
-        b: common_vendor.o(goToCreate, "25"),
-        c: refreshing.value
+        d: common_vendor.f(secondRowTabs.value, (tab, k0, i0) => {
+          return {
+            a: common_vendor.t(tab.name),
+            b: tab.id,
+            c: activeTab.value === tab.id ? 1 : "",
+            d: common_vendor.o(($event) => switchTab(tab.id), tab.id)
+          };
+        }),
+        e: common_vendor.o(goToCreate, "b1"),
+        f: refreshing.value
       }, refreshing.value ? {} : {}, {
-        d: gameList.value.length === 0 && !loading.value
+        g: gameList.value.length === 0 && !loading.value
       }, gameList.value.length === 0 && !loading.value ? {
-        e: common_assets._imports_0,
-        f: common_vendor.o(goToCreate, "bf")
+        h: common_vendor.o(goToCreate, "e0")
       } : {}, {
-        g: common_vendor.f(gameList.value, (game, k0, i0) => {
+        i: common_vendor.f(gameList.value, (game, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(getTypeText(game.type)),
             b: common_vendor.n(getTypeClass(game.type)),
@@ -273,20 +286,20 @@ const _sfc_main = {
             t: common_vendor.o(($event) => goToDetail(game.id || game._id), game.id || game._id)
           });
         }),
-        h: common_assets._imports_2,
-        i: common_assets._imports_3,
-        j: common_assets._imports_3$1,
-        k: loading.value
+        j: common_assets._imports_1,
+        k: common_assets._imports_2,
+        l: common_assets._imports_3,
+        m: loading.value
       }, loading.value ? {} : {}, {
-        l: hasMore.value && !loading.value
+        n: hasMore.value && !loading.value
       }, hasMore.value && !loading.value ? {
-        m: common_vendor.o(onLoadMore, "e2")
+        o: common_vendor.o(onLoadMore, "9a")
       } : {}, {
-        n: !hasMore.value && gameList.value.length > 0
+        p: !hasMore.value && gameList.value.length > 0
       }, !hasMore.value && gameList.value.length > 0 ? {} : {}, {
-        o: refreshing.value,
-        p: common_vendor.o(onRefresh, "34"),
-        q: common_vendor.o(onLoadMore, "87")
+        q: refreshing.value,
+        r: common_vendor.o(onRefresh, "d3"),
+        s: common_vendor.o(onLoadMore, "e7")
       });
     };
   }

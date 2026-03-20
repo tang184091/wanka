@@ -1,6 +1,5 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const common_assets = require("../../common/assets.js");
 const utils_store = require("../../utils/store.js");
 const _sfc_main = {
   __name: "settings",
@@ -10,6 +9,7 @@ const _sfc_main = {
       message: true,
       vibration: false
     });
+    const cacheSizeText = common_vendor.ref("0KB");
     const goBack = () => {
       common_vendor.index.navigateBack();
     };
@@ -37,6 +37,59 @@ const _sfc_main = {
         title: "关于玩咖约局",
         content: "版本：v1.0.0\n\n一个专注于日麻、桌游、电玩组局的小程序\n\n联系我们：support@wankayueju.com",
         showCancel: false
+      });
+    };
+    const updateCacheSize = () => {
+      try {
+        const info = common_vendor.index.getStorageInfoSync();
+        const kb = Math.round((info.currentSize || 0) * 100) / 100;
+        cacheSizeText.value = `${kb}KB`;
+      } catch (error) {
+        cacheSizeText.value = "--";
+      }
+    };
+    const clearCache = () => {
+      common_vendor.index.showModal({
+        title: "确认清理",
+        content: "将清理本地缓存（包含设置与本地临时数据），是否继续？",
+        success: (res) => {
+          if (!res.confirm)
+            return;
+          try {
+            common_vendor.index.clearStorageSync();
+            notificationSettings.value = {
+              gameReminder: true,
+              message: true,
+              vibration: false
+            };
+            saveNotificationSettings();
+            updateCacheSize();
+            common_vendor.index.showToast({ title: "缓存已清理", icon: "success" });
+          } catch (error) {
+            common_vendor.index.showToast({ title: "清理失败", icon: "none" });
+          }
+        }
+      });
+    };
+    const checkForUpdate = () => {
+      const updateManager = common_vendor.wx$1.getUpdateManager();
+      updateManager.onCheckForUpdate((res) => {
+        if (!res.hasUpdate) {
+          common_vendor.index.showToast({ title: "已是最新版本", icon: "none" });
+        }
+      });
+      updateManager.onUpdateReady(() => {
+        common_vendor.index.showModal({
+          title: "更新提示",
+          content: "新版本已准备好，是否立即重启更新？",
+          success: (res) => {
+            if (res.confirm)
+              updateManager.applyUpdate();
+          }
+        });
+      });
+      updateManager.onUpdateFailed(() => {
+        common_vendor.index.showToast({ title: "新版本下载失败", icon: "none" });
       });
     };
     const handleLogout = () => {
@@ -67,24 +120,22 @@ const _sfc_main = {
     };
     common_vendor.onMounted(() => {
       loadNotificationSettings();
+      updateCacheSize();
     });
     return (_ctx, _cache) => {
       return {
-        a: common_assets._imports_0$3,
-        b: common_vendor.o(goBack, "99"),
-        c: common_assets._imports_1$2,
-        d: notificationSettings.value.gameReminder,
-        e: common_vendor.o(onGameReminderChange, "26"),
-        f: common_assets._imports_2$2,
-        g: notificationSettings.value.message,
-        h: common_vendor.o(onMessageChange, "14"),
-        i: common_assets._imports_3$3,
-        j: notificationSettings.value.vibration,
-        k: common_vendor.o(onVibrationChange, "76"),
-        l: common_assets._imports_4,
-        m: common_assets._imports_5$1,
-        n: common_vendor.o(about, "a0"),
-        o: common_vendor.o(handleLogout, "6a")
+        a: common_vendor.o(goBack, "4c"),
+        b: notificationSettings.value.gameReminder,
+        c: common_vendor.o(onGameReminderChange, "bc"),
+        d: notificationSettings.value.message,
+        e: common_vendor.o(onMessageChange, "44"),
+        f: notificationSettings.value.vibration,
+        g: common_vendor.o(onVibrationChange, "29"),
+        h: common_vendor.t(cacheSizeText.value),
+        i: common_vendor.o(clearCache, "c2"),
+        j: common_vendor.o(checkForUpdate, "cf"),
+        k: common_vendor.o(about, "07"),
+        l: common_vendor.o(handleLogout, "fa")
       };
     };
   }

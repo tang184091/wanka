@@ -134,6 +134,8 @@ to { transform: rotate(360deg);
 }
 .tag-videogame.data-v-eca06f3c { background-color: #69db7c;
 }
+.tag-cardgame.data-v-eca06f3c { background-color: #0ea5e9;
+}
 .tag-competition.data-v-eca06f3c { background-color: #8b5cf6;
 }
 .tag-sports.data-v-eca06f3c { background-color: #ff922b;
@@ -285,9 +287,11 @@ to { transform: rotate(360deg);
   justify-content: center;
   background-color: #e6f7ff;
 }
-.gender-icon.data-v-eca06f3c {
-  width: 20rpx;
-  height: 20rpx;
+.gender-text.data-v-eca06f3c {
+  font-size: 20rpx;
+  color: #1f2937;
+  line-height: 1;
+  font-weight: 600;
 }
 .creator-tags.data-v-eca06f3c {
   display: flex;
@@ -403,12 +407,6 @@ to { transform: rotate(360deg);
 .player-status.data-v-eca06f3c {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-}
-.status-icon.data-v-eca06f3c {
-  width: 24rpx;
-  height: 24rpx;
-  opacity: 0.7;
 }
 .status-text.data-v-eca06f3c {
   font-size: 24rpx;
@@ -475,20 +473,6 @@ to { transform: rotate(360deg);
 .activity-item.data-v-eca06f3c:last-child {
   border-bottom: none;
 }
-.activity-icon.data-v-eca06f3c {
-  width: 40rpx;
-  height: 40rpx;
-  margin-right: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-.activity-icon-img.data-v-eca06f3c {
-  width: 100%;
-  height: 100%;
-}
 .activity-content.data-v-eca06f3c {
   flex: 1;
   display: flex;
@@ -522,10 +506,6 @@ to { transform: rotate(360deg);
   gap: 15rpx;
   z-index: 999;
   box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
-}
-.cancelled-icon.data-v-eca06f3c {
-  width: 36rpx;
-  height: 36rpx;
 }
 .cancelled-text.data-v-eca06f3c {
   font-size: 28rpx;
@@ -561,6 +541,14 @@ to { transform: rotate(360deg);
   flex-shrink: 0;
   transition: all 0.3s;
 }
+.share-button.data-v-eca06f3c {
+  border: 0;
+  margin: 0;
+  line-height: normal;
+}
+.share-button.data-v-eca06f3c::after {
+  border: 0;
+}
 .share-btn.data-v-eca06f3c:active {
   background-color: #e9ecef;
   transform: translateY(2rpx);
@@ -592,10 +580,6 @@ to { transform: rotate(360deg);
   font-weight: 500;
   transition: all 0.3s;
   gap: 10rpx;
-}
-.btn-icon.data-v-eca06f3c {
-  width: 36rpx;
-  height: 36rpx;
 }
 .btn-text.data-v-eca06f3c {
   font-weight: 500;
@@ -653,9 +637,7 @@ to { transform: rotate(360deg);
   color: #adb5bd;
   box-shadow: none;
 }
-.full-btn.disabled .btn-icon.data-v-eca06f3c {
-  opacity: 0.6;
-}
+
 
 /* 安全区域 */
 .safe-area-bottom.data-v-eca06f3c {
