@@ -154,6 +154,14 @@
   background-color: #fff7e6;
   color: #fa8c16;
 }
+.game-tag-deck.data-v-69e18c5c {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+.game-tag-other.data-v-69e18c5c {
+  background-color: #f3f4f6;
+  color: #374151;
+}
 
 /* 游戏名称输入框 */
 .game-name-input.data-v-69e18c5c {

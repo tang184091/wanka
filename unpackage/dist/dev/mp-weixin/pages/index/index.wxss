@@ -17,6 +17,43 @@
   z-index: 10;
   gap: 10rpx;
 }
+
+/* const markCompleted = async (game) => {
+  const gameId = game.id || game._id
+  if (!gameId) return
+  if (!canCompleteGame(game)) {
+    uni.showToast({ title: '无权限操作', icon: 'none' })
+    return
+  }
+
+  uni.showModal({
+    title: '确认完成',
+    content: '将该进行中组局标记为已完成？',
+    success: async (res) => {
+      if (!res.confirm) return
+      uni.showLoading({ title: '提交中...', mask: true })
+      try {
+        const result = await wx.cloud.callFunction({
+          name: 'game-service',
+          data: { action: 'completeGame', data: { gameId } }
+        })
+        if (result?.result?.code === 0) {
+          uni.showToast({ title: '已标记完成', icon: 'success' })
+          currentPage.value = 1
+          gameList.value = []
+          hasMore.value = true
+          await loadGameList()
+        } else {
+          throw new Error(result?.result?.message || '操作失败')
+        }
+      } catch (error) {
+        uni.showToast({ title: error.message || '操作失败', icon: 'none' })
+      } finally {
+        uni.hideLoading()
+      }
+    }
+  })
+} */
 .type-row.data-v-1cf27b2a {
   width: 100%;
   display: flex;
@@ -54,9 +91,6 @@
   background-color: #07c160;
   color: white;
   border-color: transparent;
-}
-.placeholder-btn.data-v-1cf27b2a {
-  background: transparent;
 }
 .create-btn.data-v-1cf27b2a:active {
   background-color: #06ad56;
@@ -114,6 +148,7 @@
 .game-type.data-v-1cf27b2a {
   display: flex;
   align-items: center;
+  gap: 10rpx;
 }
 .type-tag.data-v-1cf27b2a {
   padding: 6rpx 20rpx;
@@ -146,6 +181,24 @@
   border-radius: 4rpx;
   font-size: 24rpx;
   font-weight: 500;
+}
+.game-status-tag.data-v-1cf27b2a {
+  padding: 6rpx 16rpx;
+  border-radius: 4rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+.status-pending.data-v-1cf27b2a {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+.status-ongoing.data-v-1cf27b2a {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+.status-completed.data-v-1cf27b2a {
+  background-color: #e5e7eb;
+  color: #4b5563;
 }
 .tag-status.data-v-1cf27b2a {
   background-color: #e6f7ff;
@@ -250,6 +303,13 @@
   border-radius: 30rpx;
   font-size: 28rpx;
   border: 1rpx solid #ff4d4f;
+}
+.complete-btn.data-v-1cf27b2a {
+  padding: 15rpx 32rpx;
+  background-color: #fb923c;
+  color: #fff;
+  border-radius: 30rpx;
+  font-size: 28rpx;
 }
 
 /* 加载提示样式 */

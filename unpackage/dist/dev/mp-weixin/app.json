@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/wiki/list",
     "pages/seat/seat",
+    "pages/seat/select",
     "pages/user/user",
     "pages/create/create",
     "pages/detail/detail",
@@ -24,7 +25,10 @@
     "pages/wiki/detail",
     "pages/wiki/submit",
     "pages/admin/wiki",
-    "pages/admin/user-manage"
+    "pages/admin/wiki-edit",
+    "pages/admin/user-manage",
+    "pages/admin/user-edit",
+    "pages/admin/announcement"
   ],
   "window": {
     "navigationBarTextStyle": "white",
@@ -40,13 +44,13 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "组局大厅",
+        "text": "组局",
         "iconPath": "static/tabbar/home.png",
         "selectedIconPath": "static/tabbar/home-active.png"
       },
       {
         "pagePath": "pages/seat/seat",
-        "text": "座位详情",
+        "text": "座位",
         "iconPath": "static/tabbar/seat.png",
         "selectedIconPath": "static/tabbar/seat-active.png"
       },

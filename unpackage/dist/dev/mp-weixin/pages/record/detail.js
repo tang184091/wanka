@@ -4,6 +4,10 @@ const _sfc_main = {
   __name: "detail",
   setup(__props) {
     const record = common_vendor.ref(null);
+    const recordId = common_vendor.ref("");
+    const localScoreRecorded = common_vendor.ref(false);
+    const originalScoreRecorded = common_vendor.ref(false);
+    let saving = false;
     const formatTime = (t) => {
       if (!t)
         return "-";
@@ -55,36 +59,80 @@ ${scores}`;
       const scores = record.value.players.map((p) => parseScore(p.score));
       const { returnPoint, divisor } = detectScoreRule(scores);
       const umaList = getUmaList(scores);
-      return scores.map((score, idx) => {
-        const base = (score - returnPoint) / divisor;
-        return base + (umaList[idx] || 0);
-      });
+      return scores.map((score, idx) => (score - returnPoint) / divisor + (umaList[idx] || 0));
     };
     const getResultLabel = (index) => {
       const result = getResultList()[index] || 0;
       return `${result > 0 ? "+" : ""}${result.toFixed(1)}P`;
     };
+    const toggleScoreRecorded = () => {
+      localScoreRecorded.value = !localScoreRecorded.value;
+      if (record.value) {
+        record.value.scoreRecorded = localScoreRecorded.value;
+      }
+    };
+    const saveScoreRecordedIfDirty = async () => {
+      var _a;
+      if (!recordId.value)
+        return;
+      if (saving)
+        return;
+      if (localScoreRecorded.value === originalScoreRecorded.value)
+        return;
+      saving = true;
+      try {
+        const res = await common_vendor.wx$1.cloud.callFunction({
+          name: "game-service",
+          data: {
+            action: "updateMahjongRecordScoreRecorded",
+            data: {
+              recordId: recordId.value,
+              scoreRecorded: localScoreRecorded.value
+            }
+          }
+        });
+        if (((_a = res.result) == null ? void 0 : _a.code) === 0) {
+          originalScoreRecorded.value = localScoreRecorded.value;
+          common_vendor.index.setStorageSync("record_need_refresh", Date.now());
+        }
+      } catch (error) {
+        common_vendor.index.__f__("error", "at pages/record/detail.vue:124", "保存录分状态失败", error);
+      } finally {
+        saving = false;
+      }
+    };
     common_vendor.onLoad(async (options) => {
-      var _a, _b;
+      var _a, _b, _c;
       const id = options == null ? void 0 : options.id;
       if (!id)
         return;
+      recordId.value = id;
       const res = await common_vendor.wx$1.cloud.callFunction({
         name: "game-service",
         data: { action: "getMahjongRecordDetail", data: { recordId: id } }
       });
       if (((_a = res.result) == null ? void 0 : _a.code) === 0) {
         record.value = res.result.data;
+        localScoreRecorded.value = ((_b = res.result.data) == null ? void 0 : _b.scoreRecorded) === true;
+        originalScoreRecorded.value = localScoreRecorded.value;
       } else {
-        common_vendor.index.showToast({ title: ((_b = res.result) == null ? void 0 : _b.message) || "加载失败", icon: "none" });
+        common_vendor.index.showToast({ title: ((_c = res.result) == null ? void 0 : _c.message) || "加载失败", icon: "none" });
       }
+    });
+    common_vendor.onHide(() => {
+      saveScoreRecordedIfDirty();
+    });
+    common_vendor.onUnload(() => {
+      saveScoreRecordedIfDirty();
     });
     return (_ctx, _cache) => {
       return common_vendor.e({
         a: record.value
       }, record.value ? {
         b: common_vendor.t(formatTime(record.value.createdAt)),
-        c: common_vendor.f(record.value.players, (player, index, i0) => {
+        c: common_vendor.t(localScoreRecorded.value ? "已录分" : "未录分"),
+        d: common_vendor.n(localScoreRecorded.value ? "state-recorded" : "state-unrecorded"),
+        e: common_vendor.f(record.value.players, (player, index, i0) => {
           return {
             a: common_vendor.t(player.nickname || player.userId || "未知玩家"),
             b: common_vendor.t(player.score),
@@ -92,8 +140,9 @@ ${scores}`;
             d: index
           };
         }),
-        d: common_vendor.t(exportText.value),
-        e: common_vendor.o(copyExport, "3b")
+        f: common_vendor.t(exportText.value),
+        g: common_vendor.o(copyExport, "17"),
+        h: common_vendor.o(toggleScoreRecorded, "f2")
       } : {});
     };
   }

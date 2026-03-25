@@ -77,5 +77,22 @@
 }
 .status-reserved.data-v-f89a1d25 { background: #c4d9ea; border-color: #83bde3;
 }
-.status-occupied.data-v-f89a1d25 { background: #e5c1c1; border-color: #e39b9b;
+.status-occupied.data-v-f89a1d25 { background: #fed7aa; border-color: #fb923c;
+}
+.notice-card.data-v-f89a1d25 {
+  margin-top: 12rpx;
+  padding: 16rpx;
+  border-radius: 14rpx;
+  background: #ffffff;
+  border: 1rpx solid #e5e7eb;
+}
+.notice-title.data-v-f89a1d25 { font-size: 26rpx; color: #111827; font-weight: 700;
+}
+.notice-content.data-v-f89a1d25 {
+  margin-top: 10rpx;
+  color: #4b5563;
+  font-size: 23rpx;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
 }

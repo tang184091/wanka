@@ -394,6 +394,34 @@ const gameActions = {
       };
     }
   },
+  // 标记组局完成
+  async completeGame(gameId) {
+    try {
+      const result = await callGameService("completeGame", { gameId }, {
+        loadingText: "提交中..."
+      });
+      if (result.success) {
+        this.updateGame(gameId, { status: "completed" });
+        return {
+          success: true,
+          message: "已标记完成",
+          data: result.data
+        };
+      }
+      return {
+        success: false,
+        error: result.error,
+        message: result.error
+      };
+    } catch (error) {
+      common_vendor.index.__f__("error", "at utils/store.js:516", "标记组局完成失败:", error);
+      return {
+        success: false,
+        error: error.message,
+        message: error.message
+      };
+    }
+  },
   // 更新组局本地状态
   updateGame(gameId, updates) {
     const index = state.games.list.findIndex((g) => g._id === gameId || g.id === gameId);
@@ -420,7 +448,7 @@ const gameActions = {
         };
       }
     } catch (error) {
-      common_vendor.index.__f__("error", "at utils/store.js:525", "删除组局失败:", error);
+      common_vendor.index.__f__("error", "at utils/store.js:554", "删除组局失败:", error);
       return {
         success: false,
         error: error.message,
@@ -452,7 +480,7 @@ const gameActions = {
         return [];
       }
     } catch (error) {
-      common_vendor.index.__f__("error", "at utils/store.js:560", "获取创建的组局失败:", error);
+      common_vendor.index.__f__("error", "at utils/store.js:589", "获取创建的组局失败:", error);
       common_vendor.index.showToast({
         title: "获取失败，请重试",
         icon: "none",
@@ -485,7 +513,7 @@ const gameActions = {
         return [];
       }
     } catch (error) {
-      common_vendor.index.__f__("error", "at utils/store.js:596", "获取参与的组局失败:", error);
+      common_vendor.index.__f__("error", "at utils/store.js:625", "获取参与的组局失败:", error);
       common_vendor.index.showToast({
         title: "获取失败，请重试",
         icon: "none",
@@ -521,7 +549,7 @@ const gameActions = {
         return [];
       }
     } catch (error) {
-      common_vendor.index.__f__("error", "at utils/store.js:635", "获取我的组局失败:", error);
+      common_vendor.index.__f__("error", "at utils/store.js:664", "获取我的组局失败:", error);
       common_vendor.index.showToast({
         title: "获取失败，请重试",
         icon: "none",
@@ -545,7 +573,7 @@ const gameActions = {
         return [];
       }
     } catch (error) {
-      common_vendor.index.__f__("error", "at utils/store.js:661", "搜索组局失败:", error);
+      common_vendor.index.__f__("error", "at utils/store.js:690", "搜索组局失败:", error);
       common_vendor.index.showToast({
         title: "搜索失败，请重试",
         icon: "none",
@@ -556,7 +584,7 @@ const gameActions = {
   }
 };
 const initStore = () => {
-  common_vendor.index.__f__("log", "at utils/store.js:715", "初始化全局状态");
+  common_vendor.index.__f__("log", "at utils/store.js:744", "初始化全局状态");
   try {
     const savedState = common_vendor.index.getStorageSync("global_state");
     if (savedState) {
@@ -567,7 +595,7 @@ const initStore = () => {
       if (parsed.app) {
         Object.assign(state.app, parsed.app);
       }
-      common_vendor.index.__f__("log", "at utils/store.js:733", "从本地存储恢复状态:", {
+      common_vendor.index.__f__("log", "at utils/store.js:762", "从本地存储恢复状态:", {
         isLoggedIn: state.user.isLoggedIn,
         hasUserInfo: !!state.user.info,
         theme: state.app.theme,
@@ -577,7 +605,7 @@ const initStore = () => {
     if (state.user.isLoggedIn && state.user.token) {
       const isStillValid = utils_user.UserService.validateToken(state.user.token);
       if (!isStillValid) {
-        common_vendor.index.__f__("log", "at utils/store.js:745", "登录状态已失效，重置为未登录状态");
+        common_vendor.index.__f__("log", "at utils/store.js:774", "登录状态已失效，重置为未登录状态");
         state.user.isLoggedIn = false;
         state.user.info = null;
         state.user.stats = null;
@@ -585,10 +613,10 @@ const initStore = () => {
       }
     } else {
       const isLoggedIn = userActions.checkLoginStatus();
-      common_vendor.index.__f__("log", "at utils/store.js:754", "检查登录状态结果:", isLoggedIn);
+      common_vendor.index.__f__("log", "at utils/store.js:783", "检查登录状态结果:", isLoggedIn);
     }
   } catch (error) {
-    common_vendor.index.__f__("error", "at utils/store.js:758", "初始化状态失败:", error);
+    common_vendor.index.__f__("error", "at utils/store.js:787", "初始化状态失败:", error);
     state.user.isLoggedIn = false;
     state.user.info = null;
     state.user.stats = null;

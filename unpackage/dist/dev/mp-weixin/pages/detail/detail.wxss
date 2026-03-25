@@ -151,6 +151,8 @@ to { transform: rotate(360deg);
 }
 .tag-status.data-v-eca06f3c { background-color: #ff922b;
 }
+.tag-status-ongoing.data-v-eca06f3c { background-color: #fb923c;
+}
 .tag-status-full.data-v-eca06f3c { background-color: #868e96;
 }
 .tag-status-cancelled.data-v-eca06f3c { background-color: #fa5252;
@@ -415,6 +417,16 @@ to { transform: rotate(360deg);
 .player-time.data-v-eca06f3c {
   font-size: 24rpx;
   color: #999;
+  flex-shrink: 0;
+}
+.kick-btn.data-v-eca06f3c {
+  margin-left: 16rpx;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 22rpx;
+  font-weight: 600;
   flex-shrink: 0;
 }
 

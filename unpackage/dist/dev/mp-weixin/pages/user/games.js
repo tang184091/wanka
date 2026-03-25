@@ -7,7 +7,9 @@ const _sfc_main = {
     const gameTypes = common_vendor.ref([
       { id: "mahjong", name: "立直麻将" },
       { id: "boardgame", name: "桌游" },
-      { id: "videogame", name: "电玩" }
+      { id: "videogame", name: "电玩" },
+      { id: "deck", name: "卡组" },
+      { id: "other", name: "其他" }
     ]);
     const myGames = common_vendor.ref([]);
     const newGame = common_vendor.ref({
@@ -18,7 +20,9 @@ const _sfc_main = {
       const classMap = {
         "mahjong": "game-tag-mahjong",
         "boardgame": "game-tag-boardgame",
-        "videogame": "game-tag-videogame"
+        "videogame": "game-tag-videogame",
+        "deck": "game-tag-deck",
+        "other": "game-tag-other"
       };
       return classMap[type] || "game-tag-mahjong";
     };
@@ -26,7 +30,9 @@ const _sfc_main = {
       const textMap = {
         "mahjong": "立直麻将",
         "boardgame": "桌游",
-        "videogame": "电玩"
+        "videogame": "电玩",
+        "deck": "卡组",
+        "other": "其他"
       };
       return textMap[type] || "立直麻将";
     };
@@ -104,7 +110,7 @@ const _sfc_main = {
           common_vendor.index.navigateBack();
         }, 1500);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/user/games.vue:253", "保存游戏列表失败:", error);
+        common_vendor.index.__f__("error", "at pages/user/games.vue:259", "保存游戏列表失败:", error);
         common_vendor.index.showToast({
           title: "保存失败: " + (error.message || "请重试"),
           icon: "none",
@@ -126,7 +132,7 @@ const _sfc_main = {
     return (_ctx, _cache) => {
       return common_vendor.e({
         a: common_vendor.o(goBack, "e9"),
-        b: common_vendor.o(saveGames, "d0"),
+        b: common_vendor.o(saveGames, "53"),
         c: common_vendor.t(myGames.value.length),
         d: myGames.value.length === 0
       }, myGames.value.length === 0 ? {} : {
@@ -147,13 +153,13 @@ const _sfc_main = {
         g: common_vendor.t(gameTypes.value[newGame.value.typeIndex].name),
         h: gameTypes.value,
         i: newGame.value.typeIndex,
-        j: common_vendor.o(onNewGameTypeChange, "98"),
-        k: common_vendor.o(addNewGame, "6d"),
+        j: common_vendor.o(onNewGameTypeChange, "2c"),
+        k: common_vendor.o(addNewGame, "ab"),
         l: newGame.value.name,
-        m: common_vendor.o(($event) => newGame.value.name = $event.detail.value, "9b"),
+        m: common_vendor.o(($event) => newGame.value.name = $event.detail.value, "46"),
         n: common_vendor.t(myGames.value.length >= 10 ? "已达上限" : "添加到我的列表"),
         o: myGames.value.length >= 10 ? 1 : "",
-        p: common_vendor.o(addNewGame, "af")
+        p: common_vendor.o(addNewGame, "f6")
       });
     };
   }

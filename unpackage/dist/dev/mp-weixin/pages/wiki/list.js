@@ -29,7 +29,7 @@ const _sfc_main = {
         const nextPage = reset ? 1 : page.value;
         const res = await common_vendor.wx$1.cloud.callFunction({
           name: "game-service",
-          data: { action: "getWikiList", data: { page: nextPage, pageSize: 20 } }
+          data: { action: "getWikiList", data: { page: nextPage, pageSize: 10 } }
         });
         if (((_a = res == null ? void 0 : res.result) == null ? void 0 : _a.code) === 0) {
           const incoming = res.result.data.list || [];

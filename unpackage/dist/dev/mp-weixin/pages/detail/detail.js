@@ -70,7 +70,7 @@ const _sfc_main = {
         });
         return tempUrlMap;
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:351", "获取云文件临时链接失败:", err);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:358", "获取云文件临时链接失败:", err);
         return {};
       }
     };
@@ -81,11 +81,11 @@ const _sfc_main = {
       });
       if (options.id) {
         gameId.value = options.id;
-        common_vendor.index.__f__("log", "at pages/detail/detail.vue:364", "开始加载组局详情，ID:", gameId.value);
+        common_vendor.index.__f__("log", "at pages/detail/detail.vue:371", "开始加载组局详情，ID:", gameId.value);
         await getCurrentUser();
         await loadGameDetail();
       } else {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:372", "未传递游戏ID");
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:379", "未传递游戏ID");
         error.value = "参数错误：缺少游戏ID";
         loading.value = false;
       }
@@ -106,7 +106,7 @@ const _sfc_main = {
           }
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:397", "获取用户信息失败:", err);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:404", "获取用户信息失败:", err);
       }
     };
     const loadGameDetail = async () => {
@@ -116,7 +116,7 @@ const _sfc_main = {
       creatorAvatarError.value = false;
       participantAvatarErrors.value = {};
       try {
-        common_vendor.index.__f__("log", "at pages/detail/detail.vue:409", "调用game-service获取详情，参数:", { gameId: gameId.value });
+        common_vendor.index.__f__("log", "at pages/detail/detail.vue:416", "调用game-service获取详情，参数:", { gameId: gameId.value });
         const res = await common_vendor.wx$1.cloud.callFunction({
           name: "game-service",
           data: {
@@ -124,7 +124,7 @@ const _sfc_main = {
             data: { gameId: gameId.value }
           }
         });
-        common_vendor.index.__f__("log", "at pages/detail/detail.vue:419", "获取组局详情结果:", res);
+        common_vendor.index.__f__("log", "at pages/detail/detail.vue:426", "获取组局详情结果:", res);
         if (res.result && res.result.code === 0) {
           const game = res.result.data || {};
           const participants = Array.isArray(game.participants) ? game.participants : [];
@@ -137,7 +137,8 @@ const _sfc_main = {
           if (currentUser.value) {
             isJoined = participants.some((p) => p.id === currentUser.value.id);
           }
-          const isCreator = currentUser.value && game.creatorId === currentUser.value.id;
+          const currentId = currentUser.value ? String(currentUser.value.id || currentUser.value._id || "") : "";
+          const isCreator = !!currentId && String(game.creatorId || "") === currentId;
           const currentPlayers = participants.length + 1;
           const isFull = currentPlayers >= (game.maxPlayers || 4);
           gameDetail.value = {
@@ -159,12 +160,12 @@ const _sfc_main = {
             isJoined,
             isCreator
           };
-          common_vendor.index.__f__("log", "at pages/detail/detail.vue:463", "处理后的游戏数据:", gameDetail.value);
+          common_vendor.index.__f__("log", "at pages/detail/detail.vue:471", "处理后的游戏数据:", gameDetail.value);
         } else {
           throw new Error(((_e = res.result) == null ? void 0 : _e.message) || "获取游戏详情失败");
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:468", "加载组局详情失败:", err);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:476", "加载组局详情失败:", err);
         error.value = err.message || "加载失败，请稍后重试";
       } finally {
         loading.value = false;
@@ -206,14 +207,23 @@ const _sfc_main = {
       };
       return textMap[type] || "立直麻将";
     };
-    const getStatusText = (game) => {
-      if (game.status === "cancelled") {
+    const getStatusClass = (game) => {
+      if ((game == null ? void 0 : game.status) === "ongoing")
+        return "tag-status-ongoing";
+      if ((game == null ? void 0 : game.status) === "cancelled")
+        return "tag-status-cancelled";
+      if (game == null ? void 0 : game.isFull)
+        return "tag-status-full";
+      return "tag-status";
+    };
+    const getStatusTextSafe = (game) => {
+      if ((game == null ? void 0 : game.status) === "ongoing")
+        return "使用中";
+      if ((game == null ? void 0 : game.status) === "cancelled")
         return "已取消";
-      } else if (game.isFull) {
+      if (game == null ? void 0 : game.isFull)
         return "已满员";
-      } else {
-        return `缺${(game.maxPlayers || 4) - (game.currentPlayers || 1)}人`;
-      }
+      return `缺${((game == null ? void 0 : game.maxPlayers) || 4) - ((game == null ? void 0 : game.currentPlayers) || 1)}人`;
     };
     const formatDateTime = (datetime) => {
       if (!datetime)
@@ -241,7 +251,7 @@ const _sfc_main = {
         const minutes = date.getMinutes().toString().padStart(2, "0");
         return `${dateStr} ${hours}:${minutes}`;
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:563", "格式化时间错误:", e);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:585", "格式化时间错误:", e);
         return "时间格式错误";
       }
     };
@@ -254,7 +264,7 @@ const _sfc_main = {
           return "";
         return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:578", "格式化创建时间错误:", e);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:600", "格式化创建时间错误:", e);
         return "";
       }
     };
@@ -282,12 +292,12 @@ const _sfc_main = {
           return `${date.getMonth() + 1}月${date.getDate()}日`;
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:609", "格式化相对时间错误:", e);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:631", "格式化相对时间错误:", e);
         return "";
       }
     };
     const handleAvatarError = (key) => {
-      common_vendor.index.__f__("log", "at pages/detail/detail.vue:616", "头像加载失败:", key);
+      common_vendor.index.__f__("log", "at pages/detail/detail.vue:638", "头像加载失败:", key);
       if (key === "creator") {
         creatorAvatarError.value = true;
         return;
@@ -351,7 +361,7 @@ const _sfc_main = {
                   }
                 }
               });
-              common_vendor.index.__f__("log", "at pages/detail/detail.vue:687", "加入组局结果:", result);
+              common_vendor.index.__f__("log", "at pages/detail/detail.vue:709", "加入组局结果:", result);
               if (result.result && result.result.code === 0) {
                 await loadGameDetail();
                 common_vendor.index.showToast({
@@ -363,7 +373,7 @@ const _sfc_main = {
                 throw new Error(((_a = result.result) == null ? void 0 : _a.message) || "加入失败");
               }
             } catch (err) {
-              common_vendor.index.__f__("error", "at pages/detail/detail.vue:703", "加入组局失败:", err);
+              common_vendor.index.__f__("error", "at pages/detail/detail.vue:725", "加入组局失败:", err);
               common_vendor.index.showToast({
                 title: err.message || "加入失败",
                 icon: "none",
@@ -408,7 +418,7 @@ const _sfc_main = {
                   }
                 }
               });
-              common_vendor.index.__f__("log", "at pages/detail/detail.vue:752", "退出组局结果:", result);
+              common_vendor.index.__f__("log", "at pages/detail/detail.vue:774", "退出组局结果:", result);
               if (result.result && result.result.code === 0) {
                 await loadGameDetail();
                 common_vendor.index.showToast({
@@ -420,7 +430,7 @@ const _sfc_main = {
                 throw new Error(((_a = result.result) == null ? void 0 : _a.message) || "退出失败");
               }
             } catch (err) {
-              common_vendor.index.__f__("error", "at pages/detail/detail.vue:768", "退出组局失败:", err);
+              common_vendor.index.__f__("error", "at pages/detail/detail.vue:790", "退出组局失败:", err);
               common_vendor.index.showToast({
                 title: err.message || "退出失败",
                 icon: "none",
@@ -429,6 +439,56 @@ const _sfc_main = {
             } finally {
               common_vendor.index.hideLoading();
             }
+          }
+        }
+      });
+    };
+    const handleKickPlayer = (player) => {
+      var _a, _b, _c;
+      const currentId = String(((_a = currentUser.value) == null ? void 0 : _a.id) || ((_b = currentUser.value) == null ? void 0 : _b._id) || "");
+      const creatorId = String(((_c = gameDetail.value) == null ? void 0 : _c.creatorId) || "");
+      if (!currentId || currentId !== creatorId) {
+        common_vendor.index.showToast({ title: "只有创建者可操作", icon: "none" });
+        return;
+      }
+      if (gameDetail.value.status !== "pending") {
+        common_vendor.index.showToast({ title: "当前状态不可移除", icon: "none" });
+        return;
+      }
+      const targetUserId = (player == null ? void 0 : player.id) || (player == null ? void 0 : player._id) || "";
+      if (!targetUserId) {
+        common_vendor.index.showToast({ title: "玩家信息异常", icon: "none" });
+        return;
+      }
+      const targetName = (player == null ? void 0 : player.nickname) || "该玩家";
+      common_vendor.index.showModal({
+        title: "确认移除",
+        content: `确定将“${targetName}”移出本组局吗？`,
+        confirmText: "移除",
+        confirmColor: "#ef4444",
+        success: async (res) => {
+          var _a2;
+          if (!res.confirm)
+            return;
+          common_vendor.index.showLoading({ title: "移除中...", mask: true });
+          try {
+            const result = await common_vendor.wx$1.cloud.callFunction({
+              name: "game-service",
+              data: {
+                action: "removeParticipant",
+                data: { gameId: gameId.value, targetUserId }
+              }
+            });
+            if (result.result && result.result.code === 0) {
+              await loadGameDetail();
+              common_vendor.index.showToast({ title: "已移除", icon: "success" });
+            } else {
+              throw new Error(((_a2 = result.result) == null ? void 0 : _a2.message) || "移除失败");
+            }
+          } catch (err) {
+            common_vendor.index.showToast({ title: err.message || "移除失败", icon: "none" });
+          } finally {
+            common_vendor.index.hideLoading();
           }
         }
       });
@@ -474,7 +534,7 @@ const _sfc_main = {
                   data: { gameId: gameId.value }
                 }
               });
-              common_vendor.index.__f__("log", "at pages/detail/detail.vue:829", "取消组局结果:", result);
+              common_vendor.index.__f__("log", "at pages/detail/detail.vue:904", "取消组局结果:", result);
               if (result.result && result.result.code === 0) {
                 await loadGameDetail();
                 common_vendor.index.showToast({
@@ -489,7 +549,7 @@ const _sfc_main = {
                 throw new Error(((_a = result.result) == null ? void 0 : _a.message) || "取消失败");
               }
             } catch (err) {
-              common_vendor.index.__f__("error", "at pages/detail/detail.vue:850", "取消组局失败:", err);
+              common_vendor.index.__f__("error", "at pages/detail/detail.vue:925", "取消组局失败:", err);
               common_vendor.index.showToast({
                 title: err.message || "取消失败",
                 icon: "none",
@@ -528,6 +588,12 @@ const _sfc_main = {
         imageUrl: LOCAL_SHARE_IMAGE
       };
     });
+    common_vendor.onShow(async () => {
+      if (gameId.value) {
+        await getCurrentUser();
+        await loadGameDetail();
+      }
+    });
     common_vendor.onShareTimeline(() => {
       return {
         title: `玩咖约局：${gameDetail.value.title}`,
@@ -547,8 +613,8 @@ const _sfc_main = {
       } : common_vendor.e({
         g: common_vendor.t(getTypeText(gameDetail.value.type)),
         h: common_vendor.n(getTypeClass(gameDetail.value.type)),
-        i: common_vendor.t(getStatusText(gameDetail.value)),
-        j: common_vendor.n(gameDetail.value.status !== "pending" ? "tag-status-cancelled" : gameDetail.value.isFull ? "tag-status-full" : "tag-status"),
+        i: common_vendor.t(getStatusTextSafe(gameDetail.value)),
+        j: common_vendor.n(getStatusClass(gameDetail.value)),
         k: common_vendor.t(gameDetail.value.title || "未命名活动"),
         l: gameDetail.value.project
       }, gameDetail.value.project ? {
@@ -574,7 +640,7 @@ const _sfc_main = {
         B: gameDetail.value.creatorInfo
       }, gameDetail.value.creatorInfo ? common_vendor.e({
         C: creatorAvatarSrc.value,
-        D: common_vendor.o(($event) => handleAvatarError("creator"), "8e"),
+        D: common_vendor.o(($event) => handleAvatarError("creator"), "ee"),
         E: common_vendor.t(gameDetail.value.creatorInfo.nickname || "未知用户"),
         F: gameDetail.value.creatorInfo.gender
       }, gameDetail.value.creatorInfo.gender ? {
@@ -603,7 +669,7 @@ const _sfc_main = {
       } : {}) : {}, {
         Q: common_vendor.t((gameDetail.value.participants || []).length + 1),
         R: creatorAvatarSrc.value,
-        S: common_vendor.o(($event) => handleAvatarError("creator"), "1e"),
+        S: common_vendor.o(($event) => handleAvatarError("creator"), "46"),
         T: common_vendor.t(((_a = gameDetail.value.creatorInfo) == null ? void 0 : _a.nickname) || "未知用户"),
         U: common_vendor.f(gameDetail.value.participants, (player, index, i0) => {
           return common_vendor.e({
@@ -613,21 +679,24 @@ const _sfc_main = {
             d: player.joinTime
           }, player.joinTime ? {
             e: common_vendor.t(formatRelativeTime(player.joinTime))
+          } : {}, currentUser.value && String(currentUser.value.id || currentUser.value._id || "") === String(gameDetail.value.creatorId || "") && gameDetail.value.status === "pending" ? {
+            f: common_vendor.o(($event) => handleKickPlayer(player), index)
           } : {}, {
-            f: index
+            g: index
           });
         }),
-        V: !gameDetail.value.isFull
+        V: currentUser.value && String(currentUser.value.id || currentUser.value._id || "") === String(gameDetail.value.creatorId || "") && gameDetail.value.status === "pending",
+        W: !gameDetail.value.isFull
       }, !gameDetail.value.isFull ? {
-        W: common_vendor.f((gameDetail.value.maxPlayers || 4) - (gameDetail.value.currentPlayers || 1), (n, k0, i0) => {
+        X: common_vendor.f((gameDetail.value.maxPlayers || 4) - (gameDetail.value.currentPlayers || 1), (n, k0, i0) => {
           return {
             a: n
           };
         })
       } : {}, {
-        X: gameDetail.value.activities && gameDetail.value.activities.length > 0
+        Y: gameDetail.value.activities && gameDetail.value.activities.length > 0
       }, gameDetail.value.activities && gameDetail.value.activities.length > 0 ? {
-        Y: common_vendor.f(gameDetail.value.activities, (activity, index, i0) => {
+        Z: common_vendor.f(gameDetail.value.activities, (activity, index, i0) => {
           return {
             a: common_vendor.t(activity.text || "未知操作"),
             b: common_vendor.t(formatRelativeTime(activity.createdAt)),
@@ -635,28 +704,28 @@ const _sfc_main = {
           };
         })
       } : {}, {
-        Z: refreshing.value,
-        aa: common_vendor.o(onRefresh, "af"),
-        ab: common_vendor.o(onLoadMore, "72")
+        aa: refreshing.value,
+        ab: common_vendor.o(onRefresh, "af"),
+        ac: common_vendor.o(onLoadMore, "72")
       }), {
         b: error.value,
-        ac: !loading.value && !error.value && gameDetail.value.status === "pending"
+        ad: !loading.value && !error.value && gameDetail.value.status === "pending"
       }, !loading.value && !error.value && gameDetail.value.status === "pending" ? common_vendor.e({
-        ad: common_assets._imports_6,
-        ae: !gameDetail.value.isJoined
+        ae: common_assets._imports_6,
+        af: !gameDetail.value.isJoined
       }, !gameDetail.value.isJoined ? common_vendor.e({
-        af: !gameDetail.value.isFull
+        ag: !gameDetail.value.isFull
       }, !gameDetail.value.isFull ? {
-        ag: common_vendor.o(handleJoin, "7e")
+        ah: common_vendor.o(handleJoin, "51")
       } : {}) : !gameDetail.value.isCreator ? {
-        ai: common_vendor.o(handleQuit, "1a")
+        aj: common_vendor.o(handleQuit, "82")
       } : {
-        aj: common_vendor.o(handleEdit, "b7"),
-        ak: common_vendor.o(handleCancel, "ec")
+        ak: common_vendor.o(handleEdit, "d2"),
+        al: common_vendor.o(handleCancel, "b2")
       }, {
-        ah: !gameDetail.value.isCreator
+        ai: !gameDetail.value.isCreator
       }) : {}, {
-        al: !loading.value && !error.value && gameDetail.value.status === "cancelled"
+        am: !loading.value && !error.value && gameDetail.value.status === "cancelled"
       }, !loading.value && !error.value && gameDetail.value.status === "cancelled" ? {} : {});
     };
   }

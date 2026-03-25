@@ -34,7 +34,10 @@ const _sfc_main = {
         data: { action: "getMahjongRecords", data: {} }
       });
       if (((_a = res.result) == null ? void 0 : _a.code) === 0) {
-        allRecords.value = res.result.data.list || [];
+        allRecords.value = (res.result.data.list || []).map((item) => ({
+          ...item,
+          scoreRecorded: item.scoreRecorded === true
+        }));
         displayCount.value = 10;
       }
     };
@@ -84,11 +87,11 @@ const _sfc_main = {
         };
       });
       if (players.some((p) => !p.userId)) {
-        common_vendor.index.showToast({ title: "请填写4位玩家ID或昵称", icon: "none" });
+        common_vendor.index.showToast({ title: "请填写 4 位玩家 ID 或昵称", icon: "none" });
         return;
       }
       if (!scoreValid.value) {
-        common_vendor.index.showToast({ title: "分数总和必须为100000或1000", icon: "none" });
+        common_vendor.index.showToast({ title: "分数总和必须为 100000 或 1000", icon: "none" });
         return;
       }
       const res = await common_vendor.wx$1.cloud.callFunction({
@@ -112,7 +115,16 @@ const _sfc_main = {
     const goToHonor = () => {
       common_vendor.index.navigateTo({ url: "/pages/record/honor" });
     };
-    common_vendor.onShow(loadRecords);
+    common_vendor.onShow(() => {
+      loadRecords();
+      const needRefresh = common_vendor.index.getStorageSync("record_need_refresh");
+      if (needRefresh) {
+        common_vendor.index.removeStorageSync("record_need_refresh");
+        setTimeout(() => {
+          loadRecords();
+        }, 300);
+      }
+    });
     return (_ctx, _cache) => {
       return common_vendor.e({
         a: common_vendor.f(form.value.players, (player, index, i0) => {
@@ -135,31 +147,32 @@ const _sfc_main = {
             h: index
           });
         }),
-        b: `分数`,
-        c: common_vendor.t(totalScore.value),
-        d: scoreValid.value ? 1 : "",
-        e: common_vendor.o(submit, "9a"),
-        f: common_vendor.o(goToYakuman, "9c"),
-        g: common_vendor.o(goToHonor, "e0"),
-        h: visibleRecords.value.length === 0
+        b: common_vendor.t(totalScore.value),
+        c: scoreValid.value ? 1 : "",
+        d: common_vendor.o(submit, "f4"),
+        e: common_vendor.o(goToYakuman, "85"),
+        f: common_vendor.o(goToHonor, "1b"),
+        g: visibleRecords.value.length === 0
       }, visibleRecords.value.length === 0 ? {} : {}, {
-        i: common_vendor.f(visibleRecords.value, (item, k0, i0) => {
+        h: common_vendor.f(visibleRecords.value, (item, k0, i0) => {
           return {
             a: common_vendor.t(formatTime(item.createdAt)),
-            b: common_vendor.f(item.players, (player, index, i1) => {
+            b: common_vendor.t(item.scoreRecorded ? "已录分" : "未录分"),
+            c: common_vendor.n(item.scoreRecorded ? "score-tag-recorded" : "score-tag-unrecorded"),
+            d: common_vendor.f(item.players, (player, index, i1) => {
               return {
                 a: common_vendor.t(player.nickname || player.userId || "未知玩家"),
                 b: common_vendor.t(player.score),
                 c: index
               };
             }),
-            c: item._id,
-            d: common_vendor.o(($event) => openDetail(item), item._id)
+            e: item._id,
+            f: common_vendor.o(($event) => openDetail(item), item._id)
           };
         }),
-        j: canLoadMore.value
+        i: canLoadMore.value
       }, canLoadMore.value ? {
-        k: common_vendor.o(loadMoreRecords, "b5")
+        j: common_vendor.o(loadMoreRecords, "fc")
       } : {});
     };
   }

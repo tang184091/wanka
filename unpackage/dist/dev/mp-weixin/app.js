@@ -6,6 +6,7 @@ if (!Math) {
   "./pages/index/index.js";
   "./pages/wiki/list.js";
   "./pages/seat/seat.js";
+  "./pages/seat/select.js";
   "./pages/user/user.js";
   "./pages/create/create.js";
   "./pages/detail/detail.js";
@@ -27,7 +28,10 @@ if (!Math) {
   "./pages/wiki/detail.js";
   "./pages/wiki/submit.js";
   "./pages/admin/wiki.js";
+  "./pages/admin/wiki-edit.js";
   "./pages/admin/user-manage.js";
+  "./pages/admin/user-edit.js";
+  "./pages/admin/announcement.js";
 }
 const _sfc_main = {
   onLaunch: function(options) {
