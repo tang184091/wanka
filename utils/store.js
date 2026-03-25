@@ -492,6 +492,35 @@ export const gameActions = {
       }
     }
   },
+
+  // 标记组局完成
+  async completeGame(gameId) {
+    try {
+      const result = await callGameService('completeGame', { gameId }, {
+        loadingText: '提交中...'
+      })
+      if (result.success) {
+        this.updateGame(gameId, { status: 'completed' })
+        return {
+          success: true,
+          message: '已标记完成',
+          data: result.data
+        }
+      }
+      return {
+        success: false,
+        error: result.error,
+        message: result.error
+      }
+    } catch (error) {
+      console.error('标记组局完成失败:', error)
+      return {
+        success: false,
+        error: error.message,
+        message: error.message
+      }
+    }
+  },
   
   // 更新组局本地状态
   updateGame(gameId, updates) {

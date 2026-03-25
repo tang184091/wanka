@@ -1,4 +1,4 @@
-const { db, _, success, fail, getCurrentUser, getUserMapByIds } = require('./shared')
+const { db, _, success, fail, getCurrentUser, getUserMapByIds, ensureUserAvailable } = require('./shared')
 
 const YAKUMAN_TYPES = [
   '国士无双',
@@ -51,6 +51,7 @@ async function getMahjongRecords() {
   for (const record of res.data || []) {
     list.push({
       ...record,
+      scoreRecorded: record.scoreRecorded === true,
       players: await fillPlayerNicknames(record.players || [])
     })
   }
@@ -67,6 +68,7 @@ async function getMahjongRecordDetail(data) {
 
   return success({
     ...res.data,
+    scoreRecorded: res.data.scoreRecorded === true,
     players: await fillPlayerNicknames(res.data.players || [])
   }, '获取成功')
 }
@@ -82,10 +84,16 @@ async function createMahjongRecord(data, wxContext) {
   const currentUser = await getCurrentUser(wxContext)
   if (!currentUser) return fail(401, '请先登录')
 
+  {
+    const availableError = ensureUserAvailable(currentUser, '上传战绩')
+    if (availableError) return availableError
+  }
+
   const gameId = `mj-${Date.now()}`
   const addRes = await db.collection('mahjong_records').add({
     data: {
       gameId,
+      scoreRecorded: false,
       players: players.map((p, idx) => ({
         seat: idx + 1,
         userId: p.userId,
@@ -99,6 +107,23 @@ async function createMahjongRecord(data, wxContext) {
   })
 
   return success({ id: addRes._id, gameId }, '创建成功')
+}
+
+async function updateMahjongRecordScoreRecorded(data, wxContext) {
+  const { recordId, scoreRecorded } = data || {}
+  if (!recordId) return fail(400, '缺少战绩ID')
+
+  const currentUser = await getCurrentUser(wxContext)
+  if (!currentUser) return fail(401, '请先登录')
+
+  await db.collection('mahjong_records').doc(recordId).update({
+    data: {
+      scoreRecorded: scoreRecorded === true,
+      updatedAt: new Date()
+    }
+  })
+
+  return success({ recordId, scoreRecorded: scoreRecorded === true }, '更新成功')
 }
 
 async function getYakumanList() {
@@ -294,6 +319,11 @@ async function updateHonorRecord(data, wxContext) {
   if (!currentUser) return fail(401, '请先登录')
   if (!isAdminUser(currentUser)) return fail(403, '仅管理员可修改荣誉记录')
 
+  {
+    const availableError = ensureUserAvailable(currentUser, '上传战绩')
+    if (availableError) return availableError
+  }
+
   const payload = data || {}
   const recordId = String(payload.recordId || '').trim()
   const type = String(payload.type || '').trim()
@@ -337,6 +367,11 @@ async function updateHonorRecord(data, wxContext) {
     updateData.participantCount = _.remove()
   }
 
+  {
+    const availableError = ensureUserAvailable(currentUser, '上传役满')
+    if (availableError) return availableError
+  }
+
   try {
     await db.collection('honor_records').doc(recordId).update({ data: updateData })
     return success({ id: recordId }, '修改成功')
@@ -352,6 +387,7 @@ module.exports = {
   fillPlayerNicknames,
   getMahjongRecords,
   getMahjongRecordDetail,
+  updateMahjongRecordScoreRecorded,
   createMahjongRecord,
   getYakumanList,
   createYakumanRecord,

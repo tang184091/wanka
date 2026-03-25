@@ -32,8 +32,8 @@
               {{ getTypeText(gameDetail.type) }}
             </view>
           </view>
-          <view :class="['status-tag', gameDetail.status !== 'pending' ? 'tag-status-cancelled' : (gameDetail.isFull ? 'tag-status-full' : 'tag-status')]">
-            {{ getStatusText(gameDetail) }}
+          <view :class="['status-tag', getStatusClass(gameDetail)]">
+            {{ getStatusTextSafe(gameDetail) }}
           </view>
         </view>
 
@@ -181,6 +181,13 @@
             <view v-if="player.joinTime" class="player-time">
               {{ formatRelativeTime(player.joinTime) }}
             </view>
+            <view
+              v-if="currentUser && String(currentUser.id || currentUser._id || '') === String(gameDetail.creatorId || '') && gameDetail.status === 'pending'"
+              class="kick-btn"
+              @tap.stop="handleKickPlayer(player)"
+            >
+              移除
+            </view>
           </view>
           
           <!-- 空位提示 -->
@@ -276,7 +283,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
+import { onLoad, onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import constants from '@/utils/constants.js'
 
 // 响应式数据
@@ -434,7 +441,8 @@ const loadGameDetail = async () => {
       }
       
       // 计算是否是创建者
-      const isCreator = currentUser.value && (game.creatorId === currentUser.value.id)
+      const currentId = currentUser.value ? String(currentUser.value.id || currentUser.value._id || '') : ''
+      const isCreator = !!currentId && String(game.creatorId || '') === currentId
       
       // 计算是否已满员
       const currentPlayers = participants.length + 1
@@ -520,6 +528,20 @@ const getTypeText = (type) => {
 }
 
 // 获取状态文字
+const getStatusClass = (game) => {
+  if (game?.status === 'ongoing') return 'tag-status-ongoing'
+  if (game?.status === 'cancelled') return 'tag-status-cancelled'
+  if (game?.isFull) return 'tag-status-full'
+  return 'tag-status'
+}
+
+const getStatusTextSafe = (game) => {
+  if (game?.status === 'ongoing') return '使用中'
+  if (game?.status === 'cancelled') return '已取消'
+  if (game?.isFull) return '已满员'
+  return `缺${(game?.maxPlayers || 4) - (game?.currentPlayers || 1)}人`
+}
+
 const getStatusText = (game) => {
   if (game.status === 'cancelled') {
     return '已取消'
@@ -780,6 +802,59 @@ const handleQuit = async () => {
 }
 
 // 编辑
+// 创建者移除参与玩家
+const handleKickPlayer = (player) => {
+  const currentId = String(currentUser.value?.id || currentUser.value?._id || '')
+  const creatorId = String(gameDetail.value?.creatorId || '')
+  if (!currentId || currentId !== creatorId) {
+    uni.showToast({ title: '只有创建者可操作', icon: 'none' })
+    return
+  }
+  if (gameDetail.value.status !== 'pending') {
+    uni.showToast({ title: '当前状态不可移除', icon: 'none' })
+    return
+  }
+
+  const targetUserId = player?.id || player?._id || ''
+  if (!targetUserId) {
+    uni.showToast({ title: '玩家信息异常', icon: 'none' })
+    return
+  }
+
+  const targetName = player?.nickname || '该玩家'
+  uni.showModal({
+    title: '确认移除',
+    content: `确定将“${targetName}”移出本组局吗？`,
+    confirmText: '移除',
+    confirmColor: '#ef4444',
+    success: async (res) => {
+      if (!res.confirm) return
+
+      uni.showLoading({ title: '移除中...', mask: true })
+      try {
+        const result = await wx.cloud.callFunction({
+          name: 'game-service',
+          data: {
+            action: 'removeParticipant',
+            data: { gameId: gameId.value, targetUserId }
+          }
+        })
+
+        if (result.result && result.result.code === 0) {
+          await loadGameDetail()
+          uni.showToast({ title: '已移除', icon: 'success' })
+        } else {
+          throw new Error(result.result?.message || '移除失败')
+        }
+      } catch (err) {
+        uni.showToast({ title: err.message || '移除失败', icon: 'none' })
+      } finally {
+        uni.hideLoading()
+      }
+    }
+  })
+}
+
 const handleEdit = () => {
   if (!currentUser.value || !gameDetail.value.isCreator) {
     uni.showToast({
@@ -896,6 +971,13 @@ onShareAppMessage(() => {
     title: `${gameDetail.value.title} - 玩咖约局`,
     path: `/pages/detail/detail?id=${gameId.value}`,
     imageUrl: LOCAL_SHARE_IMAGE
+  }
+})
+
+onShow(async () => {
+  if (gameId.value) {
+    await getCurrentUser()
+    await loadGameDetail()
   }
 })
 
@@ -1070,6 +1152,7 @@ onShareTimeline(() => {
 }
 
 .tag-status { background-color: #ff922b; }
+.tag-status-ongoing { background-color: #fb923c; }
 .tag-status-full { background-color: #868e96; }
 .tag-status-cancelled { background-color: #fa5252; }
 
@@ -1372,6 +1455,17 @@ onShareTimeline(() => {
 .player-time {
   font-size: 24rpx;
   color: #999;
+  flex-shrink: 0;
+}
+
+.kick-btn {
+  margin-left: 16rpx;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 22rpx;
+  font-weight: 600;
   flex-shrink: 0;
 }
 

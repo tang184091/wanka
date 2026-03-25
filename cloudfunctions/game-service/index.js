@@ -1,4 +1,3 @@
-/// 组局服务云函数
 const cloud = require('wx-server-sdk')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
@@ -40,6 +39,10 @@ exports.main = async (event) => {
         return await gameActions.joinGame(data, wxContext)
       case 'quitGame':
         return await gameActions.quitGame(data, wxContext)
+      case 'removeParticipant':
+        return await gameActions.removeParticipant(data, wxContext)
+      case 'completeGame':
+        return await gameActions.completeGame(data, wxContext)
       case 'getMyGames':
         return await gameActions.getMyGames(data, wxContext)
       case 'getCreatedGames':
@@ -52,8 +55,6 @@ exports.main = async (event) => {
       // 座位状态
       case 'getSeatStatus':
         return await seatActions.getSeatStatus(data)
-      case 'getSeatStatusOverrides':
-        return await seatActions.getSeatStatusOverrides(data)
       case 'setSeatStatusOverrides':
         return await seatActions.setSeatStatusOverrides(data, wxContext)
 
@@ -62,6 +63,8 @@ exports.main = async (event) => {
         return await recordActions.getMahjongRecords()
       case 'getMahjongRecordDetail':
         return await recordActions.getMahjongRecordDetail(data)
+      case 'updateMahjongRecordScoreRecorded':
+        return await recordActions.updateMahjongRecordScoreRecorded(data, wxContext)
       case 'createMahjongRecord':
         return await recordActions.createMahjongRecord(data, wxContext)
       case 'getYakumanList':
@@ -74,6 +77,8 @@ exports.main = async (event) => {
         return await recordActions.createHonorRecord(data, wxContext)
       case 'updateHonorRecord':
         return await recordActions.updateHonorRecord(data, wxContext)
+
+      // 百科
       case 'getWikiList':
         return await wikiActions.getWikiList(data, wxContext)
       case 'getWikiDetail':
@@ -98,6 +103,10 @@ exports.main = async (event) => {
         return await adminActions.adminDeleteYakumanRecord(data, wxContext)
       case 'adminDeleteHonorRecord':
         return await adminActions.adminDeleteHonorRecord(data, wxContext)
+      case 'getSeatAnnouncement':
+        return await adminActions.getSeatAnnouncement()
+      case 'setSeatAnnouncement':
+        return await adminActions.setSeatAnnouncement(data, wxContext)
 
       default:
         return fail(400, '未知操作')

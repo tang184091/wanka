@@ -34,6 +34,13 @@
             </view>
           </view>
         </view>
+        <view v-if="false" class="form-item">
+          <view class="form-label">活动地点</view>
+          <view class="picker-input">
+            <text class="time-text">打牌/比赛类型无需选择地点</text>
+          </view>
+          <view class="location-hint">该类型不会占用座位资源</view>
+        </view>
       </view>
 
       <!-- 基本信息 -->
@@ -51,6 +58,13 @@
             maxlength="20"
           />
           <view class="form-tips">{{ formData.title.length }}/20</view>
+        </view>
+        <view v-if="false" class="form-item">
+          <view class="form-label">活动地点</view>
+          <view class="picker-input">
+            <text class="time-text">打牌/比赛类型无需选择地点</text>
+          </view>
+          <view class="location-hint">该类型不会占用座位资源</view>
         </view>
 
         <!-- 具体游戏/项目 -->
@@ -84,11 +98,10 @@
               </view>
             </picker>
             <picker 
-              mode="time" 
-              :value="timeValue" 
-              start="00:00" 
-              end="23:59" 
-              @change="bindTimeChange"
+              mode="multiSelector"
+              :range="timeMultiRange"
+              :value="timeMultiIndex"
+              @change="bindTimeMultiChange"
               class="picker-item"
             >
               <view class="picker-input">
@@ -105,22 +118,13 @@
         <!-- 活动地点 -->
         <view class="form-item">
           <view class="form-label">活动地点 *</view>
-          <picker
-            mode="selector"
-            :range="locationOptions"
-            range-key="name"
-            :value="locationPickerValue"
-            @change="bindLocationChange"
-            class="picker-item"
-          >
-            <view class="picker-input">
-              <text class="time-text" :class="{ 'placeholder-text': !selectedLocationName }">
-                {{ selectedLocationName || '请选择活动地点' }}
-              </text>
-              <text class="arrow-right">›</text>
-            </view>
-          </picker>
-          <view class="location-hint">地点由门店统一维护</view>
+          <view class="picker-input" @tap="openSeatPicker">
+            <text class="time-text" :class="{ 'placeholder-text': !selectedLocationName }">
+              {{ selectedLocationName || '从座位详情中选择可预约地点' }}
+            </text>
+            <text class="arrow-right">›</text>
+          </view>
+          <view class="location-hint">点击进入座位详情，选择“空闲中”的地点</view>
         </view>
 
         <!-- 人数设置 -->
@@ -249,16 +253,21 @@ const formData = ref({
 const isEditMode = ref(false)
 const gameId = ref('')
 const originalData = ref({})
+const currentJoinedPlayers = ref(1)
+const pickedLocationDate = ref('')
 
 // 修复：拆分为独立的日期和时间值，用于原生 picker
 const dateValue = ref('')
 const timeValue = ref('')
+const timeMultiIndex = ref([0, 0])
+const timeHourOptions = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
+const timeMinuteOptions = ['00', '10', '20', '30', '40', '50']
+const timeMultiRange = [timeHourOptions, timeMinuteOptions]
 const dateDisplay = ref('')
 const timeDisplay = ref('')
 const timeError = ref(false)
 
 // 可选地点
-const locationOptions = ref(constants.GAME_LOCATIONS || [])
 
 // 当前时间和结束日期
 const currentDate = ref('')
@@ -277,12 +286,13 @@ const maxPlayers = computed(() => {
 
 const firstRowTypes = computed(() => gameTypes.value.slice(0, 3))
 const secondRowTypes = computed(() => gameTypes.value.slice(3))
+const requiresLocation = computed(() => !['cardgame', 'competition'].includes(formData.value.type))
 
 const canSubmit = computed(() => {
   return formData.value.title && 
          formData.value.project && 
          formData.value.time && 
-         formData.value.location &&
+         (!requiresLocation.value || formData.value.location) &&
          formData.value.maxPlayers >= minPlayers.value &&
          formData.value.maxPlayers <= maxPlayers.value &&
          !timeError.value
@@ -290,18 +300,31 @@ const canSubmit = computed(() => {
 
 const selectedLocationName = computed(() => formData.value.location || '')
 
-const locationPickerValue = computed(() => {
-  const index = locationOptions.value.findIndex(item => item.name === formData.value.location)
-  return index >= 0 ? index : 0
-})
+
+const normalizeToTenMinute = (input = '') => {
+  const text = String(input || '')
+  const parts = text.split(':')
+  const hour = Number(parts[0] || 0)
+  const minute = Number(parts[1] || 0)
+  const safeHour = Math.min(23, Math.max(0, Number.isFinite(hour) ? hour : 0))
+  const safeMinute = Math.min(59, Math.max(0, Number.isFinite(minute) ? minute : 0))
+  const snappedMinute = Math.floor(safeMinute / 10) * 10
+  return `${String(safeHour).padStart(2, '0')}:${String(snappedMinute).padStart(2, '0')}`
+}
+
+const syncTimeMultiIndex = () => {
+  const [h = '00', m = '00'] = String(timeValue.value || '00:00').split(':')
+  const hourIdx = Math.max(0, timeHourOptions.indexOf(h))
+  const minuteIdx = Math.max(0, timeMinuteOptions.indexOf(m))
+  timeMultiIndex.value = [hourIdx, minuteIdx]
+}
 
 // 应用快捷创建预填参数
 const applyPrefill = (options = {}) => {
   if (options.type) {
     const allowedType = gameTypes.value.find(t => t.id === options.type)
     if (allowedType) {
-      formData.value.type = allowedType.id
-      formData.value.maxPlayers = allowedType.minPlayers
+      selectType(allowedType.id)
     }
   }
 
@@ -310,16 +333,16 @@ const applyPrefill = (options = {}) => {
   }
 
   if (options.location) {
-    formData.value.location = decodeURIComponent(options.location)
+    if (requiresLocation.value) {
+      formData.value.location = decodeURIComponent(options.location)
+      pickedLocationDate.value = dateValue.value || ''
+    }
   }
 
   if (options.date) {
     const presetDate = decodeURIComponent(options.date)
     if (/^\d{4}-\d{2}-\d{2}$/.test(presetDate)) {
       dateValue.value = presetDate
-      if (!timeValue.value) {
-        timeValue.value = '19:00'
-      }
       updateFormDateTime()
     }
   }
@@ -336,6 +359,7 @@ onLoad((options) => {
     loadGameDetail(options.id)
   } else {
     // 创建模式：初始化默认值
+    currentJoinedPlayers.value = 1
     initDates()
     applyPrefill(options)
   }
@@ -364,6 +388,7 @@ const loadGameDetail = async (id) => {
       
       // 保存原始数据
       originalData.value = { ...game }
+      currentJoinedPlayers.value = Number(game.currentPlayers || ((game.participants || []).length + 1) || 1)
       
       // 填充表单数据
       formData.value = {
@@ -380,8 +405,10 @@ const loadGameDetail = async (id) => {
       if (game.time) {
         const date = new Date(game.time)
         dateValue.value = date.toISOString().split('T')[0]
-        timeValue.value = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+        timeValue.value = normalizeToTenMinute(`${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`)
+        syncTimeMultiIndex()
         updateTimeDisplay(date)
+        pickedLocationDate.value = dateValue.value
       }
       
       // 设置页面标题
@@ -417,20 +444,15 @@ const initDates = () => {
   currentDate.value = now.toISOString().split('T')[0]
   endDate.value = max.toISOString().split('T')[0]
   
-  // 设置默认时间为明天下午7点
-  const defaultTime = new Date()
-  defaultTime.setDate(defaultTime.getDate() + 1) // 明天
-  defaultTime.setHours(19, 0, 0, 0) // 晚上7点
-  
-  // 更新独立的日期和时间值
-  dateValue.value = defaultTime.toISOString().split('T')[0]
-  timeValue.value = '19:00'
-  
-  // 更新显示值
-  updateTimeDisplay(defaultTime)
-  
-  // 更新表单数据
-  formData.value.time = defaultTime.toISOString()
+  // 不再预设活动时间，要求用户手动选择
+  dateValue.value = ''
+  timeValue.value = ''
+  syncTimeMultiIndex()
+  dateDisplay.value = ''
+  timeDisplay.value = ''
+  formData.value.time = ''
+  formData.value.location = ''
+  pickedLocationDate.value = ''
 }
 
 // 更新时间显示
@@ -461,6 +483,10 @@ const selectType = (type) => {
   if (!formData.value.project) {
     formData.value.project = ''
   }
+
+  if (!['cardgame', 'competition'].includes(type)) return
+  formData.value.location = ''
+  pickedLocationDate.value = ''
 }
 
 // 获取具体项目placeholder
@@ -504,13 +530,26 @@ const formatDateTime = (datetime) => {
 
 // 日期选择变化
 const bindDateChange = (e) => {
+  const prevDate = dateValue.value
   dateValue.value = e.detail.value
   updateFormDateTime()
+  if (requiresLocation.value && formData.value.location && prevDate && prevDate !== dateValue.value) {
+    formData.value.location = ''
+    pickedLocationDate.value = ''
+    uni.showToast({
+      title: '日期已变更，请重新选择地点',
+      icon: 'none'
+    })
+  }
 }
 
 // 时间选择变化
-const bindTimeChange = (e) => {
-  timeValue.value = e.detail.value
+const bindTimeMultiChange = (e) => {
+  const indexes = e.detail.value || [0, 0]
+  const hour = timeHourOptions[indexes[0]] || '00'
+  const minute = timeMinuteOptions[indexes[1]] || '00'
+  timeMultiIndex.value = [indexes[0] || 0, indexes[1] || 0]
+  timeValue.value = `${hour}:${minute}`
   updateFormDateTime()
 }
 
@@ -518,7 +557,9 @@ const bindTimeChange = (e) => {
 const updateFormDateTime = () => {
   if (dateValue.value && timeValue.value) {
     const dateStr = dateValue.value
-    const timeStr = timeValue.value
+    const timeStr = normalizeToTenMinute(timeValue.value)
+    timeValue.value = timeStr
+    syncTimeMultiIndex()
     
     // 组合成完整的 ISO 字符串
     const fullDateTime = `${dateStr}T${timeStr}:00`
@@ -538,12 +579,44 @@ const updateFormDateTime = () => {
 }
 
 // 选择地点（从门店维护列表中选择）
-const bindLocationChange = (e) => {
-  const index = Number(e.detail.value)
-  const selected = locationOptions.value[index]
-  if (selected && selected.name) {
-    formData.value.location = selected.name
+const openSeatPicker = () => {
+  if (!requiresLocation.value) {
+    uni.showToast({
+      title: '当前类型无需选择地点',
+      icon: 'none'
+    })
+    return
   }
+  if (!dateValue.value || !timeValue.value || !formData.value.time || timeError.value) {
+    uni.showToast({
+      title: '请先选择有效的活动时间',
+      icon: 'none'
+    })
+    return
+  }
+  const targetDate = dateValue.value
+  const currentType = formData.value.type || 'mahjong'
+  uni.navigateTo({
+    url: `/pages/seat/select?date=${encodeURIComponent(targetDate)}&type=${encodeURIComponent(currentType)}`,
+    success: (res) => {
+      if (!res || !res.eventChannel) return
+      res.eventChannel.on('seatPicked', (payload = {}) => {
+        if (!payload.location) return
+        if (payload.date && payload.date !== dateValue.value) {
+          uni.showToast({
+            title: '所选座位日期与活动日期不一致',
+            icon: 'none'
+          })
+          return
+        }
+        formData.value.location = payload.location
+        pickedLocationDate.value = payload.date || targetDate
+        if (payload.type && payload.type !== formData.value.type) {
+          selectType(payload.type)
+        }
+      })
+    }
+  })
 }
 
 // 获取人数范围文本
@@ -597,6 +670,22 @@ const handleSubmit = async () => {
     })
     return
   }
+
+  if (requiresLocation.value && formData.value.location && pickedLocationDate.value && dateValue.value !== pickedLocationDate.value) {
+    uni.showToast({
+      title: '活动日期已变化，请重新选择地点',
+      icon: 'none'
+    })
+    return
+  }
+
+  if (isEditMode.value && Number(formData.value.maxPlayers) < Number(currentJoinedPlayers.value)) {
+    uni.showToast({
+      title: `人数不能低于已加入人数(${currentJoinedPlayers.value})`,
+      icon: 'none'
+    })
+    return
+  }
   
   // 获取当前用户
   const currentUser = UserService.getCurrentUser()
@@ -628,7 +717,7 @@ const handleSubmit = async () => {
       title: formData.value.title,
       project: formData.value.project,
       time: formData.value.time,
-      location: formData.value.location,
+      location: requiresLocation.value ? formData.value.location : '',
       maxPlayers: formData.value.maxPlayers,
       description: formData.value.description || ''
     }
@@ -654,8 +743,6 @@ const handleSubmit = async () => {
       console.log('✅ updateGame 返回结果:', result)
       
       if (result.result && result.result.code === 0) {
-        uni.hideLoading()
-        
         uni.showToast({
           title: '更新成功',
           icon: 'success',
@@ -716,8 +803,6 @@ const handleSubmit = async () => {
       console.log('✅ createGame 返回结果:', result)
       
       if (result.result && result.result.code === 0) {
-        uni.hideLoading()
-        
         uni.showToast({
           title: '创建成功',
           icon: 'success',

@@ -3,7 +3,7 @@
     <scroll-view class="seat-scroll" scroll-y>
       <view class="layout-card">
         <view class="layout-header">
-          <text class="layout-title">座位详情</text>
+          <text class="layout-title">选择活动地点</text>
           <view class="header-actions">
             <picker mode="date" :value="selectedDate" @change="onDateChange">
               <view class="date-picker">{{ selectedDateLabel }}</view>
@@ -13,6 +13,7 @@
             </view>
           </view>
         </view>
+        <view class="date-tip">日期切换用于查看当天座位预约状态，请确认与活动日期一致后再选座位。</view>
 
         <view class="floor-card">
           <view class="floor-tag">一楼</view>
@@ -102,11 +103,6 @@
             </view>
           </view>
         </view>
-
-        <view class="notice-card">
-          <view class="notice-title">公告栏</view>
-          <view class="notice-content">{{ announcementContent || '暂无公告' }}</view>
-        </view>
       </view>
     </scroll-view>
   </view>
@@ -115,14 +111,11 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { onHide, onLoad, onShow, onUnload } from '@dcloudio/uni-app'
-import UserService from '@/utils/user.js'
 
 const refreshing = ref(false)
-const announcementContent = ref('')
 const today = new Date()
 const selectedDate = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`)
 const selectedDateLabel = computed(() => `日期：${selectedDate.value}`)
-const pickerMode = ref(false)
 
 let seatRefreshTimer = null
 const SEAT_REFRESH_INTERVAL = 10000
@@ -190,7 +183,6 @@ const refreshSeatStatus = async () => {
     floor2Left.value = floor2Left.value.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }))
     floor2Bottom.value = floor2Bottom.value.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }))
     hallDeskRows.value = hallDeskRows.value.map(row => row.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) })))
-
     arcadeHall.value = { ...arcadeHall.value, status: setSeatStatusByName(arcadeHall.value.name, statusMap) }
     interDesk.value = { ...interDesk.value, status: setSeatStatusByName(interDesk.value.name, statusMap) }
     interArcade1.value = { ...interArcade1.value, status: setSeatStatusByName(interArcade1.value.name, statusMap) }
@@ -201,25 +193,11 @@ const refreshSeatStatus = async () => {
   }
 }
 
-const loadSeatAnnouncement = async () => {
-  try {
-    const res = await wx.cloud.callFunction({
-      name: 'game-service',
-      data: { action: 'getSeatAnnouncement', data: {} }
-    })
-    if (res?.result?.code === 0) {
-      announcementContent.value = String(res.result?.data?.content || '')
-    }
-  } catch (error) {
-    console.error('获取公告失败:', error)
-  }
-}
-
 const handleRefresh = async () => {
   if (refreshing.value) return
   refreshing.value = true
   try {
-    await Promise.all([refreshSeatStatus(), loadSeatAnnouncement()])
+    await refreshSeatStatus()
     uni.showToast({ title: '已刷新', icon: 'success', duration: 1200 })
   } finally {
     refreshing.value = false
@@ -227,9 +205,6 @@ const handleRefresh = async () => {
 }
 
 onLoad((options = {}) => {
-  if (String(options.picker || '') === '1') {
-    pickerMode.value = true
-  }
   if (/^\d{4}-\d{2}-\d{2}$/.test(String(options.date || ''))) {
     selectedDate.value = String(options.date)
   }
@@ -263,67 +238,23 @@ onUnload(() => {
   stopAutoRefresh()
 })
 
-const goToCreateWithPreset = (seat) => {
-  const currentUser = UserService.getCurrentUser()
-  if (!currentUser) {
-    uni.showModal({
-      title: '需要登录',
-      content: '请先登录后再创建组局',
-      confirmText: '去登录',
-      success: (res) => {
-        if (res.confirm) uni.switchTab({ url: '/pages/user/user' })
-      }
-    })
-    return
-  }
-
-  const typeProjectMap = {
-    mahjong: '立直麻将局',
-    boardgame: '桌游局',
-    videogame: '电玩局',
-    cardgame: '打牌局'
-  }
-
-  uni.navigateTo({
-    url: `/pages/create/create?type=${encodeURIComponent(seat.type)}&location=${encodeURIComponent(seat.name)}&project=${encodeURIComponent(typeProjectMap[seat.type] || '娱乐局')}&date=${encodeURIComponent(selectedDate.value)}`
-  })
-}
-
 const onSeatTap = (seat) => {
-  if (pickerMode.value) {
-    if (seat.status !== 'available') {
-      uni.showToast({ title: '该座位已被占用或预约', icon: 'none' })
-      return
-    }
-    const pages = getCurrentPages()
-    const currentPage = pages[pages.length - 1]
-    const eventChannel = currentPage && currentPage.getOpenerEventChannel ? currentPage.getOpenerEventChannel() : null
-    if (eventChannel) {
-      eventChannel.emit('seatPicked', {
-        location: seat.name,
-        type: seat.type,
-        date: selectedDate.value
-      })
-    }
-    uni.navigateBack()
-    return
-  }
-
-  const baseInfo = `${seat.name}\n状态：${getSeatStatusText(seat.status)}\n容量：${seat.capacity}人\n设备：${seat.device}`
-
   if (seat.status !== 'available') {
-    uni.showModal({ title: '座位详情', content: baseInfo, showCancel: false })
+    uni.showToast({ title: '该座位已被占用或预约', icon: 'none' })
     return
   }
 
-  uni.showModal({
-    title: '快捷创建组局',
-    content: `${baseInfo}\n\n该位置空闲，是否立即创建对应类型组局？`,
-    confirmText: '立即创建',
-    success: (res) => {
-      if (res.confirm) goToCreateWithPreset(seat)
-    }
-  })
+  const pages = getCurrentPages()
+  const currentPage = pages[pages.length - 1]
+  const eventChannel = currentPage && currentPage.getOpenerEventChannel ? currentPage.getOpenerEventChannel() : null
+  if (eventChannel) {
+    eventChannel.emit('seatPicked', {
+      location: seat.name,
+      type: seat.type,
+      date: selectedDate.value
+    })
+  }
+  uni.navigateBack()
 }
 </script>
 
@@ -337,6 +268,7 @@ const onSeatTap = (seat) => {
 .layout-title { font-size: 26rpx; color: #6b7280; font-weight: 700; }
 .refresh-btn { min-width: 110rpx; height: 48rpx; border-radius: 24rpx; background: #07c160; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx; }
 .refresh-btn.disabled { background: #9ca3af; }
+.date-tip { margin-bottom: 12rpx; font-size: 22rpx; color: #6b7280; line-height: 1.4; }
 
 .floor-card { background: #eef0f2; border: 1rpx solid #d9dde2; border-radius: 14rpx; padding: 28rpx 12rpx 12rpx; margin: 12rpx 0 14rpx; position: relative; }
 .floor-tag { position: absolute; right: 14rpx; top: 8rpx; font-size: 24rpx; color: #6b7280; background: #f3f4f6; padding: 0 8rpx; border-radius: 8rpx; }
@@ -372,21 +304,4 @@ const onSeatTap = (seat) => {
 .status-available { background: #c0dcc7; border-color: #7ddf9f; }
 .status-reserved { background: #c4d9ea; border-color: #83bde3; }
 .status-occupied { background: #fed7aa; border-color: #fb923c; }
-
-.notice-card {
-  margin-top: 12rpx;
-  padding: 16rpx;
-  border-radius: 14rpx;
-  background: #ffffff;
-  border: 1rpx solid #e5e7eb;
-}
-.notice-title { font-size: 26rpx; color: #111827; font-weight: 700; }
-.notice-content {
-  margin-top: 10rpx;
-  color: #4b5563;
-  font-size: 23rpx;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
 </style>

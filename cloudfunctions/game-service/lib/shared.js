@@ -7,6 +7,79 @@ const DEFAULT_AVATAR = 'cloud://cloud1-6glnv3cs9b44417a.636c-cloud1-6glnv3cs9b44
 const success = (data = null, message = 'ok') => ({ code: 0, message, data })
 const fail = (code, message, data = null) => ({ code, message, data })
 
+async function checkTextSecurity(content, options = {}) {
+  const text = String(content || '').trim()
+  if (!text) return { ok: true }
+
+  const scene = Number(options.scene || 2)
+  const title = String(options.title || '内容')
+
+  try {
+    const checker = cloud?.openapi?.security?.msgSecCheck
+    if (typeof checker !== 'function') {
+      console.warn('msgSecCheck unavailable, skip security check')
+      return { ok: true, skipped: true }
+    }
+
+    const res = await checker({
+      content: text,
+      version: 2,
+      scene
+    })
+
+    const errCode = Number(res?.errCode || 0)
+    if (errCode === 0) return { ok: true }
+
+    return {
+      ok: false,
+      code: 422,
+      message: `${title}包含敏感或违规内容，请修改后重试`,
+      detail: res
+    }
+  } catch (error) {
+    const errCode = Number(error?.errCode || error?.errno || -1)
+    const errText = String(error?.errMsg || error?.message || '').toLowerCase()
+
+    if (errCode === 87014 || errText.includes('risky')) {
+      return {
+        ok: false,
+        code: 422,
+        message: `${title}包含敏感或违规内容，请修改后重试`
+      }
+    }
+
+    if (
+      errText.includes('openapi') ||
+      errText.includes('access_token') ||
+      errText.includes('invalid scope') ||
+      errText.includes('not found') ||
+      errText.includes('token') ||
+      errText.includes('api unauthorized') ||
+      errText.includes('request:fail')
+    ) {
+      console.warn('msgSecCheck unavailable, skip security check', errText)
+      return { ok: true, skipped: true }
+    }
+
+    // 非明确违规类错误降级放行，避免影响业务闭环
+    console.warn('msgSecCheck unexpected error, skip security check', error)
+    return { ok: true, skipped: true }
+  }
+}
+
+async function checkTextSecurityBatch(items = [], options = {}) {
+  for (const item of items) {
+    const text = String(item?.text || '').trim()
+    if (!text) continue
+    const result = await checkTextSecurity(text, {
+      scene: options.scene || item?.scene || 2,
+      title: item?.title || options.title || '内容'
+    })
+    if (!result.ok) return result
+  }
+  return { ok: true }
+}
+
 async function getCurrentUser(wxContext) {
   const userRes = await db.collection('users').where({ openid: wxContext.OPENID }).limit(1).get()
   return (userRes.data || [])[0] || null
@@ -30,6 +103,19 @@ function normalizeUserBrief(user) {
     tags: user.tags || [],
     gender: user.gender || 0
   }
+}
+
+function isBlacklistedUser(user) {
+  if (!user) return false
+  return user.isBlacklisted === true || user.isBlacklisted === 'true'
+}
+
+function ensureUserAvailable(user, actionText = '执行该操作') {
+  if (!user) return fail(401, '请先登录')
+  if (isBlacklistedUser(user)) {
+    return fail(403, `您已被管理员加入黑名单，暂时无法${actionText}`)
+  }
+  return null
 }
 
 async function getUserMapByIds(ids = []) {
@@ -130,8 +216,12 @@ module.exports = {
   fail,
   getCurrentUser,
   normalizeUserBrief,
+  isBlacklistedUser,
+  ensureUserAvailable,
   getUserMapByIds,
   normalizeParticipants,
   enrichGame,
-  addActivity
+  addActivity,
+  checkTextSecurity,
+  checkTextSecurityBatch
 }

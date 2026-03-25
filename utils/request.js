@@ -88,7 +88,6 @@ export const api = {
     searchGames: (keyword, filters) => callCloudFunction('game-service', 'searchGames', { keyword, ...filters }),
     getMahjongRecords: () => callCloudFunction('game-service', 'getMahjongRecords', {}),
     createMahjongRecord: (players) => callCloudFunction('game-service', 'createMahjongRecord', { players }),
-    getSeatStatusOverrides: () => callCloudFunction('game-service', 'getSeatStatusOverrides', {}),
     setSeatStatusOverrides: (overrides) => callCloudFunction('game-service', 'setSeatStatusOverrides', { overrides })
   },
   activity: {

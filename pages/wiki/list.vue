@@ -62,7 +62,7 @@ const fetchList = async (reset = false) => {
     const nextPage = reset ? 1 : page.value
     const res = await wx.cloud.callFunction({
       name: 'game-service',
-      data: { action: 'getWikiList', data: { page: nextPage, pageSize: 20 } }
+      data: { action: 'getWikiList', data: { page: nextPage, pageSize: 10 } }
     })
     if (res?.result?.code === 0) {
       const incoming = res.result.data.list || []

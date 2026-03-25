@@ -8,11 +8,13 @@
             <picker mode="date" :value="selectedDate" @change="onDateChange">
               <view class="date-picker">{{ selectedDateLabel }}</view>
             </picker>
-            <view class="refresh-btn" :class="{ disabled: refreshing }" @tap="refreshData">{{ refreshing ? '刷新中...' : '刷新' }}</view>
+            <view class="refresh-btn" :class="{ disabled: refreshing }" @tap="refreshData">
+              {{ refreshing ? '刷新中...' : '刷新' }}
+            </view>
           </view>
-
         </view>
-        <view class="tip">点击座位可修改状态（空闲中 / 预约中 / 使用中），若存在小程序预约则不可手工覆盖</view>
+
+        <view class="tip">点击座位可循环切换状态：空闲中 / 预约中 / 使用中。保存后以管理员修改为准。</view>
 
         <view v-if="!isAdmin" class="empty-box">
           <text class="empty-text">仅管理员可访问</text>
@@ -108,9 +110,22 @@
             </view>
           </view>
 
-          <view class="save-btn" :class="{ disabled: saving }" @tap="saveOverrides">{{ saving ? '保存中...' : '保存所有修改' }}</view>
-          <view class="reset-btn" :class="{ disabled: saving }" @tap="resetManualOverrides">清空当日手工状态</view>
+          <view class="save-btn" :class="{ disabled: saving }" @tap="saveOverrides">
+            {{ saving ? '保存中...' : '保存所有修改' }}
+          </view>
+          <view class="reset-btn" :class="{ disabled: saving }" @tap="resetManualOverrides">
+            清空当日手工状态
+          </view>
 
+          <view class="manage-card">
+            <view class="manage-title">公告管理</view>
+            <view class="manage-row">
+              <view class="manage-info">
+                <text class="manage-line">编制座位详情页面底部公告（最多1000字）</text>
+              </view>
+              <view class="action-btn" @tap="goAnnouncementManage">进入</view>
+            </view>
+          </view>
 
           <view class="manage-card">
             <view class="manage-title">役满图片管理</view>
@@ -118,16 +133,17 @@
               <view class="manage-info">
                 <text class="manage-line">进入专页管理役满照片与信息</text>
               </view>
-              <view class="delete-btn" style="background:#f59e0b" @tap="goYakumanManage">进入</view>
+              <view class="action-btn" @tap="goYakumanManage">进入</view>
             </view>
           </view>
+
           <view class="manage-card">
             <view class="manage-title">管理玩家上传战绩</view>
             <view class="manage-row">
               <view class="manage-info">
                 <text class="manage-line">进入专页管理玩家上传战绩</text>
               </view>
-              <view class="delete-btn" style="background:#f59e0b" @tap="goRecordManage">进入</view>
+              <view class="action-btn" @tap="goRecordManage">进入</view>
             </view>
           </view>
 
@@ -137,7 +153,7 @@
               <view class="manage-info">
                 <text class="manage-line">进入专页管理用户创建组局</text>
               </view>
-              <view class="delete-btn" style="background:#f59e0b" @tap="goGameManage">进入</view>
+              <view class="action-btn" @tap="goGameManage">进入</view>
             </view>
           </view>
 
@@ -147,7 +163,7 @@
               <view class="manage-info">
                 <text class="manage-line">进入专页上传/管理荣誉榜</text>
               </view>
-              <view class="delete-btn" style="background:#f59e0b" @tap="goHonorManage">进入</view>
+              <view class="action-btn" @tap="goHonorManage">进入</view>
             </view>
           </view>
 
@@ -155,19 +171,19 @@
             <view class="manage-title">百科词条管理</view>
             <view class="manage-row">
               <view class="manage-info">
-                <text class="manage-line">上传/修改/删除百科词条（支持文字与多图）</text>
+                <text class="manage-line">审核/修改/删除百科词条</text>
               </view>
-              <view class="delete-btn" style="background:#f59e0b" @tap="goWikiManage">进入</view>
+              <view class="action-btn" @tap="goWikiManage">进入</view>
             </view>
           </view>
 
           <view class="manage-card">
-            <view class="manage-title">用户昵称头像管理</view>
+            <view class="manage-title">用户管理</view>
             <view class="manage-row">
               <view class="manage-info">
-                <text class="manage-line">按昵称搜索用户并修改头像、昵称</text>
+                <text class="manage-line">管理用户头像、昵称、标签、黑名单与管理员权限</text>
               </view>
-              <view class="delete-btn" style="background:#f59e0b" @tap="goUserManage">进入</view>
+              <view class="action-btn" @tap="goUserManage">进入</view>
             </view>
           </view>
 
@@ -175,9 +191,9 @@
             <view class="manage-title">管理员功能说明</view>
             <view class="manage-row">
               <view class="manage-info">
-                <text class="manage-line">查看管理员各功能的使用说明与处理规则</text>
+                <text class="manage-line">查看管理员各功能使用说明与规则</text>
               </view>
-              <view class="delete-btn" style="background:#f59e0b" @tap="goAdminGuide">进入</view>
+              <view class="action-btn" @tap="goAdminGuide">进入</view>
             </view>
           </view>
         </view>
@@ -187,16 +203,16 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 
 const isAdmin = ref(false)
 const refreshing = ref(false)
 const saving = ref(false)
 const statusValues = ['available', 'reserved', 'occupied']
-const sourceByLocation = ref({})
-const today = new Date()
-const selectedDate = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`)
+
+const now = new Date()
+const selectedDate = ref(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`)
 const selectedDateLabel = computed(() => `日期：${selectedDate.value}`)
 
 const floor2Left = ref([
@@ -230,8 +246,17 @@ const interArcade1 = ref({ id: 'f1-inter-arcade-1', name: '间层电玩1', statu
 const interArcade2 = ref({ id: 'f1-inter-arcade-2', name: '间层电玩2', status: 'available' })
 const arcadeRoom = ref({ id: 'f1-arcade-room', name: '电玩房', status: 'available' })
 
-const getSeatStatusClass = (status) => ({ available: 'status-available', reserved: 'status-reserved', occupied: 'status-occupied' }[status] || 'status-available')
-const getSeatStatusText = (status) => ({ available: '空闲中', reserved: '预约中', occupied: '使用中' }[status] || '空闲中')
+const getSeatStatusClass = (status) => ({
+  available: 'status-available',
+  reserved: 'status-reserved',
+  occupied: 'status-occupied'
+}[status] || 'status-available')
+
+const getSeatStatusText = (status) => ({
+  available: '空闲中',
+  reserved: '预约中',
+  occupied: '使用中'
+}[status] || '空闲中')
 
 const normalizeLocationName = (name = '') => String(name).replace(/\s+/g, '').trim()
 const setSeatStatusByName = (name, statusMap) => statusMap[normalizeLocationName(name)] || statusMap[name] || 'available'
@@ -246,13 +271,7 @@ const redirectNonAdmin = () => {
 const checkAdmin = async () => {
   const res = await wx.cloud.callFunction({ name: 'user-service', data: { action: 'getMe', data: {} } })
   isAdmin.value = !!(res?.result?.code === 0 && res?.result?.data?.isAdmin)
-  if (!isAdmin.value) {
-    redirectNonAdmin()
-  }
-}
-
-const loadManageData = async () => {
-  await wx.cloud.callFunction({ name: 'game-service', data: { action: 'getAdminManageData', data: {} } })
+  if (!isAdmin.value) redirectNonAdmin()
 }
 
 const refreshData = async () => {
@@ -267,29 +286,21 @@ const refreshData = async () => {
       data: { action: 'getSeatStatus', data: { date: selectedDate.value } }
     })
     const rawStatusMap = res?.result?.data?.statusByLocation || {}
-    const rawSourceMap = res?.result?.data?.sourceByLocation || {}
     const statusMap = {}
-    const sourceMap = {}
     Object.keys(rawStatusMap).forEach((key) => {
-      const normalized = normalizeLocationName(key)
-      statusMap[normalized] = rawStatusMap[key]
-      sourceMap[normalized] = rawSourceMap[key] || ''
+      statusMap[normalizeLocationName(key)] = rawStatusMap[key]
     })
-    sourceByLocation.value = sourceMap
 
     floor2Left.value = floor2Left.value.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }))
     floor2Bottom.value = floor2Bottom.value.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) }))
     hallDeskRows.value = hallDeskRows.value.map(row => row.map(item => ({ ...item, status: setSeatStatusByName(item.name, statusMap) })))
-
     arcadeHall.value = { ...arcadeHall.value, status: setSeatStatusByName(arcadeHall.value.name, statusMap) }
     interDesk.value = { ...interDesk.value, status: setSeatStatusByName(interDesk.value.name, statusMap) }
     interArcade1.value = { ...interArcade1.value, status: setSeatStatusByName(interArcade1.value.name, statusMap) }
     interArcade2.value = { ...interArcade2.value, status: setSeatStatusByName(interArcade2.value.name, statusMap) }
     arcadeRoom.value = { ...arcadeRoom.value, status: setSeatStatusByName(arcadeRoom.value.name, statusMap) }
-
-    await loadManageData()
   } catch (error) {
-    console.error('刷新管理员数据失败:', error)
+    console.error('刷新管理员座位数据失败:', error)
     uni.showToast({ title: '刷新失败', icon: 'none' })
   } finally {
     refreshing.value = false
@@ -302,11 +313,6 @@ const cycleStatus = (status) => {
 }
 
 const onAdminSeatTap = (seat) => {
-  const locationKey = normalizeLocationName(seat.name)
-  if (sourceByLocation.value[locationKey] === 'game') {
-    uni.showToast({ title: '该座位有小程序预约，需取消组局后释放', icon: 'none' })
-    return
-  }
   seat.status = cycleStatus(seat.status)
 }
 
@@ -322,8 +328,8 @@ const collectOverrides = () => {
     arcadeRoom.value
   ]
   const overrides = {}
-  flatSeats.forEach((item) => {
-    overrides[item.name] = item.status || 'available'
+  flatSeats.forEach((seat) => {
+    overrides[seat.name] = seat.status || 'available'
   })
   return overrides
 }
@@ -339,7 +345,6 @@ const saveOverrides = async () => {
         data: { date: selectedDate.value, overrides: collectOverrides() }
       }
     })
-
     if (res?.result?.code === 0) {
       uni.showToast({ title: '保存成功', icon: 'success' })
       await refreshData()
@@ -358,7 +363,7 @@ const resetManualOverrides = () => {
   if (!isAdmin.value || saving.value) return
   uni.showModal({
     title: '确认清空',
-    content: `将清空 ${selectedDate.value} 的手工座位状态，仅保留小程序组局预约。`,
+    content: `将清空 ${selectedDate.value} 的手工座位状态，仅保留组局自动状态。`,
     success: async (res) => {
       if (!res.confirm) return
       saving.value = true
@@ -367,7 +372,7 @@ const resetManualOverrides = () => {
           name: 'game-service',
           data: {
             action: 'setSeatStatusOverrides',
-            data: { date: selectedDate.value, overrides: {}, clearOccupied: true }
+            data: { date: selectedDate.value, overrides: {} }
           }
         })
         if (result?.result?.code === 0) {
@@ -391,40 +396,22 @@ const onDateChange = async (e) => {
   await refreshData()
 }
 
-const goYakumanManage = () => {
-  if (!isAdmin.value) return redirectNonAdmin()
-  uni.navigateTo({ url: '/pages/admin/yakuman' })
+const guardAdmin = () => {
+  if (!isAdmin.value) {
+    redirectNonAdmin()
+    return false
+  }
+  return true
 }
 
-const goRecordManage = () => {
-  if (!isAdmin.value) return redirectNonAdmin()
-  uni.navigateTo({ url: '/pages/admin/records' })
-}
-
-const goGameManage = () => {
-  if (!isAdmin.value) return redirectNonAdmin()
-  uni.navigateTo({ url: '/pages/admin/games' })
-}
-
-const goHonorManage = () => {
-  if (!isAdmin.value) return redirectNonAdmin()
-  uni.navigateTo({ url: '/pages/admin/honor' })
-}
-
-const goWikiManage = () => {
-  if (!isAdmin.value) return redirectNonAdmin()
-  uni.navigateTo({ url: '/pages/admin/wiki' })
-}
-
-const goUserManage = () => {
-  if (!isAdmin.value) return redirectNonAdmin()
-  uni.navigateTo({ url: '/pages/admin/user-manage' })
-}
-
-const goAdminGuide = () => {
-  if (!isAdmin.value) return redirectNonAdmin()
-  uni.navigateTo({ url: '/pages/admin/guide' })
-}
+const goAnnouncementManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/announcement' }) }
+const goYakumanManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/yakuman' }) }
+const goRecordManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/records' }) }
+const goGameManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/games' }) }
+const goHonorManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/honor' }) }
+const goWikiManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/wiki' }) }
+const goUserManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/user-manage' }) }
+const goAdminGuide = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/guide' }) }
 
 onShow(() => {
   refreshData()
@@ -478,7 +465,7 @@ onShow(() => {
 .seat-status { margin-top: 4rpx; font-size: 22rpx; color: #374151; }
 .status-available { background: #c0dcc7; border-color: #7ddf9f; }
 .status-reserved { background: #c4d9ea; border-color: #83bde3; }
-.status-occupied { background: #e5c1c1; border-color: #e39b9b; }
+.status-occupied { background: #fed7aa; border-color: #fb923c; }
 
 .save-btn { margin-top: 8rpx; height: 64rpx; border-radius: 10rpx; background: #16a34a; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 24rpx; }
 .save-btn.disabled { opacity: .55; }
@@ -487,11 +474,8 @@ onShow(() => {
 
 .manage-card { margin-top: 16rpx; background: #fff; border-radius: 12rpx; padding: 14rpx; border: 1rpx solid #e5e7eb; }
 .manage-title { font-size: 24rpx; font-weight: 700; color: #111827; margin-bottom: 10rpx; }
-.manage-empty { color: #9ca3af; font-size: 22rpx; }
-.manage-row { display: flex; align-items: center; justify-content: space-between; gap: 10rpx; padding: 10rpx 0; border-bottom: 1rpx solid #eef2f7; }
-.manage-row:last-child { border-bottom: 0; }
+.manage-row { display: flex; align-items: center; justify-content: space-between; gap: 10rpx; padding: 10rpx 0; }
 .manage-info { flex: 1; }
 .manage-line { display: block; font-size: 22rpx; color: #111827; }
-.manage-sub { display: block; margin-top: 4rpx; font-size: 20rpx; color: #6b7280; }
-.delete-btn { width: 90rpx; height: 48rpx; border-radius: 8rpx; background: #ef4444; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx; }
+.action-btn { width: 90rpx; height: 48rpx; border-radius: 8rpx; background: #f59e0b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx; }
 </style>

@@ -27,6 +27,14 @@
       }
     },
     {
+      "path": "pages/seat/select",
+      "style": {
+        "navigationBarTitleText": "选择活动地点",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/user/user",
       "style": {
         "navigationBarTitleText": "个人中心",
@@ -195,9 +203,33 @@
       }
     },
     {
+      "path": "pages/admin/wiki-edit",
+      "style": {
+        "navigationBarTitleText": "词条编辑",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/admin/user-manage",
       "style": {
         "navigationBarTitleText": "用户昵称头像管理",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/admin/user-edit",
+      "style": {
+        "navigationBarTitleText": "用户信息编辑",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/admin/announcement",
+      "style": {
+        "navigationBarTitleText": "公告管理",
         "navigationBarBackgroundColor": "#07c160",
         "navigationBarTextStyle": "white"
       }
@@ -220,13 +252,13 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "组局大厅",
+        "text": "组局",
         "iconPath": "static/tabbar/home.png",
         "selectedIconPath": "static/tabbar/home-active.png"
       },
       {
         "pagePath": "pages/seat/seat",
-        "text": "座位详情",
+        "text": "座位",
         "iconPath": "static/tabbar/seat.png",
         "selectedIconPath": "static/tabbar/seat-active.png"
       },

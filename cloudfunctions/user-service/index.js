@@ -9,6 +9,74 @@ const _ = db.command
 const success = (data = null, message = 'ok') => ({ code: 0, message, data })
 const fail = (code, message, data = null) => ({ code, message, data })
 
+async function checkTextSecurity(content, title = '内容') {
+  const text = String(content || '').trim()
+  if (!text) return { ok: true }
+
+  try {
+    const checker = cloud?.openapi?.security?.msgSecCheck
+    if (typeof checker !== 'function') {
+      console.warn('msgSecCheck unavailable, skip security check')
+      return { ok: true, skipped: true }
+    }
+
+    const res = await checker({
+      content: text,
+      version: 2,
+      scene: 2
+    })
+    const errCode = Number(res?.errCode || 0)
+    if (errCode === 0) return { ok: true }
+    if (errCode !== 87014) {
+      console.warn('msgSecCheck unavailable by errCode, skip security check:', errCode, res?.errMsg || '')
+      return { ok: true, skipped: true }
+    }
+    return {
+      ok: false,
+      code: 422,
+      message: `${title}包含敏感或违规内容，请修改后重试`
+    }
+  } catch (error) {
+    const errCode = Number(error?.errCode || error?.errno || -1)
+    const errText = String(error?.errMsg || error?.message || '')
+
+    if (errCode === 87014 || errText.includes('risky')) {
+      return {
+        ok: false,
+        code: 422,
+        message: `${title}包含敏感或违规内容，请修改后重试`
+      }
+    }
+
+    if (
+      errText.includes('openapi') ||
+      errText.includes('access_token') ||
+      errText.includes('invalid scope') ||
+      errText.includes('not found')
+    ) {
+      console.warn('msgSecCheck unavailable, skip security check', errText)
+      return { ok: true, skipped: true }
+    }
+
+    console.warn('msgSecCheck unavailable, skip security check', errCode, errText)
+    return { ok: true, skipped: true }
+    console.error('msgSecCheck failed:', error)
+    return {
+      ok: false,
+      code: 503,
+      message: '内容安全检查失败，请稍后重试'
+    }
+  }
+}
+
+async function checkTextSecurityBatch(items = []) {
+  for (const item of items) {
+    const result = await checkTextSecurity(item?.text, item?.title || '内容')
+    if (!result.ok) return result
+  }
+  return { ok: true }
+}
+
 const CAPTCHA_LOCK_MS = 30 * 60 * 1000
 
 function isCollectionNotExistsError(error) {
@@ -48,10 +116,16 @@ exports.main = async (event) => {
         return await adminUpdateUserProfile(data, wxContext)
       case 'adminUpdateUserTags':
         return await adminUpdateUserTags(data, wxContext)
+      case 'adminSetUserBlacklist':
+        return await adminSetUserBlacklist(data, wxContext)
+      case 'adminSetUserAdmin':
+        return await adminSetUserAdmin(data, wxContext)
       case 'getUserStats':
         return await getUserStats(data)
       case 'searchUsers':
         return await searchUsers(data)
+      case 'adminListUsers':
+        return await adminListUsers(data, wxContext)
       case 'getMe':
         return await getMe(wxContext)
       case 'getCurrentUser':
@@ -79,7 +153,8 @@ function toUserDto(user) {
     avatar: user.avatar || '',
     tags: user.tags || [],
     games: user.games || [],
-    isAdmin: !!user.isAdmin
+    isAdmin: !!user.isAdmin,
+    isBlacklisted: !!user.isBlacklisted
   }
 }
 
@@ -95,6 +170,19 @@ function sanitizeUserUpdates(updates = {}) {
 function isAdminUser(user) {
   if (!user) return false
   return user.isAdmin === true || user.isAdmin === 'true' || user.role === 'admin'
+}
+
+function isBlacklistedUser(user) {
+  if (!user) return false
+  return user.isBlacklisted === true || user.isBlacklisted === 'true'
+}
+
+function ensureNotBlacklisted(currentUser, actionText = '执行该操作') {
+  if (!currentUser) return fail(404, '用户不存在')
+  if (isBlacklistedUser(currentUser)) {
+    return fail(403, `您已被管理员加入黑名单，暂时无法${actionText}`)
+  }
+  return null
 }
 
 function ensureOwner(currentUser, targetUserId) {
@@ -197,8 +285,17 @@ async function updateUserInfo(data, wxContext) {
   const currentUser = await getCurrentUser(wxContext)
   const ownerError = ensureOwner(currentUser, userId)
   if (ownerError) return ownerError
+  const blacklistError = ensureNotBlacklisted(currentUser, '修改个人标签')
+  if (blacklistError) return blacklistError
 
   const filteredUpdates = sanitizeUserUpdates(updates)
+  const infoSecurityRes = await checkTextSecurityBatch([
+    { title: '昵称', text: filteredUpdates.nickname },
+    { title: '省份', text: filteredUpdates.province },
+    { title: '城市', text: filteredUpdates.city },
+    { title: '国家', text: filteredUpdates.country }
+  ])
+  if (!infoSecurityRes.ok) return fail(infoSecurityRes.code || 422, infoSecurityRes.message || '内容包含敏感信息')
   if (!Object.keys(filteredUpdates).length) return fail(400, '没有有效的更新字段')
 
   await db.collection('users').doc(currentUser._id).update({
@@ -219,6 +316,13 @@ async function updateUserTags(data, wxContext) {
   const currentUser = await getCurrentUser(wxContext)
   const ownerError = ensureOwner(currentUser, userId)
   if (ownerError) return ownerError
+  const blacklistError = ensureNotBlacklisted(currentUser, '修改个人信息')
+  if (blacklistError) return blacklistError
+
+  const tagSecurityRes = await checkTextSecurityBatch(
+    tags.map((item) => ({ title: '标签', text: item && item.name }))
+  )
+  if (!tagSecurityRes.ok) return fail(tagSecurityRes.code || 422, tagSecurityRes.message || '内容包含敏感信息')
 
   await db.collection('users').doc(currentUser._id).update({
     data: {
@@ -238,6 +342,13 @@ async function updateUserGames(data, wxContext) {
   const currentUser = await getCurrentUser(wxContext)
   const ownerError = ensureOwner(currentUser, userId)
   if (ownerError) return ownerError
+  const blacklistGamesError = ensureNotBlacklisted(currentUser, '修改游戏设备信息')
+  if (blacklistGamesError) return blacklistGamesError
+
+  const gameSecurityRes = await checkTextSecurityBatch(
+    games.map((item) => ({ title: '游戏/设备名称', text: item && item.name }))
+  )
+  if (!gameSecurityRes.ok) return fail(gameSecurityRes.code || 422, gameSecurityRes.message || '内容包含敏感信息')
 
   await db.collection('users').doc(currentUser._id).update({
     data: {
@@ -261,6 +372,8 @@ async function updateUserAvatar(data, wxContext) {
   const currentUser = await getCurrentUser(wxContext)
   const ownerError = ensureOwner(currentUser, userId)
   if (ownerError) return ownerError
+  const blacklistAvatarError = ensureNotBlacklisted(currentUser, '修改头像')
+  if (blacklistAvatarError) return blacklistAvatarError
 
   if (!isAdminUser(currentUser)) {
     const lastUpdateTs = currentUser.lastAvatarUpdateAt ? new Date(currentUser.lastAvatarUpdateAt).getTime() : 0
@@ -301,6 +414,13 @@ async function adminUpdateUserProfile(data, wxContext) {
     const text = String(nickname || '').trim()
     if (!text) return fail(400, '鏄电О涓嶈兘涓虹┖')
     updates.nickname = text.slice(0, 32)
+  }
+
+  const adminProfileSecurityRes = await checkTextSecurityBatch([
+    { title: '昵称', text: updates.nickname }
+  ])
+  if (!adminProfileSecurityRes.ok) {
+    return fail(adminProfileSecurityRes.code || 422, adminProfileSecurityRes.message || '内容包含敏感信息')
   }
 
   if (typeof avatarUrl !== 'undefined') {
@@ -350,6 +470,13 @@ async function adminUpdateUserTags(data, wxContext) {
     })
   }
 
+  const adminTagSecurityRes = await checkTextSecurityBatch(
+    normalizedTags.map((item) => ({ title: '标签', text: item && item.name }))
+  )
+  if (!adminTagSecurityRes.ok) {
+    return fail(adminTagSecurityRes.code || 422, adminTagSecurityRes.message || '内容包含敏感信息')
+  }
+
   await db.collection('users').doc(targetUserId).update({
     data: {
       tags: normalizedTags,
@@ -363,6 +490,62 @@ async function adminUpdateUserTags(data, wxContext) {
   return success(toUserDto(userRes.data), '标签更新成功')
 }
 
+async function adminSetUserBlacklist(data, wxContext) {
+  const currentUser = await getCurrentUser(wxContext)
+  if (!currentUser) return fail(401, '请先登录')
+  if (!isAdminUser(currentUser)) return fail(403, '仅管理员可操作')
+
+  const targetUserId = String(data?.userId || '').trim()
+  const isBlacklisted = !!data?.isBlacklisted
+  if (!targetUserId) return fail(400, '缺少用户ID')
+  if (String(targetUserId) === String(currentUser._id) && isBlacklisted) {
+    return fail(400, '不能将自己加入黑名单')
+  }
+
+  const updateData = {
+    isBlacklisted,
+    updatedAt: new Date(),
+    adminUpdatedBy: currentUser._id
+  }
+
+  if (isBlacklisted) {
+    updateData.blacklistedAt = new Date()
+    updateData.blacklistedBy = currentUser._id
+  } else {
+    updateData.blacklistedAt = null
+    updateData.blacklistedBy = null
+  }
+
+  await db.collection('users').doc(targetUserId).update({ data: updateData })
+  const userRes = await db.collection('users').doc(targetUserId).get()
+  if (!userRes.data) return fail(404, '用户不存在')
+  return success(toUserDto(userRes.data), isBlacklisted ? '已加入黑名单' : '已移出黑名单')
+}
+
+async function adminSetUserAdmin(data, wxContext) {
+  const currentUser = await getCurrentUser(wxContext)
+  if (!currentUser) return fail(401, '请先登录')
+  if (!isAdminUser(currentUser)) return fail(403, '仅管理员可操作')
+
+  const targetUserId = String(data?.userId || '').trim()
+  const isAdmin = !!data?.isAdmin
+  if (!targetUserId) return fail(400, '缺少用户ID')
+  if (String(targetUserId) === String(currentUser._id) && !isAdmin) {
+    return fail(400, '不能取消自己的管理员身份')
+  }
+
+  await db.collection('users').doc(targetUserId).update({
+    data: {
+      isAdmin,
+      updatedAt: new Date(),
+      adminUpdatedBy: currentUser._id
+    }
+  })
+  const userRes = await db.collection('users').doc(targetUserId).get()
+  if (!userRes.data) return fail(404, '用户不存在')
+  return success(toUserDto(userRes.data), isAdmin ? '已加冕管理员' : '已取消管理员')
+}
+
 async function getMe(wxContext) {
   const user = await getCurrentUser(wxContext)
   if (!user) return fail(404, '用户不存在')
@@ -371,7 +554,8 @@ async function getMe(wxContext) {
     id: user._id,
     nickname: user.nickname || '',
     avatar: user.avatar || '',
-    isAdmin: !!user.isAdmin
+    isAdmin: !!user.isAdmin,
+    isBlacklisted: !!user.isBlacklisted
   }, '获取成功')
 }
 
@@ -398,16 +582,59 @@ async function searchUsers(data) {
 
   const byNick = await db.collection('users')
     .where({ nickname: db.RegExp({ regexp: keyword, options: 'i' }) })
-    .limit(20)
+    .limit(10)
     .get()
 
   const list = (byNick.data || []).map((u) => ({
     id: u._id,
     nickname: u.nickname || '未命名用户',
-    avatar: u.avatar || ''
+    avatar: u.avatar || '',
+    isAdmin: !!u.isAdmin,
+    isBlacklisted: !!u.isBlacklisted
   }))
 
   return success({ list }, '获取成功')
+}
+
+async function adminListUsers(data, wxContext) {
+  const currentUser = await getCurrentUser(wxContext)
+  if (!currentUser) return fail(401, '请先登录')
+  if (!isAdminUser(currentUser)) return fail(403, '仅管理员可操作')
+
+  const page = Math.max(1, Number(data?.page || 1))
+  const pageSize = Math.min(10, Math.max(1, Number(data?.pageSize || 10)))
+  const skip = (page - 1) * pageSize
+
+  let res
+  try {
+    res = await db.collection('users')
+      .orderBy('createdAt', 'desc')
+      .skip(skip)
+      .limit(pageSize)
+      .get()
+  } catch (error) {
+    console.warn('adminListUsers fallback to _id desc:', error && (error.errMsg || error.message || error))
+    res = await db.collection('users')
+      .orderBy('_id', 'desc')
+      .skip(skip)
+      .limit(pageSize)
+      .get()
+  }
+
+  const list = (res.data || []).map((u) => ({
+    id: u._id,
+    nickname: u.nickname || '未命名用户',
+    createdAt: u.createdAt || null,
+    isAdmin: !!u.isAdmin,
+    isBlacklisted: !!u.isBlacklisted
+  }))
+
+  return success({
+    list,
+    page,
+    pageSize,
+    hasMore: list.length >= pageSize
+  }, '获取成功')
 }
 
 async function getUserStats(data) {

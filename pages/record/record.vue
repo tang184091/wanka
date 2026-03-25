@@ -12,7 +12,7 @@
             :placeholder="`玩家${index + 1} 昵称或ID`"
             @input="onSearch(index)"
           />
-          <input class="input score" type="number" v-model="player.score" :placeholder="`分数`" />
+          <input class="input score" type="number" v-model="player.score" placeholder="分数" />
           <view v-if="searchingIndex === index && searchResults.length" class="search-box">
             <view class="search-item" v-for="u in searchResults" :key="u.id" @tap="pickUser(index, u)">
               {{ u.nickname }}
@@ -20,7 +20,7 @@
           </view>
         </view>
 
-        <view class="sum" :class="{ok: scoreValid}">当前总和：{{ totalScore }} / 100000（或1000）</view>
+        <view class="sum" :class="{ ok: scoreValid }">当前总和：{{ totalScore }} / 100000（或 1000）</view>
         <view class="btn" @tap="submit">提交战绩</view>
       </view>
 
@@ -35,14 +35,19 @@
       </view>
 
       <view class="card">
-        <view class="card-title">近7天立直麻将战绩</view>
-        <view class="card-sub">按时间倒序展示</view>
+        <view class="card-title">近 7 天立直麻将战绩</view>
+        <view class="card-sub">按时间倒序显示</view>
 
         <view v-if="visibleRecords.length === 0" class="empty">暂无战绩</view>
         <view v-for="item in visibleRecords" :key="item._id" class="record-item" @tap="openDetail(item)">
           <view class="record-head">
             <text class="time">{{ formatTime(item.createdAt) }}</text>
-            <text class="detail-link">查看详情</text>
+            <view class="head-right">
+              <text :class="['score-tag', item.scoreRecorded ? 'score-tag-recorded' : 'score-tag-unrecorded']">
+                {{ item.scoreRecorded ? '已录分' : '未录分' }}
+              </text>
+              <text class="detail-link">查看详情</text>
+            </view>
           </view>
           <view class="row" v-for="(player, index) in item.players" :key="index">
             <text class="name">{{ player.nickname || player.userId || '未知玩家' }}</text>
@@ -56,11 +61,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 
 const allRecords = ref([])
 const displayCount = ref(10)
+
 const emptyPlayers = () => ([
   { keyword: '', userId: '', nickname: '', score: '' },
   { keyword: '', userId: '', nickname: '', score: '' },
@@ -92,7 +98,10 @@ const loadRecords = async () => {
     data: { action: 'getMahjongRecords', data: {} }
   })
   if (res.result?.code === 0) {
-    allRecords.value = res.result.data.list || []
+    allRecords.value = (res.result.data.list || []).map((item) => ({
+      ...item,
+      scoreRecorded: item.scoreRecorded === true
+    }))
     displayCount.value = 10
   }
 }
@@ -136,7 +145,7 @@ const pickUser = (index, user) => {
 }
 
 const submit = async () => {
-  const players = form.value.players.map(p => {
+  const players = form.value.players.map((p) => {
     const typed = (p.keyword || '').trim()
     const userId = (p.userId || typed).trim()
     const nickname = p.nickname || ''
@@ -147,12 +156,12 @@ const submit = async () => {
     }
   })
 
-  if (players.some(p => !p.userId)) {
-    uni.showToast({ title: '请填写4位玩家ID或昵称', icon: 'none' })
+  if (players.some((p) => !p.userId)) {
+    uni.showToast({ title: '请填写 4 位玩家 ID 或昵称', icon: 'none' })
     return
   }
   if (!scoreValid.value) {
-    uni.showToast({ title: '分数总和必须为100000或1000', icon: 'none' })
+    uni.showToast({ title: '分数总和必须为 100000 或 1000', icon: 'none' })
     return
   }
 
@@ -182,7 +191,16 @@ const goToHonor = () => {
   uni.navigateTo({ url: '/pages/record/honor' })
 }
 
-onShow(loadRecords)
+onShow(() => {
+  loadRecords()
+  const needRefresh = uni.getStorageSync('record_need_refresh')
+  if (needRefresh) {
+    uni.removeStorageSync('record_need_refresh')
+    setTimeout(() => {
+      loadRecords()
+    }, 300)
+  }
+})
 </script>
 
 <style scoped>
@@ -190,25 +208,31 @@ onShow(loadRecords)
 .record-scroll { height: 100vh; }
 .card { margin: 20rpx; background: #fff; border-radius: 16rpx; padding: 20rpx; }
 .card-title { font-size: 30rpx; font-weight: 700; }
-.card-sub,.hint { color: #6b7280; font-size: 22rpx; margin-top: 8rpx; }
-.middle-card { margin: 0 20rpx; background: linear-gradient(135deg,#fef3c7,#fde68a); border-radius: 16rpx; padding: 20rpx; }
-.middle-card.honor { margin-top: 14rpx; background: linear-gradient(135deg,#ede9fe,#ddd6fe); }
-.middle-title { display:block; font-size:30rpx; font-weight:700; color:#78350f; }
-.middle-sub { display:block; margin-top:6rpx; font-size:22rpx; color:#92400e; }
+.card-sub, .hint { color: #6b7280; font-size: 22rpx; margin-top: 8rpx; }
+.middle-card { margin: 0 20rpx; background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 16rpx; padding: 20rpx; }
+.middle-card.honor { margin-top: 14rpx; background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
+.middle-title { display: block; font-size: 30rpx; font-weight: 700; color: #78350f; }
+.middle-sub { display: block; margin-top: 6rpx; font-size: 22rpx; color: #92400e; }
 .record-item { margin-top: 14rpx; padding: 14rpx; background: #f8fafc; border-radius: 12rpx; }
-.record-head { display:flex; justify-content:space-between; align-items:center; }
-.detail-link { color:#2563eb; font-size:22rpx; }
+.record-head { display: flex; justify-content: space-between; align-items: center; }
+.head-right { display: flex; align-items: center; width: 280rpx; justify-content: flex-end; }
+.score-tag { font-size: 22rpx; width: 120rpx; text-align: right; }
+.score-tag-recorded { color: #16a34a; }
+.score-tag-unrecorded { color: #9ca3af; }
+.detail-link { color: #2563eb; font-size: 22rpx; width: 140rpx; text-align: right; }
 .time { font-size: 22rpx; color: #6b7280; }
 .row { display: flex; justify-content: space-between; margin-top: 6rpx; }
+.name { flex: 1; }
+.score { width: 120rpx; text-align: right; }
 .form-row { position: relative; display: flex; gap: 12rpx; margin-top: 14rpx; }
-.input { flex:1; height: 72rpx; background: #f8fafc; border-radius: 10rpx; padding: 0 16rpx; font-size: 24rpx; }
-.score { width: 180rpx; flex: none; }
+.input { flex: 1; height: 72rpx; background: #f8fafc; border-radius: 10rpx; padding: 0 16rpx; font-size: 24rpx; }
+.score.input, .input.score { width: 180rpx; flex: none; }
 .search-box { position: absolute; top: 76rpx; left: 0; right: 180rpx; z-index: 10; background: #fff; border: 1rpx solid #e5e7eb; border-radius: 10rpx; overflow: hidden; }
 .search-item { height: 64rpx; padding: 0 16rpx; display: flex; align-items: center; font-size: 24rpx; border-bottom: 1rpx solid #f1f5f9; }
 .search-item:last-child { border-bottom: none; }
 .sum { margin-top: 16rpx; font-size: 24rpx; color: #ef4444; }
 .sum.ok { color: #16a34a; }
-.btn { margin-top: 16rpx; height: 72rpx; border-radius: 10rpx; background: #07c160; color:#fff; display:flex; align-items:center; justify-content:center; font-size: 26rpx; }
-.more-btn { margin-top: 16rpx; height: 68rpx; border-radius: 10rpx; background: #eef2ff; color:#4338ca; display:flex; align-items:center; justify-content:center; font-size: 24rpx; }
+.btn { margin-top: 16rpx; height: 72rpx; border-radius: 10rpx; background: #07c160; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26rpx; }
+.more-btn { margin-top: 16rpx; height: 68rpx; border-radius: 10rpx; background: #eef2ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 24rpx; }
 .empty { margin-top: 16rpx; color: #9ca3af; font-size: 24rpx; }
 </style>

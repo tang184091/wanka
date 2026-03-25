@@ -1,51 +1,76 @@
 const { db, success, fail, getCurrentUser } = require('./shared')
 const _ = db.command
 
+const PAGE_BATCH_SIZE = 100
+const AUTO_COMPLETE_HOURS = 12
+const CN_OFFSET_MS = 8 * 60 * 60 * 1000
+const VALID_STATUSES = new Set(['available', 'reserved', 'occupied'])
+
 function normalizeLocationName(name = '') {
   return String(name).replace(/\s+/g, '').trim()
+}
+
+function parseGameTime(input) {
+  if (!input) return null
+  if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input
+
+  const text = String(input).trim()
+  if (!text) return null
+
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/)
+  if (match) {
+    const [, y, m, d, hh = '0', mm = '0', ss = '0'] = match
+    const date = new Date(`${y}-${m}-${d}T${hh}:${mm}:${ss}+08:00`)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  const normalized = text.includes(' ') ? text.replace(' ', 'T') : text
+  const date = new Date(normalized)
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 function parseQueryDate(input) {
   if (!input) return null
   const text = String(input).trim()
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null
-  const date = new Date(`${text}T00:00:00`)
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) return null
+  const [, y, m, d] = match
+  const date = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d)) - CN_OFFSET_MS)
   return Number.isNaN(date.getTime()) ? null : date
 }
 
 function toYmd(date) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
+  const shifted = new Date(date.getTime() + CN_OFFSET_MS)
+  const y = shifted.getUTCFullYear()
+  const m = String(shifted.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(shifted.getUTCDate()).padStart(2, '0')
   return `${y}-${m}-${d}`
 }
 
+function getCnDayStart(date = new Date()) {
+  const shifted = new Date(date.getTime() + CN_OFFSET_MS)
+  return new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()) - CN_OFFSET_MS)
+}
+
 function getDateRange(queryDateInput) {
-  const selected = parseQueryDate(queryDateInput) || new Date()
-  const dayStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), 0, 0, 0, 0)
+  const dayStart = parseQueryDate(queryDateInput) || getCnDayStart(new Date())
   const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+  const date = toYmd(dayStart)
   return {
     dayStart,
     dayEnd,
-    date: toYmd(dayStart),
-    key: `day:${toYmd(dayStart)}`
+    date,
+    key: `day:${date}`
   }
 }
 
-function shouldAutoReleaseOccupiedAt18(dateStr, now = new Date()) {
-  const selected = parseQueryDate(dateStr)
-  if (!selected) return false
-  if (now.getHours() < 18) return false
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
-  return selected.getTime() <= todayStart.getTime()
-}
-
-function normalizeOverrideMap(raw = {}) {
+function normalizeStatusMap(raw = {}) {
   const normalized = {}
   Object.keys(raw || {}).forEach((location) => {
     const locationKey = normalizeLocationName(location)
-    if (!locationKey) return
-    normalized[locationKey] = raw[location]
+    const status = String(raw[location] || '').trim()
+    if (!locationKey || !VALID_STATUSES.has(status)) return
+    normalized[locationKey] = status
   })
   return normalized
 }
@@ -53,225 +78,242 @@ function normalizeOverrideMap(raw = {}) {
 async function getOverrideRowByKey(key) {
   const res = await db.collection('seat_status_overrides').where({ key }).limit(1).get()
   const row = ((res.data || [])[0]) || null
-  const overrides = normalizeOverrideMap((row && row.overrides) || {})
-  return { row, overrides }
+  return {
+    row,
+    overrides: normalizeStatusMap((row && row.overrides) || {})
+  }
 }
 
-async function fetchActiveGamesByDate(dayStart, dayEnd) {
-  const inactiveStatus = ['cancelled', 'finished', 'completed']
-  const query = db.collection('games').where({
-    status: _.nin(inactiveStatus)
-  })
-
+async function readAllByQuery(query) {
   const totalRes = await query.count()
   const total = totalRes.total || 0
-  const pageSize = 100
-  const games = []
-
-  for (let offset = 0; offset < total; offset += pageSize) {
-    const pageRes = await query.skip(offset).limit(pageSize).get()
-    ;(pageRes.data || []).forEach((game) => {
-      const gameTime = new Date(game.time)
-      if (Number.isNaN(gameTime.getTime())) return
-      if (gameTime < dayStart || gameTime >= dayEnd) return
-      games.push(game)
-    })
+  const list = []
+  for (let offset = 0; offset < total; offset += PAGE_BATCH_SIZE) {
+    const res = await query.skip(offset).limit(PAGE_BATCH_SIZE).get()
+    list.push(...(res.data || []))
   }
-
-  return games
+  return list
 }
 
-function buildGameStatusByLocation(games, now, dayEnd) {
-  const priority = { available: 0, reserved: 1, occupied: 2 }
-  const gameStatusByLocation = {}
-  const isPastDay = dayEnd <= new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+async function fetchGamesByDate(dayStart, dayEnd, now = new Date()) {
+  const query = db.collection('games').where({
+    status: _.nin(['cancelled', 'finished'])
+  })
+  const allGames = await readAllByQuery(query)
+  const inDayGames = []
 
-  games.forEach((game) => {
-    if (!game.location || !game.time) return
-    const gameTime = new Date(game.time)
-    if (Number.isNaN(gameTime.getTime())) return
+  ;(allGames || []).forEach((game) => {
+    if (!game || !game.time) return
+    const gameTime = parseGameTime(game.time)
+    if (!gameTime) return
+
+    if (
+      game.status === 'ongoing' &&
+      now >= dayStart &&
+      now < dayEnd &&
+      gameTime < dayStart
+    ) {
+      inDayGames.push(game)
+      return
+    }
+
+    if (gameTime >= dayStart && gameTime < dayEnd) {
+      inDayGames.push(game)
+    }
+  })
+
+  return inDayGames
+}
+
+async function promoteDueGamesToOngoing(games, now) {
+  const dueGames = (games || []).filter((game) => {
+    if (!game || game.status !== 'pending') return false
+    const gameTime = parseGameTime(game.time)
+    if (!gameTime) return false
+    return gameTime <= now
+  })
+
+  if (!dueGames.length) return
+
+  await Promise.all(
+    dueGames.map(async (game) => {
+      try {
+        await db.collection('games').doc(game._id).update({
+          data: { status: 'ongoing', updatedAt: new Date() }
+        })
+        game.status = 'ongoing'
+      } catch (error) {
+        console.error('promoteDueGamesToOngoing failed:', game._id, error)
+      }
+    })
+  )
+}
+
+async function completeOvertimeOngoingGames(games, now) {
+  const thresholdTs = now.getTime() - AUTO_COMPLETE_HOURS * 60 * 60 * 1000
+  const overtimeGames = (games || []).filter((game) => {
+    if (!game || game.status !== 'ongoing') return false
+    const gameTime = parseGameTime(game.time)
+    if (!gameTime) return false
+    return gameTime.getTime() <= thresholdTs
+  })
+
+  if (!overtimeGames.length) return
+
+  await Promise.all(
+    overtimeGames.map(async (game) => {
+      try {
+        await db.collection('games').doc(game._id).update({
+          data: { status: 'completed', updatedAt: new Date() }
+        })
+        game.status = 'completed'
+      } catch (error) {
+        console.error('completeOvertimeOngoingGames failed:', game._id, error)
+      }
+    })
+  )
+}
+
+function buildGameSeatMap(games = []) {
+  const priority = { available: 0, reserved: 1, occupied: 2 }
+  const statusByLocation = {}
+  const metaByLocation = {}
+  const metaPriority = { ongoing: 2, pending: 1 }
+
+  ;(games || []).forEach((game) => {
+    if (!game || !game.location || !game.status) return
+    if (!['pending', 'ongoing'].includes(game.status)) return
 
     const locationKey = normalizeLocationName(game.location)
     if (!locationKey) return
 
-    let status = 'reserved'
-    if (game.status === 'ongoing' || isPastDay || gameTime <= now) {
-      status = 'occupied'
+    const nextStatus = game.status === 'ongoing' ? 'occupied' : 'reserved'
+    const currentStatus = statusByLocation[locationKey] || 'available'
+    if (priority[nextStatus] > priority[currentStatus]) {
+      statusByLocation[locationKey] = nextStatus
     }
 
-    const current = gameStatusByLocation[locationKey] || 'available'
-    if (priority[status] > priority[current]) {
-      gameStatusByLocation[locationKey] = status
+    const existingMeta = metaByLocation[locationKey]
+    const currentMetaPriority = metaPriority[game.status] || 0
+    const existingMetaPriority = existingMeta ? (metaPriority[existingMeta.status] || 0) : -1
+    const currentTime = parseGameTime(game.time) || new Date(8640000000000000)
+    const existingTime = existingMeta ? (parseGameTime(existingMeta.time) || new Date(8640000000000000)) : new Date(8640000000000000)
+
+    if (
+      !existingMeta ||
+      currentMetaPriority > existingMetaPriority ||
+      (currentMetaPriority === existingMetaPriority && currentTime.getTime() < existingTime.getTime())
+    ) {
+      metaByLocation[locationKey] = {
+        id: game._id,
+        title: game.title || '',
+        project: game.project || '',
+        status: game.status,
+        time: game.time,
+        creatorId: game.creatorId || ''
+      }
     }
   })
 
-  return gameStatusByLocation
+  return { statusByLocation, metaByLocation }
 }
 
-function mergeSeatStatus({
-  gameStatusByLocation,
-  manualOverrideByLocation,
-  forceClearOccupied,
-  autoReleaseOccupied
-}) {
-  const mergedStatusByLocation = {}
-  const sourceByLocation = {}
+function buildSeatState({ gameStatusByLocation, gameMetaByLocation, manualOverrideByLocation }) {
+  const finalStatusByLocation = {}
+
   const allLocations = new Set([
     ...Object.keys(gameStatusByLocation || {}),
     ...Object.keys(manualOverrideByLocation || {})
   ])
 
   allLocations.forEach((locationKey) => {
+    const hasManual = Object.prototype.hasOwnProperty.call(manualOverrideByLocation || {}, locationKey)
     const gameStatus = gameStatusByLocation[locationKey] || 'available'
-    const manualStatus = manualOverrideByLocation[locationKey] || 'available'
 
-    let status = 'available'
-    let source = ''
-    if (gameStatus !== 'available') {
-      status = gameStatus
-      source = 'game'
-    } else if (manualStatus !== 'available') {
-      status = manualStatus
-      source = 'manual'
-    }
-
-    if ((forceClearOccupied || autoReleaseOccupied) && status === 'occupied') {
-      status = 'available'
-      source = ''
-    }
+    // Simple mode: game status has priority, manual only fills when game is available.
+    const manualStatus = hasManual ? manualOverrideByLocation[locationKey] : 'available'
+    let status = gameStatus !== 'available' ? gameStatus : manualStatus
 
     if (status !== 'available') {
-      mergedStatusByLocation[locationKey] = status
-      sourceByLocation[locationKey] = source
+      finalStatusByLocation[locationKey] = status
     }
   })
 
-  return { mergedStatusByLocation, sourceByLocation }
+  return {
+    statusByLocation: finalStatusByLocation,
+    gameMetaByLocation
+  }
+}
+
+async function loadSeatRuntimeState(dateInput) {
+  const now = new Date()
+  const { dayStart, dayEnd, date, key } = getDateRange(dateInput)
+  const games = await fetchGamesByDate(dayStart, dayEnd, now)
+
+  await promoteDueGamesToOngoing(games, now)
+  await completeOvertimeOngoingGames(games, now)
+
+  const { statusByLocation: gameStatusByLocation, metaByLocation: gameMetaByLocation } = buildGameSeatMap(games)
+  const dayRow = await getOverrideRowByKey(key)
+
+  const seatState = buildSeatState({
+    gameStatusByLocation,
+    gameMetaByLocation,
+    manualOverrideByLocation: dayRow.overrides || {}
+  })
+
+  return {
+    date,
+    key,
+    dayRow,
+    gameStatusByLocation,
+    seatState,
+    totalActiveGames: games.filter((g) => ['pending', 'ongoing'].includes(g.status)).length
+  }
 }
 
 async function getSeatStatus(data = {}) {
-  const now = new Date()
-  const { dayStart, dayEnd, date, key } = getDateRange(data.date)
-  const games = await fetchActiveGamesByDate(dayStart, dayEnd)
-  const gameStatusByLocation = buildGameStatusByLocation(games, now, dayEnd)
-
-  const [globalRow, dayRow] = await Promise.all([
-    getOverrideRowByKey('global'),
-    getOverrideRowByKey(key)
-  ])
-
-  // global override only allows occupied to avoid stale reserved for all days
-  const globalOverrideByLocation = {}
-  Object.keys(globalRow.overrides || {}).forEach((locationKey) => {
-    if (globalRow.overrides[locationKey] === 'occupied') {
-      globalOverrideByLocation[locationKey] = 'occupied'
-    }
-  })
-
-  const manualOverrideByLocation = {
-    ...globalOverrideByLocation,
-    ...(dayRow.overrides || {})
-  }
-  const forceClearOccupied = !!(dayRow.row && dayRow.row.clearOccupied)
-  const autoReleaseOccupied = shouldAutoReleaseOccupiedAt18(date, now)
-  const { mergedStatusByLocation, sourceByLocation } = mergeSeatStatus({
-    gameStatusByLocation,
-    manualOverrideByLocation,
-    forceClearOccupied,
-    autoReleaseOccupied
-  })
-
+  const runtime = await loadSeatRuntimeState(data.date)
   return success({
-    date,
-    key,
-    gameStatusByLocation,
-    manualOverrideByLocation,
-    sourceByLocation,
-    forceClearOccupied,
-    autoReleaseOccupied,
-    statusByLocation: mergedStatusByLocation,
-    totalActiveGames: games.length
+    date: runtime.date,
+    key: runtime.key,
+    gameStatusByLocation: runtime.gameStatusByLocation,
+    gameMetaByLocation: runtime.seatState.gameMetaByLocation,
+    manualOverrideByLocation: runtime.dayRow.overrides || {},
+    statusByLocation: runtime.seatState.statusByLocation,
+    totalActiveGames: runtime.totalActiveGames
   }, '获取座位状态成功')
 }
 
-async function getSeatStatusOverrides(data = {}) {
-  const { key } = getDateRange(data.date)
-  const [globalRow, dayRow] = await Promise.all([
-    getOverrideRowByKey('global'),
-    getOverrideRowByKey(key)
-  ])
-
-  return success({
-    key,
-    globalOverrides: globalRow.overrides || {},
-    dayOverrides: dayRow.overrides || {},
-    clearOccupied: !!(dayRow.row && dayRow.row.clearOccupied)
-  }, '获取成功')
-}
-
-async function setSeatStatusOverrides(data, wxContext) {
+async function setSeatStatusOverrides(data = {}, wxContext) {
   const currentUser = await getCurrentUser(wxContext)
-  if (!currentUser || !currentUser.isAdmin) return fail(403, '仅管理员可操作')
-
-  const rawOverrides = (data && data.overrides) || {}
-  const clearOccupied = !!(data && data.clearOccupied)
-  const scope = String((data && data.scope) || '').trim()
-  const { dayStart, dayEnd, key } = scope === 'global'
-    ? { dayStart: null, dayEnd: null, key: 'global' }
-    : getDateRange((data && data.date) || '')
-
-  const validStatuses = new Set(['available', 'reserved', 'occupied'])
-  const normalizedOverrides = {}
-  Object.keys(rawOverrides).forEach((location) => {
-    const locationKey = normalizeLocationName(location)
-    const status = String(rawOverrides[location] || '').trim()
-    if (!locationKey || !validStatuses.has(status)) return
-    normalizedOverrides[locationKey] = status
-  })
-
-  // online reservation always wins: only save manual status that differs from online status
-  const onlineMap = {}
-  if (scope !== 'global') {
-    const games = await fetchActiveGamesByDate(dayStart, dayEnd)
-    Object.assign(onlineMap, buildGameStatusByLocation(games, new Date(), dayEnd))
+  if (!currentUser || !currentUser.isAdmin) {
+    return fail(403, '仅管理员可操作')
   }
 
-  const overrides = {}
-  Object.keys(normalizedOverrides).forEach((locationKey) => {
-    const manualStatus = normalizedOverrides[locationKey]
-    const onlineStatus = onlineMap[locationKey] || 'available'
-    if (manualStatus === 'available') return
-    if (scope === 'global' && manualStatus !== 'occupied') return
-    if (manualStatus === onlineStatus) return
-    overrides[locationKey] = manualStatus
-  })
+  const { key } = getDateRange(data.date)
+  const input = data.overrides || {}
+  const normalizedInput = normalizeStatusMap(input)
+  const nextOverrides = { ...normalizedInput }
 
   const existed = await db.collection('seat_status_overrides').where({ key }).limit(1).get()
   const docData = {
-    overrides,
-    clearOccupied: scope === 'global' ? false : clearOccupied,
+    key,
+    overrides: nextOverrides,
     updatedAt: new Date(),
     updatedBy: currentUser._id
   }
 
   if ((existed.data || []).length) {
-    await db.collection('seat_status_overrides').doc(existed.data[0]._id).update({
-      data: docData
-    })
+    await db.collection('seat_status_overrides').doc(existed.data[0]._id).update({ data: docData })
   } else {
-    await db.collection('seat_status_overrides').add({
-      data: {
-        key,
-        ...docData
-      }
-    })
+    await db.collection('seat_status_overrides').add({ data: docData })
   }
 
-  return success({ key, overrides, clearOccupied: docData.clearOccupied }, '保存成功')
+  return success({ key, overrides: nextOverrides }, '保存座位覆盖状态成功')
 }
 
 module.exports = {
   getSeatStatus,
-  getSeatStatusOverrides,
   setSeatStatusOverrides
 }

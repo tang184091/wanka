@@ -337,8 +337,6 @@ const handleLogout = () => {
           userStats.value = null
           console.log('✅ 本地响应式数据已清空')
           
-          uni.hideLoading()
-          
           uni.showToast({
             title: '已退出登录',
             icon: 'success',
@@ -351,13 +349,14 @@ const handleLogout = () => {
           }, 100)
           
         } catch (error) {
-          uni.hideLoading()
           console.error('退出登录过程中出错:', error)
           uni.showToast({
             title: '退出登录失败: ' + error.message,
             icon: 'none',
             duration: 2000
           })
+        } finally {
+          uni.hideLoading()
         }
       }
     }

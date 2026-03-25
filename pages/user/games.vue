@@ -6,7 +6,7 @@
       <view class="nav-left" @tap="goBack">
         <text class="nav-text-btn">返回</text>
       </view>
-      <view class="nav-title">游戏/设备管理</view>
+      <view class="nav-title">游戏设备管理</view>
       <view class="nav-right" @tap="saveGames">
         <text class="save-text">保存</text>
       </view>
@@ -118,7 +118,9 @@ import UserService from '@/utils/user.js'
 const gameTypes = ref([
   { id: 'mahjong', name: '立直麻将' },
   { id: 'boardgame', name: '桌游' },
-  { id: 'videogame', name: '电玩' }
+  { id: 'videogame', name: '电玩' },
+  { id: 'deck', name: '卡组' },
+  { id: 'other', name: '其他' }
 ])
 
 // 我的游戏列表
@@ -135,7 +137,9 @@ const getGameTypeClass = (type) => {
   const classMap = {
     'mahjong': 'game-tag-mahjong',
     'boardgame': 'game-tag-boardgame',
-    'videogame': 'game-tag-videogame'
+    'videogame': 'game-tag-videogame',
+    'deck': 'game-tag-deck',
+    'other': 'game-tag-other'
   }
   return classMap[type] || 'game-tag-mahjong'
 }
@@ -145,7 +149,9 @@ const getGameTypeText = (type) => {
   const textMap = {
     'mahjong': '立直麻将',
     'boardgame': '桌游',
-    'videogame': '电玩'
+    'videogame': '电玩',
+    'deck': '卡组',
+    'other': '其他'
   }
   return textMap[type] || '立直麻将'
 }
@@ -443,6 +449,16 @@ onMounted(() => {
 .game-tag-videogame {
   background-color: #fff7e6;
   color: #fa8c16;
+}
+
+.game-tag-deck {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.game-tag-other {
+  background-color: #f3f4f6;
+  color: #374151;
 }
 
 /* 游戏名称输入框 */

@@ -1,4 +1,4 @@
-const { db, success, fail, getCurrentUser } = require('./shared')
+const { db, success, fail, getCurrentUser, checkTextSecurityBatch } = require('./shared')
 
 function isAdminUser(user) {
   if (!user) return false
@@ -69,10 +69,75 @@ async function adminDeleteHonorRecord(data, wxContext) {
   return success(null, '删除成功')
 }
 
+async function getSeatAnnouncement() {
+  try {
+    const res = await db.collection('system_tags').where({ key: 'seat_announcement' }).limit(1).get()
+    const item = (res.data || [])[0] || {}
+    return success({
+      content: String(item.value || ''),
+      updatedAt: item.updatedAt || null,
+      updatedBy: item.updatedBy || '',
+      updatedByNickname: item.updatedByNickname || ''
+    }, '获取成功')
+  } catch (error) {
+    return success({
+      content: '',
+      updatedAt: null,
+      updatedBy: '',
+      updatedByNickname: ''
+    }, '获取成功')
+  }
+}
+
+async function setSeatAnnouncement(data, wxContext) {
+  const auth = await ensureAdmin(wxContext)
+  if (auth.error) return auth.error
+
+  const content = String(data?.content || '').trim()
+  if (content.length > 1000) return fail(400, '公告最多1000字')
+
+  const securityRes = await checkTextSecurityBatch([
+    { title: '公告内容', text: content }
+  ])
+  if (!securityRes.ok) return fail(securityRes.code || 422, securityRes.message || '内容安全检查失败')
+
+  const now = new Date()
+  const payload = {
+    key: 'seat_announcement',
+    value: content,
+    updatedAt: now,
+    updatedBy: auth.user._id,
+    updatedByNickname: auth.user.nickname || '管理员'
+  }
+
+  const queryRes = await db.collection('system_tags').where({ key: 'seat_announcement' }).limit(1).get()
+  const existed = (queryRes.data || [])[0]
+
+  if (existed?._id) {
+    await db.collection('system_tags').doc(existed._id).update({ data: payload })
+  } else {
+    await db.collection('system_tags').add({
+      data: {
+        ...payload,
+        createdAt: now
+      }
+    })
+  }
+
+  return success({
+    content,
+    updatedAt: now,
+    updatedBy: auth.user._id,
+    updatedByNickname: auth.user.nickname || '管理员'
+  }, '保存成功')
+}
+
 module.exports = {
   getAdminManageData,
   adminDeleteMahjongRecord,
   adminDeleteGame,
   adminDeleteYakumanRecord,
-  adminDeleteHonorRecord
+  adminDeleteHonorRecord,
+  getSeatAnnouncement,
+  setSeatAnnouncement
 }

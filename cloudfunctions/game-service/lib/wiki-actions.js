@@ -1,4 +1,4 @@
-const { db, _, success, fail, getCurrentUser } = require('./shared')
+const { db, _, success, fail, getCurrentUser, checkTextSecurityBatch, ensureUserAvailable } = require('./shared')
 
 const STATUS_PENDING = 'pending'
 const STATUS_PUBLISHED = 'published'
@@ -59,7 +59,7 @@ async function ensureAdmin(wxContext) {
 
 async function getWikiList(data, wxContext) {
   const page = Math.max(1, Number(data?.page || 1))
-  const pageSize = Math.min(30, Math.max(1, Number(data?.pageSize || 20)))
+  const pageSize = Math.min(10, Math.max(1, Number(data?.pageSize || 10)))
   const skip = (page - 1) * pageSize
 
   const includeAll = !!data?.includeAll
@@ -131,6 +131,11 @@ async function submitWiki(data, wxContext) {
   const currentUser = await getCurrentUser(wxContext)
   if (!currentUser) return fail(401, '请先登录')
 
+  {
+    const availableError = ensureUserAvailable(currentUser, '投稿百科')
+    if (availableError) return availableError
+  }
+
   const title = normalizeString(data?.title, 80)
   const summary = normalizeString(data?.summary, 200)
   const content = normalizeString(data?.content, 1000)
@@ -138,6 +143,14 @@ async function submitWiki(data, wxContext) {
   const tags = normalizeTags(data?.tags)
   if (!title) return fail(400, '标题不能为空')
   if (!content) return fail(400, '正文不能为空')
+
+  const submitSecurityRes = await checkTextSecurityBatch([
+    { title: '词条标题', text: title },
+    { title: '词条摘要', text: summary },
+    { title: '词条正文', text: content },
+    { title: '词条标签', text: tags.join(' ') }
+  ])
+  if (!submitSecurityRes.ok) return fail(submitSecurityRes.code || 422, submitSecurityRes.message || '内容包含敏感信息')
 
   const now = new Date()
   const addRes = await db.collection('wiki_entries').add({
@@ -173,6 +186,15 @@ async function adminCreateWiki(data, wxContext) {
   const status = normalizeStatus(data?.status, STATUS_PUBLISHED)
   if (!title) return fail(400, '标题不能为空')
   if (!content) return fail(400, '正文不能为空')
+
+  const createSecurityRes = await checkTextSecurityBatch([
+    { title: '词条标题', text: title },
+    { title: '词条摘要', text: summary },
+    { title: '词条正文', text: content },
+    { title: '词条标签', text: tags.join(' ') },
+    { title: '创建者昵称', text: data?.creatorNickname }
+  ])
+  if (!createSecurityRes.ok) return fail(createSecurityRes.code || 422, createSecurityRes.message || '内容包含敏感信息')
 
   const now = new Date()
   const creatorId = normalizeString(data?.creatorId, 64) || auth.user._id
@@ -215,6 +237,15 @@ async function adminUpdateWiki(data, wxContext) {
   const status = normalizeStatus(data?.status, STATUS_PENDING)
   if (!title) return fail(400, '标题不能为空')
   if (!content) return fail(400, '正文不能为空')
+
+  const updateSecurityRes = await checkTextSecurityBatch([
+    { title: '词条标题', text: title },
+    { title: '词条摘要', text: summary },
+    { title: '词条正文', text: content },
+    { title: '词条标签', text: tags.join(' ') },
+    { title: '创建者昵称', text: data?.creatorNickname }
+  ])
+  if (!updateSecurityRes.ok) return fail(updateSecurityRes.code || 422, updateSecurityRes.message || '内容包含敏感信息')
 
   const creatorId = normalizeString(data?.creatorId, 64)
   const creatorNickname = normalizeString(data?.creatorNickname, 64)

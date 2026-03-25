@@ -31,7 +31,6 @@
         >
           {{ tab.name }}
         </view>
-        <view class="quarter-btn placeholder-btn"></view>
         <view class="type-tab create-btn quarter-btn" @tap="goToCreate">
           <text>+ 创建</text>
         </view>
@@ -72,6 +71,9 @@
           <view class="game-type">
             <view :class="['type-tag', getTypeClass(game.type)]">
               {{ getTypeText(game.type) }}
+            </view>
+            <view :class="['game-status-tag', getGameStatusClass(game.status)]">
+              {{ getGameStatusText(game.status) }}
             </view>
           </view>
           <view :class="['status-tag', game.isFull ? 'tag-status-full' : 'tag-status']">
@@ -118,19 +120,24 @@
         </view>
 
         <!-- 操作按钮 -->
-        <view class="action-btn" v-if="!game.isFull && !game.isJoined">
+        <view class="action-btn" v-if="game.status === 'pending' && !game.isFull && !game.isJoined">
           <view class="join-btn" @tap.stop="joinGame(game.id || game._id)">
             立即加入
           </view>
         </view>
-        <view v-if="game.isJoined" class="action-btn">
+        <view v-if="game.status === 'pending' && game.isJoined" class="action-btn">
           <view class="joined-btn">
             已加入
           </view>
         </view>
-        <view v-if="game.isFull && !game.isJoined" class="action-btn">
+        <view v-if="game.status === 'pending' && game.isFull && !game.isJoined" class="action-btn">
           <view class="full-btn">
             已满员
+          </view>
+        </view>
+        <view v-if="game.status === 'ongoing' && canCompleteGame(game)" class="action-btn">
+          <view class="complete-btn" @tap.stop="markCompleted(game)">
+            标记已完成
           </view>
         </view>
       </view>
@@ -161,7 +168,8 @@ const tabs = ref([
   { id: 'boardgame', name: '桌游' },
   { id: 'videogame', name: '电玩' },
   { id: 'cardgame', name: '打牌' },
-  { id: 'competition', name: '比赛' }
+  { id: 'competition', name: '比赛' },
+  { id: 'ongoing', name: '进行中' }
 ])
 
 const activeTab = ref('all')
@@ -172,7 +180,7 @@ const hasMore = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const firstRowTabs = ref(tabs.value.slice(0, 3))
-const secondRowTabs = ref(tabs.value.slice(3, 5))
+const secondRowTabs = ref(tabs.value.slice(3, 6))
 
 // 切换标签
 const switchTab = (tabId) => {
@@ -205,6 +213,37 @@ const getTypeText = (type) => {
     'competition': '比赛'
   }
   return textMap[type] || '立直麻将'
+}
+
+const getCurrentUser = () => UserService.getCurrentUser() || null
+
+const canCompleteGame = (game) => {
+  if (!game || game.status !== 'ongoing') return false
+  const user = getCurrentUser()
+  if (!user) return false
+  const userId = String(user.id || user._id || '')
+  if (!userId) return false
+  if (user.isAdmin) return true
+  if (String(game.creatorId || '') === userId) return true
+  return !!game.isJoined
+}
+
+const getGameStatusText = (status) => {
+  const textMap = {
+    pending: '预约中',
+    ongoing: '进行中',
+    completed: '已完成'
+  }
+  return textMap[status] || '预约中'
+}
+
+const getGameStatusClass = (status) => {
+  const classMap = {
+    pending: 'status-pending',
+    ongoing: 'status-ongoing',
+    completed: 'status-completed'
+  }
+  return classMap[status] || 'status-pending'
 }
 
 // 格式化时间
@@ -241,7 +280,9 @@ const loadGameList = async () => {
       pageSize: pageSize.value
     }
     
-    if (activeTab.value !== 'all') {
+    if (activeTab.value === 'ongoing') {
+      params.status = 'ongoing'
+    } else if (activeTab.value !== 'all') {
       params.type = activeTab.value
     }
     
@@ -423,6 +464,41 @@ onMounted(() => {
   console.log('首页加载，开始获取组局列表')
   loadGameList()
 })
+const markCompleted = async (game) => {
+  const gameId = game.id || game._id
+  if (!gameId) return
+  if (!canCompleteGame(game)) {
+    uni.showToast({ title: '无权限操作', icon: 'none' })
+    return
+  }
+  uni.showModal({
+    title: '确认完成',
+    content: '将该进行中组局标记为已完成？',
+    success: async (res) => {
+      if (!res.confirm) return
+      uni.showLoading({ title: '提交中...', mask: true })
+      try {
+        const result = await wx.cloud.callFunction({
+          name: 'game-service',
+          data: { action: 'completeGame', data: { gameId } }
+        })
+        if (result?.result?.code === 0) {
+          uni.showToast({ title: '已标记完成', icon: 'success' })
+          currentPage.value = 1
+          gameList.value = []
+          hasMore.value = true
+          await loadGameList()
+        } else {
+          throw new Error(result?.result?.message || '操作失败')
+        }
+      } catch (error) {
+        uni.showToast({ title: error.message || '操作失败', icon: 'none' })
+      } finally {
+        uni.hideLoading()
+      }
+    }
+  })
+}
 </script>
 
 <style scoped>
@@ -443,6 +519,43 @@ onMounted(() => {
   z-index: 10;
   gap: 10rpx;
 }
+
+/* const markCompleted = async (game) => {
+  const gameId = game.id || game._id
+  if (!gameId) return
+  if (!canCompleteGame(game)) {
+    uni.showToast({ title: '无权限操作', icon: 'none' })
+    return
+  }
+
+  uni.showModal({
+    title: '确认完成',
+    content: '将该进行中组局标记为已完成？',
+    success: async (res) => {
+      if (!res.confirm) return
+      uni.showLoading({ title: '提交中...', mask: true })
+      try {
+        const result = await wx.cloud.callFunction({
+          name: 'game-service',
+          data: { action: 'completeGame', data: { gameId } }
+        })
+        if (result?.result?.code === 0) {
+          uni.showToast({ title: '已标记完成', icon: 'success' })
+          currentPage.value = 1
+          gameList.value = []
+          hasMore.value = true
+          await loadGameList()
+        } else {
+          throw new Error(result?.result?.message || '操作失败')
+        }
+      } catch (error) {
+        uni.showToast({ title: error.message || '操作失败', icon: 'none' })
+      } finally {
+        uni.hideLoading()
+      }
+    }
+  })
+} */
 
 .type-row {
   width: 100%;
@@ -487,10 +600,6 @@ onMounted(() => {
   background-color: #07c160;
   color: white;
   border-color: transparent;
-}
-
-.placeholder-btn {
-  background: transparent;
 }
 
 .create-btn:active {
@@ -556,6 +665,7 @@ onMounted(() => {
 .game-type {
   display: flex;
   align-items: center;
+  gap: 10rpx;
 }
 
 .type-tag {
@@ -595,6 +705,28 @@ onMounted(() => {
   border-radius: 4rpx;
   font-size: 24rpx;
   font-weight: 500;
+}
+
+.game-status-tag {
+  padding: 6rpx 16rpx;
+  border-radius: 4rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.status-pending {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-ongoing {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.status-completed {
+  background-color: #e5e7eb;
+  color: #4b5563;
 }
 
 .tag-status {
@@ -715,6 +847,14 @@ onMounted(() => {
   border-radius: 30rpx;
   font-size: 28rpx;
   border: 1rpx solid #ff4d4f;
+}
+
+.complete-btn {
+  padding: 15rpx 32rpx;
+  background-color: #fb923c;
+  color: #fff;
+  border-radius: 30rpx;
+  font-size: 28rpx;
 }
 
 /* 加载提示样式 */
