@@ -2,6 +2,7 @@
 const common_vendor = require("../../common/vendor.js");
 const utils_user = require("../../utils/user.js");
 const common_assets = require("../../common/assets.js");
+const utils_cloudImage = require("../../utils/cloud-image.js");
 const _sfc_main = {
   __name: "list",
   setup(__props) {
@@ -20,6 +21,30 @@ const _sfc_main = {
     const currentPage = common_vendor.ref(1);
     const pageSize = common_vendor.ref(10);
     const userId = common_vendor.ref("");
+    const normalizeGamesAvatarUrls = async (games2 = []) => {
+      if (!Array.isArray(games2) || !games2.length)
+        return games2;
+      const avatarList = [];
+      games2.forEach((game) => {
+        const players = Array.isArray(game == null ? void 0 : game.players) ? game.players : [];
+        players.forEach((player) => {
+          avatarList.push((player == null ? void 0 : player.avatar) || "");
+        });
+      });
+      const resolved = await utils_cloudImage.resolveCloudFileUrls(avatarList);
+      let offset = 0;
+      games2.forEach((game) => {
+        const players = Array.isArray(game == null ? void 0 : game.players) ? game.players : [];
+        players.forEach((player) => {
+          const nextAvatar = resolved[offset];
+          if (nextAvatar) {
+            player.avatar = nextAvatar;
+          }
+          offset += 1;
+        });
+      });
+      return games2;
+    };
     const pageParams = common_vendor.ref({});
     const filteredGames = common_vendor.computed(() => {
       let filtered = [...games.value];
@@ -91,13 +116,13 @@ const _sfc_main = {
         activeTab.value = options.tab;
       }
       pageParams.value = options;
-      common_vendor.index.__f__("log", "at pages/game/list.vue:281", "页面参数:", options);
+      common_vendor.index.__f__("log", "at pages/game/list.vue:306", "页面参数:", options);
     });
     common_vendor.onShow(() => {
-      common_vendor.index.__f__("log", "at pages/game/list.vue:285", "页面显示，检查是否需要刷新数据");
+      common_vendor.index.__f__("log", "at pages/game/list.vue:310", "页面显示，检查是否需要刷新数据");
       const needRefresh = common_vendor.index.getStorageSync("needRefreshGameList");
       if (needRefresh) {
-        common_vendor.index.__f__("log", "at pages/game/list.vue:289", "检测到需要刷新游戏列表，执行刷新");
+        common_vendor.index.__f__("log", "at pages/game/list.vue:314", "检测到需要刷新游戏列表，执行刷新");
         common_vendor.index.removeStorageSync("needRefreshGameList");
         onRefresh();
       }
@@ -136,8 +161,8 @@ const _sfc_main = {
         let response = null;
         if (activeTab.value === "created" || activeTab.value === "joined") {
           try {
-            common_vendor.index.__f__("log", "at pages/game/list.vue:339", `开始获取${activeTab.value === "created" ? "我创建的" : "我参与的"}组局...`);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:340", "当前用户ID:", userId.value);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:364", `开始获取${activeTab.value === "created" ? "我创建的" : "我参与的"}组局...`);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:365", "当前用户ID:", userId.value);
             const cloudResult = await common_vendor.wx$1.cloud.callFunction({
               name: "game-service",
               data: {
@@ -149,15 +174,15 @@ const _sfc_main = {
                 pageSize: pageSize.value
               }
             });
-            common_vendor.index.__f__("log", "at pages/game/list.vue:355", "【getMyGames】云函数返回原始数据:", cloudResult);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:356", "【getMyGames】result数据结构:", typeof cloudResult.result, cloudResult.result);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:357", "【getMyGames】result.code:", (_a = cloudResult.result) == null ? void 0 : _a.code);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:358", "【getMyGames】result.data:", (_b = cloudResult.result) == null ? void 0 : _b.data);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:359", "【getMyGames】result.message:", (_c = cloudResult.result) == null ? void 0 : _c.message);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:380", "【getMyGames】云函数返回原始数据:", cloudResult);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:381", "【getMyGames】result数据结构:", typeof cloudResult.result, cloudResult.result);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:382", "【getMyGames】result.code:", (_a = cloudResult.result) == null ? void 0 : _a.code);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:383", "【getMyGames】result.data:", (_b = cloudResult.result) == null ? void 0 : _b.data);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:384", "【getMyGames】result.message:", (_c = cloudResult.result) == null ? void 0 : _c.message);
             if (cloudResult && cloudResult.errMsg === "cloud.callFunction:ok") {
               if (cloudResult.result && cloudResult.result.code === 0) {
                 const gamesData = cloudResult.result.data || [];
-                common_vendor.index.__f__("log", "at pages/game/list.vue:365", `获取到${activeTab.value === "created" ? "我创建的" : "我参与的"}组局数据:`, gamesData.length, "条");
+                common_vendor.index.__f__("log", "at pages/game/list.vue:390", `获取到${activeTab.value === "created" ? "我创建的" : "我参与的"}组局数据:`, gamesData.length, "条");
                 const formattedGames = gamesData.map((game) => {
                   return {
                     ...game,
@@ -174,12 +199,12 @@ const _sfc_main = {
               throw new Error((cloudResult == null ? void 0 : cloudResult.errMsg) || "获取数据失败");
             }
           } catch (error) {
-            common_vendor.index.__f__("error", "at pages/game/list.vue:385", `获取${activeTab.value}组局失败:`, error);
+            common_vendor.index.__f__("error", "at pages/game/list.vue:410", `获取${activeTab.value}组局失败:`, error);
             throw error;
           }
         } else if (activeTab.value === "all") {
           try {
-            common_vendor.index.__f__("log", "at pages/game/list.vue:391", "开始获取所有组局...");
+            common_vendor.index.__f__("log", "at pages/game/list.vue:416", "开始获取所有组局...");
             const cloudResult = await common_vendor.wx$1.cloud.callFunction({
               name: "game-service",
               data: {
@@ -188,15 +213,15 @@ const _sfc_main = {
                 pageSize: pageSize.value
               }
             });
-            common_vendor.index.__f__("log", "at pages/game/list.vue:403", "【getGameList-all】云函数返回原始数据:", cloudResult);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:404", "【getGameList-all】result数据结构:", typeof cloudResult.result, cloudResult.result);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:405", "【getGameList-all】result.code:", (_e = cloudResult.result) == null ? void 0 : _e.code);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:406", "【getGameList-all】result.data:", (_f = cloudResult.result) == null ? void 0 : _f.data);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:407", "【getGameList-all】result.message:", (_g = cloudResult.result) == null ? void 0 : _g.message);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:428", "【getGameList-all】云函数返回原始数据:", cloudResult);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:429", "【getGameList-all】result数据结构:", typeof cloudResult.result, cloudResult.result);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:430", "【getGameList-all】result.code:", (_e = cloudResult.result) == null ? void 0 : _e.code);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:431", "【getGameList-all】result.data:", (_f = cloudResult.result) == null ? void 0 : _f.data);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:432", "【getGameList-all】result.message:", (_g = cloudResult.result) == null ? void 0 : _g.message);
             if (cloudResult && cloudResult.errMsg === "cloud.callFunction:ok") {
               if (cloudResult.result && cloudResult.result.code === 0) {
                 const gamesData = ((_h = cloudResult.result.data) == null ? void 0 : _h.list) || [];
-                common_vendor.index.__f__("log", "at pages/game/list.vue:413", "获取到所有组局数据:", gamesData.length, "条");
+                common_vendor.index.__f__("log", "at pages/game/list.vue:438", "获取到所有组局数据:", gamesData.length, "条");
                 const formattedGames = gamesData.map((game) => {
                   return {
                     ...game,
@@ -213,12 +238,12 @@ const _sfc_main = {
               throw new Error((cloudResult == null ? void 0 : cloudResult.errMsg) || "获取数据失败");
             }
           } catch (error) {
-            common_vendor.index.__f__("error", "at pages/game/list.vue:432", "获取所有组局失败:", error);
+            common_vendor.index.__f__("error", "at pages/game/list.vue:457", "获取所有组局失败:", error);
             throw error;
           }
         } else if (activeTab.value === "pending" || activeTab.value === "completed") {
           try {
-            common_vendor.index.__f__("log", "at pages/game/list.vue:438", `开始获取${activeTab.value === "pending" ? "进行中" : "已完成"}的组局...`);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:463", `开始获取${activeTab.value === "pending" ? "进行中" : "已完成"}的组局...`);
             const cloudResult = await common_vendor.wx$1.cloud.callFunction({
               name: "game-service",
               data: {
@@ -228,15 +253,15 @@ const _sfc_main = {
                 pageSize: pageSize.value
               }
             });
-            common_vendor.index.__f__("log", "at pages/game/list.vue:451", `【getGameList-${activeTab.value}】云函数返回原始数据:`, cloudResult);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:452", `【getGameList-${activeTab.value}】result数据结构:`, typeof cloudResult.result, cloudResult.result);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:453", `【getGameList-${activeTab.value}】result.code:`, (_j = cloudResult.result) == null ? void 0 : _j.code);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:454", `【getGameList-${activeTab.value}】result.data:`, (_k = cloudResult.result) == null ? void 0 : _k.data);
-            common_vendor.index.__f__("log", "at pages/game/list.vue:455", `【getGameList-${activeTab.value}】result.message:`, (_l = cloudResult.result) == null ? void 0 : _l.message);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:476", `【getGameList-${activeTab.value}】云函数返回原始数据:`, cloudResult);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:477", `【getGameList-${activeTab.value}】result数据结构:`, typeof cloudResult.result, cloudResult.result);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:478", `【getGameList-${activeTab.value}】result.code:`, (_j = cloudResult.result) == null ? void 0 : _j.code);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:479", `【getGameList-${activeTab.value}】result.data:`, (_k = cloudResult.result) == null ? void 0 : _k.data);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:480", `【getGameList-${activeTab.value}】result.message:`, (_l = cloudResult.result) == null ? void 0 : _l.message);
             if (cloudResult && cloudResult.errMsg === "cloud.callFunction:ok") {
               if (cloudResult.result && cloudResult.result.code === 0) {
                 const gamesData = ((_m = cloudResult.result.data) == null ? void 0 : _m.list) || [];
-                common_vendor.index.__f__("log", "at pages/game/list.vue:461", `获取到${activeTab.value === "pending" ? "进行中" : "已完成"}组局数据:`, gamesData.length, "条");
+                common_vendor.index.__f__("log", "at pages/game/list.vue:486", `获取到${activeTab.value === "pending" ? "进行中" : "已完成"}组局数据:`, gamesData.length, "条");
                 const formattedGames = gamesData.map((game) => {
                   return {
                     ...game,
@@ -253,24 +278,25 @@ const _sfc_main = {
               throw new Error((cloudResult == null ? void 0 : cloudResult.errMsg) || "获取数据失败");
             }
           } catch (error) {
-            common_vendor.index.__f__("error", "at pages/game/list.vue:480", `获取${activeTab.value}组局失败:`, error);
+            common_vendor.index.__f__("error", "at pages/game/list.vue:505", `获取${activeTab.value}组局失败:`, error);
             throw error;
           }
         }
         if (response) {
+          const normalizedResponse = await normalizeGamesAvatarUrls(response);
           if (currentPage.value === 1) {
-            games.value = response;
+            games.value = normalizedResponse;
           } else {
-            games.value = [...games.value, ...response];
+            games.value = [...games.value, ...normalizedResponse];
           }
-          hasMore.value = response.length >= pageSize.value;
-          common_vendor.index.__f__("log", "at pages/game/list.vue:495", "处理后games.value:", games.value.length, "条");
+          hasMore.value = normalizedResponse.length >= pageSize.value;
+          common_vendor.index.__f__("log", "at pages/game/list.vue:521", "处理后games.value:", games.value.length, "条");
         } else {
           games.value = [];
           hasMore.value = false;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/game/list.vue:502", "加载组局列表失败:", error);
+        common_vendor.index.__f__("error", "at pages/game/list.vue:528", "加载组局列表失败:", error);
         common_vendor.index.showToast({
           title: "加载失败: " + (error.message || "请检查网络"),
           icon: "none",
@@ -471,7 +497,7 @@ const _sfc_main = {
                 throw new Error((result == null ? void 0 : result.errMsg) || "加入失败");
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/game/list.vue:748", "加入游戏失败:", error);
+              common_vendor.index.__f__("error", "at pages/game/list.vue:774", "加入游戏失败:", error);
               common_vendor.index.showToast({
                 title: error.message || "加入失败",
                 icon: "none"
@@ -530,7 +556,7 @@ const _sfc_main = {
                 throw new Error((result == null ? void 0 : result.errMsg) || "退出失败");
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/game/list.vue:816", "退出游戏失败:", error);
+              common_vendor.index.__f__("error", "at pages/game/list.vue:842", "退出游戏失败:", error);
               common_vendor.index.showToast({
                 title: error.message || "退出失败",
                 icon: "none"
@@ -566,7 +592,7 @@ const _sfc_main = {
         events: {
           // 监听编辑页面的事件
           refreshList: async () => {
-            common_vendor.index.__f__("log", "at pages/game/list.vue:857", "收到编辑页面刷新事件");
+            common_vendor.index.__f__("log", "at pages/game/list.vue:883", "收到编辑页面刷新事件");
             common_vendor.index.setStorageSync("needRefreshGameList", true);
             await loadGameList();
             updateTabCounts();
@@ -574,7 +600,7 @@ const _sfc_main = {
         },
         success: (res) => {
           res.eventChannel.on("onGameUpdated", async (data) => {
-            common_vendor.index.__f__("log", "at pages/game/list.vue:868", "编辑页面关闭，收到组局更新事件:", data);
+            common_vendor.index.__f__("log", "at pages/game/list.vue:894", "编辑页面关闭，收到组局更新事件:", data);
             if (data.success) {
               common_vendor.index.setStorageSync("needRefreshGameList", true);
               await loadGameList();
@@ -639,13 +665,13 @@ const _sfc_main = {
                   icon: "success",
                   duration: 2e3
                 });
-                common_vendor.index.__f__("log", "at pages/game/list.vue:942", "组局取消成功，已重新加载列表");
+                common_vendor.index.__f__("log", "at pages/game/list.vue:968", "组局取消成功，已重新加载列表");
               } else {
-                common_vendor.index.__f__("error", "at pages/game/list.vue:945", "取消失败返回结果:", result);
+                common_vendor.index.__f__("error", "at pages/game/list.vue:971", "取消失败返回结果:", result);
                 throw new Error(((_a = result == null ? void 0 : result.result) == null ? void 0 : _a.message) || "取消失败");
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/game/list.vue:950", "取消组局失败:", error);
+              common_vendor.index.__f__("error", "at pages/game/list.vue:976", "取消组局失败:", error);
               common_vendor.index.showToast({
                 title: error.message || "取消失败",
                 icon: "none",

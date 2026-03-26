@@ -92,6 +92,7 @@ function normalizeUserBrief(user) {
       nickname: '未知用户',
       avatar: DEFAULT_AVATAR,
       tags: [],
+      games: [],
       gender: 0
     }
   }
@@ -101,6 +102,7 @@ function normalizeUserBrief(user) {
     nickname: user.nickname || '未知用户',
     avatar: user.avatar || DEFAULT_AVATAR,
     tags: user.tags || [],
+    games: Array.isArray(user.games) ? user.games : [],
     gender: user.gender || 0
   }
 }
@@ -142,35 +144,51 @@ function participantId(item) {
 async function normalizeParticipants(participants = []) {
   if (!Array.isArray(participants) || !participants.length) return []
 
-  if (typeof participants[0] !== 'string') {
-    return participants.map((p) => ({
+  const normalized = participants.map((p) => {
+    if (typeof p === 'string') {
+      return {
+        id: p,
+        nickname: '未知用户',
+        avatar: DEFAULT_AVATAR
+      }
+    }
+    return {
       id: participantId(p),
       nickname: p.nickname || '未知用户',
       avatar: p.avatar || DEFAULT_AVATAR
-    }))
-  }
+    }
+  })
 
-  const userMap = await getUserMapByIds(participants)
-  return participants.map((uid) => {
-    const user = userMap[uid]
+  const ids = normalized.map((p) => p.id).filter(Boolean)
+  const userMap = await getUserMapByIds(ids)
+  return normalized.map((item) => {
+    const user = userMap[item.id]
     return {
-      id: uid,
-      nickname: (user && user.nickname) || '未知用户',
-      avatar: (user && user.avatar) || DEFAULT_AVATAR
+      id: item.id,
+      nickname: (user && user.nickname) || item.nickname || '未知用户',
+      avatar: (user && user.avatar) || item.avatar || DEFAULT_AVATAR
     }
   })
 }
 
 async function normalizeCreatorInfo(creatorInfo, creatorId) {
-  if (creatorInfo && typeof creatorInfo === 'object') return normalizeUserBrief(creatorInfo)
-  if (!creatorId) return normalizeUserBrief(null)
+  if (!creatorId) return normalizeUserBrief(creatorInfo && typeof creatorInfo === 'object' ? creatorInfo : null)
 
   try {
+    // 始终优先读取 users 集合中的最新资料，保证组局详情中的标签/设备实时更新
     const userRes = await db.collection('users').doc(creatorId).get()
-    return normalizeUserBrief(userRes.data)
+    if (userRes && userRes.data) return normalizeUserBrief(userRes.data)
   } catch (error) {
-    return normalizeUserBrief({ id: creatorId })
+    console.error('normalizeCreatorInfo load latest user failed:', creatorId, error)
   }
+
+  if (creatorInfo && typeof creatorInfo === 'object') {
+    return normalizeUserBrief({
+      ...creatorInfo,
+      id: creatorInfo.id || creatorId
+    })
+  }
+  return normalizeUserBrief({ id: creatorId })
 }
 
 async function enrichGame(game, viewerUserId) {

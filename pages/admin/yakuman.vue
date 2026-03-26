@@ -3,7 +3,7 @@
     <scroll-view scroll-y class="scroll">
       <view class="header-card">
         <view class="title">役满图片管理</view>
-        <view class="sub">管理员可删除违规或错误记录</view>
+        <view class="sub">管理员可编辑或删除役满记录</view>
       </view>
 
       <view v-if="!isAdmin" class="empty">仅管理员可访问</view>
@@ -11,12 +11,15 @@
 
       <view class="grid" v-else>
         <view class="item" v-for="item in list" :key="item.id">
-          <image class="photo" :src="item.imageFileId" mode="aspectFill" />
+          <image class="photo" :src="item.imageUrl || item.imageFileId" mode="aspectFill" />
           <view class="info">
             <text class="line">{{ item.playerNickname }} · {{ item.yakumanType }}</text>
             <text class="line subline">{{ formatTime(item.achievedAt) }} · 上传: {{ item.uploaderNickname }}</text>
           </view>
-          <view class="delete-btn" @tap="deleteYakuman(item)">删除</view>
+          <view class="ops">
+            <view class="edit-btn" @tap="editYakuman(item)">编辑</view>
+            <view class="delete-btn" @tap="deleteYakuman(item)">删除</view>
+          </view>
         </view>
       </view>
     </scroll-view>
@@ -54,8 +57,32 @@ const loadData = async () => {
   })
 
   if (res.result?.code === 0) {
-    list.value = res.result.data.yakumanRecords || []
+    const rawList = res.result.data.yakumanRecords || []
+    const cloudIds = [...new Set(
+      rawList
+        .map((item) => String(item.imageFileId || '').trim())
+        .filter((id) => id.startsWith('cloud://'))
+    )]
+    const idUrlMap = {}
+    for (let i = 0; i < cloudIds.length; i += 50) {
+      const chunk = cloudIds.slice(i, i + 50)
+      const tempRes = await wx.cloud.getTempFileURL({ fileList: chunk })
+      ;(tempRes?.fileList || []).forEach((entry) => {
+        if (entry?.fileID && entry?.status === 0 && entry?.tempFileURL) {
+          idUrlMap[entry.fileID] = entry.tempFileURL
+        }
+      })
+    }
+    list.value = rawList.map((item) => ({
+      ...item,
+      imageUrl: idUrlMap[String(item.imageFileId || '').trim()] || item.imageFileId || ''
+    }))
   }
+}
+
+const editYakuman = (item) => {
+  if (!item?.id) return
+  uni.navigateTo({ url: `/pages/admin/yakuman-edit?recordId=${item.id}` })
 }
 
 const deleteYakuman = (item) => {
@@ -94,5 +121,7 @@ onShow(loadData)
 .info { padding: 10rpx; display:flex; flex-direction:column; gap:4rpx; }
 .line { font-size: 22rpx; color:#111827; }
 .subline { color:#6b7280; }
-.delete-btn { height: 60rpx; background:#ef4444; color:#fff; display:flex; align-items:center; justify-content:center; font-size:24rpx; }
+.ops { display:flex; gap:10rpx; padding: 0 10rpx 10rpx; }
+.edit-btn { flex:1; height:56rpx; background:#2563eb; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22rpx; border-radius:8rpx; }
+.delete-btn { flex:1; height:56rpx; background:#ef4444; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22rpx; border-radius:8rpx; }
 </style>

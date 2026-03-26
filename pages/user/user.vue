@@ -4,7 +4,7 @@
     <view class="user-card card" v-if="userInfo">
       <view class="user-header">
         <view class="avatar-section">
-          <image :src="userInfo.avatar" class="user-avatar" @tap="chooseAvatar" />
+          <image :src="displayAvatar || userInfo.avatar" class="user-avatar" @tap="chooseAvatar" />
           <view class="avatar-edit" @tap="chooseAvatar">更换</view>
         </view>
         <view class="user-base-info">
@@ -63,6 +63,30 @@
         </view>
       </view>
 
+      <view class="section">
+        <view class="section-header">
+          <text class="section-title">我的荣誉</text>
+        </view>
+        <view class="games-container">
+          <view v-if="userHonors.length === 0" class="no-games">
+            <text>暂无荣誉</text>
+          </view>
+          <view v-else class="honor-list">
+            <view v-for="honor in userHonors" :key="honor._id || honor.id" class="honor-item">
+              <view class="honor-head">
+                <view class="honor-rarity" :class="`honor-${normalizeHonorRarity(honor.rarity)}`">
+                  {{ getHonorRarityText(honor.rarity) }}
+                </view>
+                <text class="honor-time">{{ formatHonorDate(honor.achievedAt) }}</text>
+              </view>
+              <text class="honor-title">
+                {{ honor.type === 'tournament' ? `${honor.title || '店内比赛'} · 冠军:${honor.championNickname || '-'}` : `${honor.rankName || '-'} · ${honor.playerNickname || '-'}` }}
+              </text>
+            </view>
+          </view>
+        </view>
+      </view>
+
       <!-- 游戏数据统计 -->
       <view class="stats-section" v-if="userStats">
         <view class="stat-item">
@@ -108,7 +132,18 @@
         <view class="menu-left">
           <text class="menu-text">历史记录</text>
         </view>
-        <text class="menu-arrow">›</text>
+        <view class="menu-right">
+          <text class="menu-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="menu-item" @tap="goToBoardgameTools">
+        <view class="menu-left">
+          <text class="menu-text">桌游工具</text>
+        </view>
+        <view class="menu-right">
+          <text class="menu-arrow">›</text>
+        </view>
       </view>
 
       <view class="menu-divider"></view>
@@ -118,21 +153,36 @@
         <view class="menu-left">
           <text class="menu-text">管理员功能</text>
         </view>
-        <text class="menu-arrow">›</text>
+        <view class="menu-right">
+          <text class="menu-arrow">›</text>
+        </view>
       </view>
 
       <view class="menu-item" @tap="goToSettings">
         <view class="menu-left">
           <text class="menu-text">设置</text>
         </view>
-        <text class="menu-arrow">›</text>
+        <view class="menu-right">
+          <text class="menu-arrow">›</text>
+        </view>
       </view>
+
+      <button class="menu-item share-menu-item" open-type="share">
+        <view class="menu-left">
+          <text class="menu-text">分享本小程序</text>
+        </view>
+        <view class="menu-right">
+          <text class="menu-arrow">›</text>
+        </view>
+      </button>
 
       <view class="menu-item" @tap="goToAbout">
         <view class="menu-left">
           <text class="menu-text">关于我们</text>
         </view>
-        <text class="menu-arrow">›</text>
+        <view class="menu-right">
+          <text class="menu-arrow">›</text>
+        </view>
       </view>
     </view>
 
@@ -155,13 +205,29 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { onLoad, onShow } from '@dcloudio/uni-app'
+import { onLoad, onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import UserService from '@/utils/user.js'
 import { userActions } from '@/utils/store.js'
+import { resolveCloudFileUrl } from '@/utils/cloud-image.js'
 
 // 用户信息
 const userInfo = ref(null)
 const userStats = ref(null)
+const displayAvatar = ref('')
+const userHonors = ref([])
+
+const refreshDisplayAvatar = async () => {
+  if (!userInfo.value?.avatar) {
+    displayAvatar.value = ''
+    return
+  }
+  displayAvatar.value = await resolveCloudFileUrl(userInfo.value.avatar)
+}
+
+const syncUserInfo = async (nextUser) => {
+  userInfo.value = nextUser || null
+  await refreshDisplayAvatar()
+}
 
 // 新增：加载用户统计数据
 const loadUserStats = async () => {
@@ -203,7 +269,9 @@ const getGameTypeClass = (type) => {
   const classMap = {
     'mahjong': 'game-tag-mahjong',
     'boardgame': 'game-tag-boardgame',
-    'videogame': 'game-tag-videogame'
+    'videogame': 'game-tag-videogame',
+    'deck': 'game-tag-deck',
+    'other': 'game-tag-other'
   }
   return classMap[type] || 'game-tag-mahjong'
 }
@@ -213,7 +281,9 @@ const getGameTypeText = (type) => {
   const textMap = {
     'mahjong': '立直麻将',
     'boardgame': '桌游',
-    'videogame': '电玩'
+    'videogame': '电玩',
+    'deck': '卡组',
+    'other': '其他'
   }
   return textMap[type] || '立直麻将'
 }
@@ -272,7 +342,7 @@ const handleLogin = () => {
           )
           
           // 更新本地状态
-          userInfo.value = loginResult.userInfo
+          await syncUserInfo(loginResult.userInfo)
           userStats.value = loginResult.stats || { 
             createdGames: 0, 
             joinedGames: 0, 
@@ -333,7 +403,7 @@ const handleLogout = () => {
           }
           
           // 3. 直接清空本地响应式数据
-          userInfo.value = null
+          await syncUserInfo(null)
           userStats.value = null
           console.log('✅ 本地响应式数据已清空')
           
@@ -363,8 +433,53 @@ const handleLogout = () => {
   })
 }
 
+const normalizeHonorRarity = (rarity) => {
+  const v = String(rarity || '').trim().toLowerCase()
+  if (v === 'legend' || v === 'gold') return 'legend'
+  if (v === 'epic' || v === 'purple') return 'epic'
+  if (v === 'rare' || v === 'blue' || v === 'silver') return 'rare'
+  return 'common'
+}
+
+const getHonorRarityText = (rarity) => {
+  const v = normalizeHonorRarity(rarity)
+  if (v === 'legend') return '传说'
+  if (v === 'epic') return '史诗'
+  if (v === 'rare') return '稀有'
+  return '普通'
+}
+
+const formatHonorDate = (value) => {
+  if (!value) return '-'
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return '-'
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+const loadUserHonors = async () => {
+  if (!userInfo.value?.id) {
+    userHonors.value = []
+    return
+  }
+  try {
+    const res = await wx.cloud.callFunction({
+      name: 'game-service',
+      data: { action: 'getHonorList', data: { ownerUserId: userInfo.value.id, limit: 20 } }
+    })
+    if (res?.result?.code === 0) {
+      userHonors.value = res.result.data.list || []
+    } else {
+      userHonors.value = []
+    }
+  } catch (error) {
+    console.error('加载我的荣誉失败:', error)
+    userHonors.value = []
+  }
+}
+
 // 修改：检查登录状态，添加统计加载
-const checkLoginStatus = () => {
+const checkLoginStatus = async () => {
   console.log('执行登录状态检查')
   
   const isLoggedIn = UserService.isLoggedIn()
@@ -377,7 +492,7 @@ const checkLoginStatus = () => {
     console.log('获取到的用户信息:', currentUser)
     console.log('获取到的用户统计（本地）:', currentStats)
     
-    userInfo.value = currentUser
+    await syncUserInfo(currentUser)
     
     // 先使用本地缓存的统计
     if (currentStats) {
@@ -393,9 +508,11 @@ const checkLoginStatus = () => {
     
     // 立即从服务器获取最新统计
     loadUserStats()
+    loadUserHonors()
   } else {
-    userInfo.value = null
+    await syncUserInfo(null)
     userStats.value = null
+    userHonors.value = []
   }
 }
 
@@ -406,7 +523,7 @@ const setupUserListeners = () => {
   // 登录成功事件
   uni.$on('user:login', async (data) => {
     console.log('监听到用户登录事件:', data)
-    userInfo.value = data.userInfo
+    await syncUserInfo(data.userInfo)
     
     // 先使用登录返回的统计
     if (data.stats) {
@@ -424,17 +541,17 @@ const setupUserListeners = () => {
   })
   
   // 退出登录事件
-  uni.$on('user:logout', () => {
+  uni.$on('user:logout', async () => {
     console.log('监听到用户退出事件')
     // 立即清空本地状态
-    userInfo.value = null
+    await syncUserInfo(null)
     userStats.value = null
   })
   
   // 用户信息更新事件
-  uni.$on('user:updated', (updatedUser) => {
+  uni.$on('user:updated', async (updatedUser) => {
     console.log('监听到用户信息更新:', updatedUser)
-    userInfo.value = updatedUser
+    await syncUserInfo(updatedUser)
   })
   
   // 新增：对局数据更新事件监听
@@ -445,20 +562,22 @@ const setupUserListeners = () => {
 }
 
 // 页面显示时刷新统计数据
-onShow(() => {
+onShow(async () => {
   console.log('用户中心页面显示，刷新统计')
+  await checkLoginStatus()
   loadUserStats()
+  loadUserHonors()
 })
 
 // 页面加载时检查登录状态
-onMounted(() => {
+onMounted(async () => {
   console.log('个人中心页面加载')
   
   // 设置全局事件监听器
   setupUserListeners()
   
   // 初始检查登录状态
-  checkLoginStatus()
+  await checkLoginStatus()
 })
 
 // 移除事件监听器
@@ -531,7 +650,7 @@ const chooseAvatar = () => {
         )
         
         // 5. 更新本地状态
-        userInfo.value = updatedUser
+        await syncUserInfo(updatedUser)
         
         uni.showToast({
           title: '头像更新成功',
@@ -625,7 +744,7 @@ const editNickname = () => {
           )
           
           // 更新本地状态
-          userInfo.value = updatedUser
+          await syncUserInfo(updatedUser)
           
           uni.showToast({
             title: '昵称更新成功',
@@ -725,6 +844,21 @@ const goToAbout = () => {
     showCancel: false
   })
 }
+
+const goToBoardgameTools = () => {
+  uni.navigateTo({
+    url: '/pages/tools/list'
+  })
+}
+
+onShareAppMessage(() => ({
+  title: '玩咖约局',
+  path: '/pages/index/index'
+}))
+
+onShareTimeline(() => ({
+  title: '玩咖约局'
+}))
 </script>
 
 <style scoped>
@@ -900,11 +1034,80 @@ const goToAbout = () => {
   color: #fa8c16;
 }
 
+.game-tag-deck {
+  background-color: #f3e8ff;
+  color: #7c3aed;
+}
+
+.game-tag-other {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
 .game-name {
   font-size: 28rpx;
   color: #333;
   flex: 1;
   word-break: break-all;
+}
+
+.honor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.honor-item {
+  background-color: #f8fafc;
+  border-radius: 10rpx;
+  padding: 14rpx;
+}
+
+.honor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.honor-rarity {
+  min-width: 84rpx;
+  text-align: center;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.honor-legend {
+  background: linear-gradient(135deg, #f59e0b, #fcd34d);
+  color: #7c2d12;
+}
+
+.honor-epic {
+  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+  color: #fff;
+}
+
+.honor-rare {
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  color: #fff;
+}
+
+.honor-common {
+  background: #fff;
+  color: #111827;
+  border: 1rpx solid #111827;
+}
+
+.honor-time {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+.honor-title {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #1f2937;
 }
 
 /* 统计数据样式 */
@@ -956,6 +1159,8 @@ const goToAbout = () => {
   justify-content: space-between;
   align-items: center;
   padding: 30rpx;
+  min-height: 96rpx;
+  box-sizing: border-box;
   background-color: white;
 }
 
@@ -963,9 +1168,25 @@ const goToAbout = () => {
   background-color: #f8f8f8;
 }
 
+.share-menu-item {
+  width: 100%;
+  margin: 0;
+  padding: 30rpx;
+  border: none;
+  border-radius: 0;
+  background-color: #fff;
+  text-align: left;
+}
+
+.share-menu-item::after {
+  border: none;
+}
+
 .menu-left {
   display: flex;
   align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .menu-text {
@@ -976,6 +1197,9 @@ const goToAbout = () => {
 .menu-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  min-width: 120rpx;
+  flex-shrink: 0;
 }
 
 .menu-count {

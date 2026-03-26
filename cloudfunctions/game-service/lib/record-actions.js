@@ -1,3 +1,4 @@
+const cloud = require('wx-server-sdk')
 const { db, _, success, fail, getCurrentUser, getUserMapByIds, ensureUserAvailable } = require('./shared')
 
 const YAKUMAN_TYPES = [
@@ -133,8 +134,36 @@ async function getYakumanList() {
       .limit(200)
       .get()
 
+    const rawList = res.data || []
+    const fileIds = [...new Set(
+      rawList
+        .map((item) => String(item.imageFileId || '').trim())
+        .filter((id) => id.startsWith('cloud://'))
+    )]
+    const fileIdToUrl = {}
+
+    for (let i = 0; i < fileIds.length; i += 50) {
+      const chunk = fileIds.slice(i, i + 50)
+      const tempRes = await cloud.getTempFileURL({ fileList: chunk })
+      ;(tempRes.fileList || []).forEach((item) => {
+        if (item?.fileID && item?.tempFileURL) {
+          fileIdToUrl[item.fileID] = item.tempFileURL
+        }
+      })
+    }
+
+    const list = rawList.map((item) => {
+      const imageFileId = String(item.imageFileId || '').trim()
+      const imageUrl = fileIdToUrl[imageFileId] || ''
+      return {
+        ...item,
+        imageFileId,
+        imageUrl
+      }
+    })
+
     return success({
-      list: res.data || [],
+      list,
       yakumanTypes: YAKUMAN_TYPES
     }, '获取成功')
   } catch (error) {
@@ -220,12 +249,16 @@ async function createYakumanRecord(data, wxContext) {
   }
 }
 
-async function getHonorList() {
+async function getHonorList(data) {
+  const payload = data || {}
+  const ownerUserId = String(payload.ownerUserId || '').trim()
+  const limit = Math.max(1, Math.min(500, Number(payload.limit || 500)))
   try {
-    const res = await db.collection('honor_records')
-      .orderBy('achievedAt', 'desc')
-      .limit(500)
-      .get()
+    let query = db.collection('honor_records')
+    if (ownerUserId) {
+      query = query.where({ ownerUserId })
+    }
+    const res = await query.orderBy('achievedAt', 'desc').limit(limit).get()
 
     return success({ list: res.data || [] }, '获取成功')
   } catch (error) {
@@ -267,6 +300,12 @@ async function createHonorRecord(data, wxContext) {
     uploaderNickname: currentUser.nickname || '未知用户',
     createdAt: new Date(),
     updatedAt: new Date()
+  }
+  const ownerUserId = String(payload.ownerUserId || '').trim()
+  const ownerNickname = String(payload.ownerNickname || '').trim()
+  if (ownerUserId) {
+    base.ownerUserId = ownerUserId
+    base.ownerNickname = ownerNickname || ''
   }
 
   if (type === 'tournament') {
@@ -343,6 +382,15 @@ async function updateHonorRecord(data, wxContext) {
     updaterId: currentUser._id,
     updaterNickname: currentUser.nickname || '未知用户',
     updatedAt: new Date()
+  }
+  const ownerUserId = String(payload.ownerUserId || '').trim()
+  const ownerNickname = String(payload.ownerNickname || '').trim()
+  if (ownerUserId) {
+    updateData.ownerUserId = ownerUserId
+    updateData.ownerNickname = ownerNickname || ''
+  } else {
+    updateData.ownerUserId = _.remove()
+    updateData.ownerNickname = _.remove()
   }
 
   if (type === 'tournament') {

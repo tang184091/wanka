@@ -72,7 +72,7 @@ exports.main = async (event) => {
       case 'createYakumanRecord':
         return await recordActions.createYakumanRecord(data, wxContext)
       case 'getHonorList':
-        return await recordActions.getHonorList()
+        return await recordActions.getHonorList(data)
       case 'createHonorRecord':
         return await recordActions.createHonorRecord(data, wxContext)
       case 'updateHonorRecord':
@@ -101,12 +101,20 @@ exports.main = async (event) => {
         return await adminActions.getAdminManageData(wxContext)
       case 'adminDeleteYakumanRecord':
         return await adminActions.adminDeleteYakumanRecord(data, wxContext)
+      case 'adminGetYakumanRecord':
+        return await adminActions.adminGetYakumanRecord(data, wxContext)
+      case 'adminUpdateYakumanRecord':
+        return await adminActions.adminUpdateYakumanRecord(data, wxContext)
       case 'adminDeleteHonorRecord':
         return await adminActions.adminDeleteHonorRecord(data, wxContext)
       case 'getSeatAnnouncement':
         return await adminActions.getSeatAnnouncement()
       case 'setSeatAnnouncement':
         return await adminActions.setSeatAnnouncement(data, wxContext)
+      case 'getBoardgameToolCovers':
+        return await adminActions.getBoardgameToolCovers()
+      case 'setBoardgameToolCover':
+        return await adminActions.setBoardgameToolCover(data, wxContext)
 
       default:
         return fail(400, '未知操作')

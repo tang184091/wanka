@@ -9,9 +9,6 @@ const _sfc_main = {
     const page = common_vendor.ref(1);
     const pageSize = common_vendor.ref(10);
     const hasMore = common_vendor.ref(true);
-    const statusFilterOptions = ["全部", "待审核", "已发布", "已驳回"];
-    const statusFilterValueMap = ["", "pending", "published", "rejected"];
-    const statusFilterIndex = common_vendor.ref(0);
     const statusText = (value) => {
       if (value === "published")
         return "已发布";
@@ -44,7 +41,6 @@ const _sfc_main = {
       loading.value = true;
       try {
         const nextPage = append ? page.value + 1 : 1;
-        const statusFilter = statusFilterValueMap[statusFilterIndex.value];
         const res = await common_vendor.wx$1.cloud.callFunction({
           name: "game-service",
           data: {
@@ -52,8 +48,7 @@ const _sfc_main = {
             data: {
               page: nextPage,
               pageSize: pageSize.value,
-              includeAll: true,
-              status: statusFilter
+              includeAll: true
             }
           }
         });
@@ -66,7 +61,7 @@ const _sfc_main = {
           common_vendor.index.showToast({ title: ((_f = res == null ? void 0 : res.result) == null ? void 0 : _f.message) || "加载失败", icon: "none" });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/admin/wiki.vue:110", "load wiki list failed", error);
+        common_vendor.index.__f__("error", "at pages/admin/wiki.vue:101", "load wiki list failed", error);
         common_vendor.index.showToast({ title: "加载失败", icon: "none" });
       } finally {
         loading.value = false;
@@ -81,10 +76,6 @@ const _sfc_main = {
       if (!hasMore.value)
         return;
       await loadList(true);
-    };
-    const onFilterChange = async (e) => {
-      statusFilterIndex.value = Number(e.detail.value || 0);
-      await refreshList();
     };
     const goToEdit = (entryId) => {
       if (!entryId)
@@ -122,16 +113,12 @@ const _sfc_main = {
       return common_vendor.e({
         a: !isAdmin.value
       }, !isAdmin.value ? {} : common_vendor.e({
-        b: common_vendor.t(statusFilterOptions[statusFilterIndex.value]),
-        c: statusFilterOptions,
-        d: statusFilterIndex.value,
-        e: common_vendor.o(onFilterChange, "8c"),
-        f: common_vendor.o(refreshList, "e9"),
-        g: list.value.length === 0
+        b: common_vendor.o(refreshList, "45"),
+        c: list.value.length === 0
       }, list.value.length === 0 ? {
-        h: common_vendor.t(loading.value ? "加载中..." : "暂无词条")
+        d: common_vendor.t(loading.value ? "加载中..." : "暂无词条")
       } : {}, {
-        i: common_vendor.f(list.value, (item, k0, i0) => {
+        e: common_vendor.f(list.value, (item, k0, i0) => {
           return {
             a: common_vendor.t(statusText(item.status)),
             b: common_vendor.n(statusClass(item.status)),
@@ -143,10 +130,10 @@ const _sfc_main = {
             h: item.id
           };
         }),
-        j: hasMore.value
+        f: hasMore.value
       }, hasMore.value ? {
-        k: common_vendor.t(loading.value ? "加载中..." : "加载更多"),
-        l: common_vendor.o(loadMore, "c5")
+        g: common_vendor.t(loading.value ? "加载中..." : "加载更多"),
+        h: common_vendor.o(loadMore, "96")
       } : {}));
     };
   }

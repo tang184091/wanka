@@ -22,6 +22,7 @@
       <view class="export-box">{{ exportText }}</view>
       <view class="btn copy-btn" @tap="copyExport">复制</view>
       <view class="btn toggle-btn" @tap="toggleScoreRecorded">切换录分状态</view>
+      <view v-if="isAdmin" class="btn delete-btn" @tap="deleteRecord">删除战绩</view>
     </view>
   </view>
 </template>
@@ -34,6 +35,7 @@ const record = ref(null)
 const recordId = ref('')
 const localScoreRecorded = ref(false)
 const originalScoreRecorded = ref(false)
+const isAdmin = ref(false)
 let saving = false
 
 const formatTime = (t) => {
@@ -128,6 +130,13 @@ const saveScoreRecordedIfDirty = async () => {
 }
 
 onLoad(async (options) => {
+  try {
+    const me = await wx.cloud.callFunction({ name: 'user-service', data: { action: 'getMe', data: {} } })
+    isAdmin.value = !!me?.result?.data?.isAdmin
+  } catch (error) {
+    isAdmin.value = false
+  }
+
   const id = options?.id
   if (!id) return
   recordId.value = id
@@ -153,6 +162,34 @@ onHide(() => {
 onUnload(() => {
   saveScoreRecordedIfDirty()
 })
+
+const deleteRecord = () => {
+  if (!isAdmin.value) return
+  if (!recordId.value) return
+  uni.showModal({
+    title: '确认删除战绩',
+    content: '删除后不可恢复，确认继续？',
+    success: async (res) => {
+      if (!res.confirm) return
+      const result = await wx.cloud.callFunction({
+        name: 'game-service',
+        data: {
+          action: 'adminDeleteMahjongRecord',
+          data: { recordId: recordId.value }
+        }
+      })
+      if (result?.result?.code === 0) {
+        uni.showToast({ title: '已删除', icon: 'success' })
+        uni.setStorageSync('record_need_refresh', Date.now())
+        setTimeout(() => {
+          uni.navigateBack()
+        }, 400)
+      } else {
+        uni.showToast({ title: result?.result?.message || '删除失败', icon: 'none' })
+      }
+    }
+  })
+}
 </script>
 
 <style scoped>
@@ -174,4 +211,5 @@ onUnload(() => {
 .btn { margin-top: 16rpx; height: 72rpx; border-radius: 12rpx; display: flex; align-items: center; justify-content: center; color: #fff; }
 .copy-btn { background: #10b981; }
 .toggle-btn { background: #2563eb; }
+.delete-btn { background: #ef4444; }
 </style>

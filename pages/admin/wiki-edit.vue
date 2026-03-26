@@ -2,41 +2,41 @@
   <view class="page">
     <scroll-view scroll-y class="scroll">
       <view class="card">
-        <view class="title">Wiki Review & Edit</view>
-        <view class="sub">Tags are hidden. Review and save on this page.</view>
+        <view class="title">词条审核与编辑</view>
+        <view class="sub">标签项已隐藏，可在本页编辑并保存</view>
       </view>
 
-      <view v-if="!isAdmin" class="empty">Admin only.</view>
-      <view v-else-if="!editingId" class="empty">Entry not found or invalid params.</view>
+      <view v-if="!isAdmin" class="empty">仅管理员可访问</view>
+      <view v-else-if="!editingId" class="empty">词条不存在或参数无效</view>
       <view v-else class="card">
-        <input class="input" v-model="form.title" placeholder="Title" />
-        <input class="input" v-model="form.summary" placeholder="Summary (optional)" />
-        <textarea class="textarea" v-model="form.content" placeholder="Content (max 1000 chars)" maxlength="1000" />
+        <input class="input" v-model="form.title" placeholder="词条标题" />
+        <input class="input" v-model="form.summary" placeholder="词条摘要（可选）" />
+        <textarea class="textarea" v-model="form.content" placeholder="词条正文（最多1000字）" maxlength="1000" />
         <view class="count">{{ form.content.length }}/1000</view>
-        <input class="input" v-model="form.creatorNickname" placeholder="Creator nickname" />
-        <input class="input" v-model="form.creatorId" placeholder="Creator id (optional)" />
+        <input class="input" v-model="form.creatorNickname" placeholder="创建者昵称" />
+        <input class="input" v-model="form.creatorId" placeholder="创建者ID（可选）" />
 
         <view class="form-row">
-          <text class="label">Status</text>
+          <text class="label">发布状态</text>
           <picker mode="selector" :range="statusOptions" :value="statusIndex" @change="onStatusChange">
             <view class="picker">{{ statusOptions[statusIndex] }}</view>
           </picker>
         </view>
 
         <view class="img-head">
-          <text class="label">Images (max 9)</text>
-          <view class="img-btn" @tap="chooseImages">Choose</view>
+          <text class="label">词条图片（最多9张）</text>
+          <view class="img-btn" @tap="chooseImages">选择图片</view>
         </view>
         <view class="img-list" v-if="form.images.length">
           <view class="img-item" v-for="(img, index) in form.images" :key="img + index">
             <image :src="displayImages[index] || localFallbackImage" class="img" mode="aspectFill" />
-            <view class="img-del" @tap="removeImage(index)">Delete</view>
+            <view class="img-del" @tap="removeImage(index)">删除</view>
           </view>
         </view>
 
         <view class="actions">
-          <view class="btn primary" @tap="submit">Save</view>
-          <view class="btn ghost" @tap="goBack">Back</view>
+          <view class="btn primary" @tap="submit">保存</view>
+          <view class="btn ghost" @tap="goBack">返回</view>
         </view>
       </view>
     </scroll-view>
@@ -50,7 +50,7 @@ import { onLoad } from '@dcloudio/uni-app'
 const localFallbackImage = '/static/empty.png'
 const isAdmin = ref(false)
 const editingId = ref('')
-const statusOptions = ['pending', 'published', 'rejected']
+const statusOptions = ['待审核', '已发布', '已驳回']
 const statusValueMap = ['pending', 'published', 'rejected']
 const statusIndex = ref(0)
 const preservedTags = ref([])
@@ -72,7 +72,7 @@ const checkAdmin = async () => {
   const me = await wx.cloud.callFunction({ name: 'user-service', data: { action: 'getMe', data: {} } })
   isAdmin.value = !!me?.result?.data?.isAdmin
   if (!isAdmin.value) {
-    uni.showToast({ title: 'Admin only', icon: 'none' })
+    uni.showToast({ title: '仅管理员可访问', icon: 'none' })
     setTimeout(() => {
       uni.switchTab({ url: '/pages/user/user' })
     }, 300)
@@ -124,7 +124,7 @@ const uploadSingleImage = async (filePath) => {
 const chooseImages = () => {
   const remain = Math.max(0, 9 - form.value.images.length)
   if (!remain) {
-    uni.showToast({ title: 'Max 9 images', icon: 'none' })
+    uni.showToast({ title: '最多 9 张图片', icon: 'none' })
     return
   }
   uni.chooseImage({
@@ -132,17 +132,17 @@ const chooseImages = () => {
     sizeType: ['compressed'],
     success: async (res) => {
       try {
-        uni.showLoading({ title: 'Uploading...', mask: true })
+        uni.showLoading({ title: '上传中...', mask: true })
         const files = res.tempFilePaths || []
         for (const path of files) {
           const fileID = await uploadSingleImage(path)
           form.value.images.push(fileID)
         }
         await refreshDisplayImages()
-        uni.showToast({ title: 'Uploaded', icon: 'success' })
+        uni.showToast({ title: '上传成功', icon: 'success' })
       } catch (error) {
         console.error('upload wiki images failed', error)
-        uni.showToast({ title: 'Upload failed', icon: 'none' })
+        uni.showToast({ title: '上传失败', icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -161,7 +161,7 @@ const loadDetail = async (entryId) => {
     data: { action: 'getWikiDetail', data: { entryId } }
   })
   if (res?.result?.code !== 0) {
-    uni.showToast({ title: res?.result?.message || 'Load failed', icon: 'none' })
+    uni.showToast({ title: res?.result?.message || '加载失败', icon: 'none' })
     return
   }
   const doc = res.result.data || {}
@@ -181,11 +181,11 @@ const loadDetail = async (entryId) => {
 const submit = async () => {
   if (!editingId.value) return
   if (!form.value.title.trim()) {
-    uni.showToast({ title: 'Title required', icon: 'none' })
+    uni.showToast({ title: '请填写标题', icon: 'none' })
     return
   }
   if (!form.value.content.trim()) {
-    uni.showToast({ title: 'Content required', icon: 'none' })
+    uni.showToast({ title: '请填写正文', icon: 'none' })
     return
   }
 
@@ -206,9 +206,9 @@ const submit = async () => {
     data: { action: 'adminUpdateWiki', data: payload }
   })
   if (res?.result?.code === 0) {
-    uni.showToast({ title: 'Saved', icon: 'success' })
+    uni.showToast({ title: '已保存', icon: 'success' })
   } else {
-    uni.showToast({ title: res?.result?.message || 'Save failed', icon: 'none' })
+    uni.showToast({ title: res?.result?.message || '保存失败', icon: 'none' })
   }
 }
 
@@ -221,7 +221,7 @@ onLoad(async (query) => {
   if (!isAdmin.value) return
   const entryId = String(query?.entryId || '').trim()
   if (!entryId) {
-    uni.showToast({ title: 'Missing entry id', icon: 'none' })
+    uni.showToast({ title: '缺少词条ID', icon: 'none' })
     return
   }
   await loadDetail(entryId)

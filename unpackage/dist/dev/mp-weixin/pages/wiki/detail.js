@@ -1,5 +1,6 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
+const utils_cloudImage = require("../../utils/cloud-image.js");
 const _sfc_main = {
   __name: "detail",
   setup(__props) {
@@ -12,6 +13,7 @@ const _sfc_main = {
       creatorNickname: "",
       createdAt: ""
     });
+    const displayImages = common_vendor.ref([]);
     const formatDateTime = (value) => {
       if (!value)
         return "-";
@@ -32,16 +34,17 @@ const _sfc_main = {
         });
         if (((_a = res == null ? void 0 : res.result) == null ? void 0 : _a.code) === 0) {
           detail.value = res.result.data || detail.value;
+          displayImages.value = await utils_cloudImage.resolveCloudFileUrls(detail.value.images || []);
         } else {
           common_vendor.index.showToast({ title: ((_b = res == null ? void 0 : res.result) == null ? void 0 : _b.message) || "加载失败", icon: "none" });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/wiki/detail.vue:66", "load wiki detail failed", error);
+        common_vendor.index.__f__("error", "at pages/wiki/detail.vue:69", "load wiki detail failed", error);
         common_vendor.index.showToast({ title: "加载失败", icon: "none" });
       }
     };
     const preview = (index) => {
-      const images = detail.value.images || [];
+      const images = displayImages.value || [];
       if (!images.length)
         return;
       common_vendor.index.previewImage({ current: images[index], urls: images });
@@ -60,7 +63,7 @@ const _sfc_main = {
         e: common_vendor.t(detail.value.creatorNickname || "未命名用户"),
         f: detail.value.images && detail.value.images.length
       }, detail.value.images && detail.value.images.length ? {
-        g: common_vendor.f(detail.value.images, (url, index, i0) => {
+        g: common_vendor.f(displayImages.value, (url, index, i0) => {
           return {
             a: index,
             b: url,

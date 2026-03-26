@@ -1,0 +1,27 @@
+
+.page.data-v-c40673f7 { min-height: 100vh; background: #f5f6f8;
+}
+.scroll.data-v-c40673f7 { height: 100vh;
+}
+.header-card.data-v-c40673f7 { margin: 20rpx; background: #fff; border-radius: 16rpx; padding: 20rpx;
+}
+.title.data-v-c40673f7 { font-size: 30rpx; font-weight: 700; color: #111827;
+}
+.sub.data-v-c40673f7 { margin-top: 6rpx; font-size: 22rpx; color: #6b7280;
+}
+.grid.data-v-c40673f7 { margin: 20rpx; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16rpx;
+}
+.item.data-v-c40673f7 { background: #fff; border-radius: 12rpx; overflow: hidden; display: flex; flex-direction: column;
+}
+.cover.data-v-c40673f7 { width: 100%; height: 220rpx; background: #e5e7eb;
+}
+.info.data-v-c40673f7 { padding: 12rpx; display: flex; flex-direction: column; gap: 6rpx; min-height: 108rpx; box-sizing: border-box;
+}
+.name.data-v-c40673f7 { font-size: 24rpx; font-weight: 700; color: #111827;
+}
+.desc.data-v-c40673f7 { font-size: 22rpx; color: #6b7280;
+}
+.ops.data-v-c40673f7 { padding: 0 12rpx 12rpx; margin-top: auto;
+}
+.upload-btn.data-v-c40673f7 { width: 100%; height: 52rpx; border-radius: 8rpx; background: #2563eb; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx;
+}

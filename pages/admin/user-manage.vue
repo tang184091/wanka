@@ -153,7 +153,7 @@ const searchUsers = async () => {
 
 const goToEdit = (userId) => {
   if (!userId) return
-  uni.navigateTo({ url: `/pages/admin/user-edit?userId=${userId}` })
+  uni.navigateTo({ url: `/pages/user/profile?userId=${userId}&adminEdit=1` })
 }
 
 onShow(async () => {

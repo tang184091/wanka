@@ -312,6 +312,38 @@ to { transform: rotate(360deg);
   background-color: #f8f9fa;
   color: #868e96;
 }
+.creator-games.data-v-eca06f3c {
+  margin-bottom: 20rpx;
+}
+.creator-games-title.data-v-eca06f3c {
+  font-size: 24rpx;
+  color: #6b7280;
+  margin-bottom: 12rpx;
+}
+.creator-games-list.data-v-eca06f3c {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.creator-game-item.data-v-eca06f3c {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 10rpx 14rpx;
+  border-radius: 10rpx;
+  background: #f8fafc;
+}
+.creator-game-type.data-v-eca06f3c {
+  font-size: 22rpx;
+  color: #2563eb;
+  background: #e0edff;
+  border-radius: 8rpx;
+  padding: 4rpx 10rpx;
+}
+.creator-game-name.data-v-eca06f3c {
+  font-size: 24rpx;
+  color: #334155;
+}
 .creator-intro.data-v-eca06f3c {
   background-color: #f8f9fa;
   border-radius: 12rpx;

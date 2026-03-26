@@ -140,6 +140,11 @@
             标记已完成
           </view>
         </view>
+        <view v-if="isAdminUser()" class="action-btn">
+          <view class="admin-delete-btn" @tap.stop="adminDeleteGame(game)">
+            删除组局
+          </view>
+        </view>
       </view>
 
       <!-- 加载更多 -->
@@ -161,6 +166,7 @@ import { ref, onMounted } from 'vue'
 import { gameActions } from '@/utils/store.js'
 import UserService from '@/utils/user.js'
 import * as icons from '@/utils/icons.js'
+import { resolveCloudFileUrls } from '@/utils/cloud-image.js'
 
 // 响应式数据
 const tabs = ref([
@@ -181,6 +187,31 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const firstRowTabs = ref(tabs.value.slice(0, 3))
 const secondRowTabs = ref(tabs.value.slice(3, 6))
+
+const normalizeGamesAvatarUrls = async (games = []) => {
+  if (!Array.isArray(games) || !games.length) return games
+  const avatarList = []
+  games.forEach((game) => {
+    const players = Array.isArray(game?.players) ? game.players : []
+    players.forEach((player) => {
+      avatarList.push(player?.avatar || '')
+    })
+  })
+
+  const resolved = await resolveCloudFileUrls(avatarList)
+  let offset = 0
+  games.forEach((game) => {
+    const players = Array.isArray(game?.players) ? game.players : []
+    players.forEach((player) => {
+      const nextAvatar = resolved[offset]
+      if (nextAvatar) {
+        player.avatar = nextAvatar
+      }
+      offset += 1
+    })
+  })
+  return games
+}
 
 // 切换标签
 const switchTab = (tabId) => {
@@ -226,6 +257,11 @@ const canCompleteGame = (game) => {
   if (user.isAdmin) return true
   if (String(game.creatorId || '') === userId) return true
   return !!game.isJoined
+}
+
+const isAdminUser = () => {
+  const user = getCurrentUser()
+  return !!user?.isAdmin
 }
 
 const getGameStatusText = (status) => {
@@ -293,11 +329,12 @@ const loadGameList = async () => {
     console.log('获取到的组局列表:', games)
     
     if (games && Array.isArray(games)) {
+      const displayGames = await normalizeGamesAvatarUrls(games)
       // 检查当前用户是否已加入每个组局
       const currentUser = UserService.getCurrentUser()
       if (currentUser) {
         const userId = currentUser.id
-        games.forEach(game => {
+        displayGames.forEach(game => {
           // 注意：云函数返回的数据中 isJoined 字段已由后端计算
           // 这里做双重保险
           if (game.participants && Array.isArray(game.participants)) {
@@ -308,12 +345,12 @@ const loadGameList = async () => {
       
       // 分页加载
       if (currentPage.value === 1) {
-        gameList.value = games
+        gameList.value = displayGames
       } else {
-        gameList.value = [...gameList.value, ...games]
+        gameList.value = [...gameList.value, ...displayGames]
       }
       
-      hasMore.value = games.length >= pageSize.value
+      hasMore.value = displayGames.length >= pageSize.value
     } else {
       console.warn('返回数据格式异常:', games)
       gameList.value = []
@@ -493,6 +530,42 @@ const markCompleted = async (game) => {
         }
       } catch (error) {
         uni.showToast({ title: error.message || '操作失败', icon: 'none' })
+      } finally {
+        uni.hideLoading()
+      }
+    }
+  })
+}
+
+const adminDeleteGame = async (game) => {
+  const gameId = game?.id || game?._id
+  if (!gameId) return
+  if (!isAdminUser()) {
+    uni.showToast({ title: '仅管理员可操作', icon: 'none' })
+    return
+  }
+  uni.showModal({
+    title: '确认删除组局',
+    content: '删除后不可恢复，确认继续？',
+    success: async (res) => {
+      if (!res.confirm) return
+      uni.showLoading({ title: '删除中...', mask: true })
+      try {
+        const result = await wx.cloud.callFunction({
+          name: 'game-service',
+          data: { action: 'adminDeleteGame', data: { gameId } }
+        })
+        if (result?.result?.code === 0) {
+          uni.showToast({ title: '已删除', icon: 'success' })
+          currentPage.value = 1
+          gameList.value = []
+          hasMore.value = true
+          await loadGameList()
+        } else {
+          throw new Error(result?.result?.message || '删除失败')
+        }
+      } catch (error) {
+        uni.showToast({ title: error.message || '删除失败', icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -852,6 +925,14 @@ const markCompleted = async (game) => {
 .complete-btn {
   padding: 15rpx 32rpx;
   background-color: #fb923c;
+  color: #fff;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+}
+.admin-delete-btn {
+  margin-top: 16rpx;
+  padding: 15rpx 40rpx;
+  background-color: #ef4444;
   color: #fff;
   border-radius: 30rpx;
   font-size: 28rpx;

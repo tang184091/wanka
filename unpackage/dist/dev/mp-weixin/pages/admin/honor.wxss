@@ -17,9 +17,11 @@
 }
 .label.data-v-ba19e650 { color:#374151; font-size:24rpx;
 }
-.picker.data-v-ba19e650,.input.data-v-ba19e650,.textarea.data-v-ba19e650 { margin-top:10rpx; width:100%; background:#f8fafc; border-radius:10rpx; padding:12rpx; box-sizing:border-box; font-size:24rpx;
+.picker.data-v-ba19e650,.input.data-v-ba19e650,.textarea.data-v-ba19e650 { margin-top:10rpx; width:100%; background:#f8fafc; border-radius:10rpx; padding:16rpx; box-sizing:border-box; font-size:24rpx; line-height:1.5;
 }
-.textarea.data-v-ba19e650 { min-height:120rpx;
+.input.data-v-ba19e650,.picker.data-v-ba19e650 { min-height:76rpx; display:flex; align-items:center;
+}
+.textarea.data-v-ba19e650 { min-height:180rpx;
 }
 .actions.data-v-ba19e650 { margin-top:14rpx; display:flex; gap:12rpx;
 }
@@ -56,4 +58,32 @@
 .edit.data-v-ba19e650 { background:#2563eb;
 }
 .del.data-v-ba19e650 { background:#ef4444;
+}
+.subtle.data-v-ba19e650 { color:#6b7280; font-size:22rpx;
+}
+.owner-block.data-v-ba19e650 { margin-top:10rpx;
+}
+.owner-title.data-v-ba19e650 { font-size:24rpx; color:#374151; margin-bottom:6rpx;
+}
+.owner-search-row.data-v-ba19e650 { display:flex; gap:10rpx; align-items:center;
+}
+.owner-input.data-v-ba19e650 { flex:1; margin-top:0;
+}
+.owner-search-btn.data-v-ba19e650 { width:110rpx; height:76rpx; border-radius:10rpx; background:#07c160; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22rpx;
+}
+.owner-selected.data-v-ba19e650 { margin-top:10rpx; display:flex; align-items:center; justify-content:space-between; gap:10rpx; background:#ecfeff; border:1rpx solid #67e8f9; border-radius:10rpx; padding:10rpx 12rpx;
+}
+.owner-selected-text.data-v-ba19e650 { flex:1; min-width:0; font-size:22rpx; color:#0e7490; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.owner-clear-btn.data-v-ba19e650 { min-width:86rpx; height:48rpx; border-radius:8rpx; background:#ef4444; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22rpx;
+}
+.owner-results.data-v-ba19e650 { margin-top:10rpx; border:1rpx solid #e5e7eb; border-radius:10rpx; overflow:hidden;
+}
+.owner-item.data-v-ba19e650 { padding:10rpx 12rpx; border-bottom:1rpx solid #f1f5f9;
+}
+.owner-item.data-v-ba19e650:last-child { border-bottom:none;
+}
+.owner-name.data-v-ba19e650 { display:block; font-size:23rpx; color:#111827;
+}
+.owner-id.data-v-ba19e650 { display:block; margin-top:4rpx; font-size:20rpx; color:#9ca3af;
 }

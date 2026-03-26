@@ -128,36 +128,6 @@
           </view>
 
           <view class="manage-card">
-            <view class="manage-title">役满图片管理</view>
-            <view class="manage-row">
-              <view class="manage-info">
-                <text class="manage-line">进入专页管理役满照片与信息</text>
-              </view>
-              <view class="action-btn" @tap="goYakumanManage">进入</view>
-            </view>
-          </view>
-
-          <view class="manage-card">
-            <view class="manage-title">管理玩家上传战绩</view>
-            <view class="manage-row">
-              <view class="manage-info">
-                <text class="manage-line">进入专页管理玩家上传战绩</text>
-              </view>
-              <view class="action-btn" @tap="goRecordManage">进入</view>
-            </view>
-          </view>
-
-          <view class="manage-card">
-            <view class="manage-title">管理用户创建组局</view>
-            <view class="manage-row">
-              <view class="manage-info">
-                <text class="manage-line">进入专页管理用户创建组局</text>
-              </view>
-              <view class="action-btn" @tap="goGameManage">进入</view>
-            </view>
-          </view>
-
-          <view class="manage-card">
             <view class="manage-title">荣誉榜管理</view>
             <view class="manage-row">
               <view class="manage-info">
@@ -405,13 +375,11 @@ const guardAdmin = () => {
 }
 
 const goAnnouncementManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/announcement' }) }
-const goYakumanManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/yakuman' }) }
-const goRecordManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/records' }) }
-const goGameManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/games' }) }
 const goHonorManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/honor' }) }
 const goWikiManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/wiki' }) }
 const goUserManage = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/user-manage' }) }
 const goAdminGuide = () => { if (guardAdmin()) uni.navigateTo({ url: '/pages/admin/guide' }) }
+
 
 onShow(() => {
   refreshData()

@@ -6,7 +6,7 @@ const _sfc_main = {
   setup(__props) {
     const isAdmin = common_vendor.ref(false);
     const editingId = common_vendor.ref("");
-    const statusOptions = ["pending", "published", "rejected"];
+    const statusOptions = ["待审核", "已发布", "已驳回"];
     const statusValueMap = ["pending", "published", "rejected"];
     const statusIndex = common_vendor.ref(0);
     const preservedTags = common_vendor.ref([]);
@@ -27,7 +27,7 @@ const _sfc_main = {
       const me = await common_vendor.wx$1.cloud.callFunction({ name: "user-service", data: { action: "getMe", data: {} } });
       isAdmin.value = !!((_b = (_a = me == null ? void 0 : me.result) == null ? void 0 : _a.data) == null ? void 0 : _b.isAdmin);
       if (!isAdmin.value) {
-        common_vendor.index.showToast({ title: "Admin only", icon: "none" });
+        common_vendor.index.showToast({ title: "仅管理员可访问", icon: "none" });
         setTimeout(() => {
           common_vendor.index.switchTab({ url: "/pages/user/user" });
         }, 300);
@@ -75,7 +75,7 @@ const _sfc_main = {
     const chooseImages = () => {
       const remain = Math.max(0, 9 - form.value.images.length);
       if (!remain) {
-        common_vendor.index.showToast({ title: "Max 9 images", icon: "none" });
+        common_vendor.index.showToast({ title: "最多 9 张图片", icon: "none" });
         return;
       }
       common_vendor.index.chooseImage({
@@ -83,17 +83,17 @@ const _sfc_main = {
         sizeType: ["compressed"],
         success: async (res) => {
           try {
-            common_vendor.index.showLoading({ title: "Uploading...", mask: true });
+            common_vendor.index.showLoading({ title: "上传中...", mask: true });
             const files = res.tempFilePaths || [];
             for (const path of files) {
               const fileID = await uploadSingleImage(path);
               form.value.images.push(fileID);
             }
             await refreshDisplayImages();
-            common_vendor.index.showToast({ title: "Uploaded", icon: "success" });
+            common_vendor.index.showToast({ title: "上传成功", icon: "success" });
           } catch (error) {
             common_vendor.index.__f__("error", "at pages/admin/wiki-edit.vue:144", "upload wiki images failed", error);
-            common_vendor.index.showToast({ title: "Upload failed", icon: "none" });
+            common_vendor.index.showToast({ title: "上传失败", icon: "none" });
           } finally {
             common_vendor.index.hideLoading();
           }
@@ -111,7 +111,7 @@ const _sfc_main = {
         data: { action: "getWikiDetail", data: { entryId } }
       });
       if (((_a = res == null ? void 0 : res.result) == null ? void 0 : _a.code) !== 0) {
-        common_vendor.index.showToast({ title: ((_b = res == null ? void 0 : res.result) == null ? void 0 : _b.message) || "Load failed", icon: "none" });
+        common_vendor.index.showToast({ title: ((_b = res == null ? void 0 : res.result) == null ? void 0 : _b.message) || "加载失败", icon: "none" });
         return;
       }
       const doc = res.result.data || {};
@@ -132,11 +132,11 @@ const _sfc_main = {
       if (!editingId.value)
         return;
       if (!form.value.title.trim()) {
-        common_vendor.index.showToast({ title: "Title required", icon: "none" });
+        common_vendor.index.showToast({ title: "请填写标题", icon: "none" });
         return;
       }
       if (!form.value.content.trim()) {
-        common_vendor.index.showToast({ title: "Content required", icon: "none" });
+        common_vendor.index.showToast({ title: "请填写正文", icon: "none" });
         return;
       }
       const payload = {
@@ -155,9 +155,9 @@ const _sfc_main = {
         data: { action: "adminUpdateWiki", data: payload }
       });
       if (((_a = res == null ? void 0 : res.result) == null ? void 0 : _a.code) === 0) {
-        common_vendor.index.showToast({ title: "Saved", icon: "success" });
+        common_vendor.index.showToast({ title: "已保存", icon: "success" });
       } else {
-        common_vendor.index.showToast({ title: ((_b = res == null ? void 0 : res.result) == null ? void 0 : _b.message) || "Save failed", icon: "none" });
+        common_vendor.index.showToast({ title: ((_b = res == null ? void 0 : res.result) == null ? void 0 : _b.message) || "保存失败", icon: "none" });
       }
     };
     const goBack = () => {
@@ -169,7 +169,7 @@ const _sfc_main = {
         return;
       const entryId = String((query == null ? void 0 : query.entryId) || "").trim();
       if (!entryId) {
-        common_vendor.index.showToast({ title: "Missing entry id", icon: "none" });
+        common_vendor.index.showToast({ title: "缺少词条ID", icon: "none" });
         return;
       }
       await loadDetail(entryId);
@@ -179,21 +179,21 @@ const _sfc_main = {
         a: !isAdmin.value
       }, !isAdmin.value ? {} : !editingId.value ? {} : common_vendor.e({
         c: form.value.title,
-        d: common_vendor.o(($event) => form.value.title = $event.detail.value, "bc"),
+        d: common_vendor.o(($event) => form.value.title = $event.detail.value, "ad"),
         e: form.value.summary,
-        f: common_vendor.o(($event) => form.value.summary = $event.detail.value, "99"),
+        f: common_vendor.o(($event) => form.value.summary = $event.detail.value, "20"),
         g: form.value.content,
-        h: common_vendor.o(($event) => form.value.content = $event.detail.value, "b2"),
+        h: common_vendor.o(($event) => form.value.content = $event.detail.value, "6f"),
         i: common_vendor.t(form.value.content.length),
         j: form.value.creatorNickname,
-        k: common_vendor.o(($event) => form.value.creatorNickname = $event.detail.value, "3c"),
+        k: common_vendor.o(($event) => form.value.creatorNickname = $event.detail.value, "b1"),
         l: form.value.creatorId,
-        m: common_vendor.o(($event) => form.value.creatorId = $event.detail.value, "8d"),
+        m: common_vendor.o(($event) => form.value.creatorId = $event.detail.value, "de"),
         n: common_vendor.t(statusOptions[statusIndex.value]),
         o: statusOptions,
         p: statusIndex.value,
-        q: common_vendor.o(onStatusChange, "33"),
-        r: common_vendor.o(chooseImages, "b3"),
+        q: common_vendor.o(onStatusChange, "b5"),
+        r: common_vendor.o(chooseImages, "c3"),
         s: form.value.images.length
       }, form.value.images.length ? {
         t: common_vendor.f(form.value.images, (img, index, i0) => {
@@ -204,8 +204,8 @@ const _sfc_main = {
           };
         })
       } : {}, {
-        v: common_vendor.o(submit, "4b"),
-        w: common_vendor.o(goBack, "e9")
+        v: common_vendor.o(submit, "c1"),
+        w: common_vendor.o(goBack, "bd")
       }), {
         b: !editingId.value
       });

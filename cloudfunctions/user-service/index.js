@@ -116,6 +116,8 @@ exports.main = async (event) => {
         return await adminUpdateUserProfile(data, wxContext)
       case 'adminUpdateUserTags':
         return await adminUpdateUserTags(data, wxContext)
+      case 'adminUpdateUserGames':
+        return await adminUpdateUserGames(data, wxContext)
       case 'adminSetUserBlacklist':
         return await adminSetUserBlacklist(data, wxContext)
       case 'adminSetUserAdmin':
@@ -208,8 +210,6 @@ async function handleLogin(data, wxContext) {
 
   if (!(queryResult.data || []).length) {
     isNewUser = true
-    const defaultTags = [{ id: 1, name: '立直麻将初心玩家' }]
-    const defaultGames = [{ id: Date.now(), name: 'root', type: 'mahjong' }]
 
     const newUser = {
       openid,
@@ -219,8 +219,8 @@ async function handleLogin(data, wxContext) {
       province: userInfo.province || '',
       city: userInfo.city || '',
       country: userInfo.country || '',
-      tags: defaultTags,
-      games: defaultGames,
+      tags: [],
+      games: [],
       createdAt: now,
       updatedAt: now,
       lastLoginAt: now,
@@ -240,20 +240,17 @@ async function handleLogin(data, wxContext) {
       })
     }
 
+    const updates = { lastLoginAt: now }
     if (userData.forceLogoutFlag) {
-      await db.collection('users').doc(userData._id).update({
-        data: {
-          forceLogoutFlag: false,
-          forceLogoutUntil: null,
-          lastLoginAt: now,
-          updatedAt: now
-        }
-      })
-    } else {
-      await db.collection('users').doc(userData._id).update({
-        data: { lastLoginAt: now }
-      })
+      updates.forceLogoutFlag = false
+      updates.forceLogoutUntil = null
     }
+    if (Object.keys(updates).length > 1) {
+      updates.updatedAt = now
+    }
+
+    await db.collection('users').doc(userData._id).update({ data: updates })
+    userData = { ...userData, ...updates }
   }
 
   const statsRes = await getUserStats({ userId: userData._id })
@@ -488,6 +485,51 @@ async function adminUpdateUserTags(data, wxContext) {
   const userRes = await db.collection('users').doc(targetUserId).get()
   if (!userRes.data) return fail(404, '用户不存在')
   return success(toUserDto(userRes.data), '标签更新成功')
+}
+
+async function adminUpdateUserGames(data, wxContext) {
+  const currentUser = await getCurrentUser(wxContext)
+  if (!currentUser) return fail(401, '请先登录')
+  if (!isAdminUser(currentUser)) return fail(403, '仅管理员可操作')
+
+  const targetUserId = String(data?.userId || '').trim()
+  if (!targetUserId) return fail(400, '缺少用户ID')
+
+  const games = Array.isArray(data?.games) ? data.games : null
+  if (!games) return fail(400, '设备格式错误')
+  if (games.length > 20) return fail(400, '设备数量不能超过20个')
+
+  const normalizedGames = []
+  for (let i = 0; i < games.length; i++) {
+    const game = games[i] || {}
+    const name = String(game.name || '').trim().slice(0, 24)
+    if (!name) continue
+    const type = String(game.type || '').trim() || 'other'
+    normalizedGames.push({
+      id: game.id || String(Date.now() + i),
+      type,
+      name
+    })
+  }
+
+  const adminGameSecurityRes = await checkTextSecurityBatch(
+    normalizedGames.map((item) => ({ title: '游戏/设备名称', text: item && item.name }))
+  )
+  if (!adminGameSecurityRes.ok) {
+    return fail(adminGameSecurityRes.code || 422, adminGameSecurityRes.message || '内容包含敏感信息')
+  }
+
+  await db.collection('users').doc(targetUserId).update({
+    data: {
+      games: normalizedGames,
+      updatedAt: new Date(),
+      adminUpdatedBy: currentUser._id
+    }
+  })
+
+  const userRes = await db.collection('users').doc(targetUserId).get()
+  if (!userRes.data) return fail(404, '用户不存在')
+  return success(toUserDto(userRes.data), '设备更新成功')
 }
 
 async function adminSetUserBlacklist(data, wxContext) {

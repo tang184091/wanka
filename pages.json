@@ -91,6 +91,62 @@
       }
     },
     {
+      "path": "pages/user/profile",
+      "style": {
+        "navigationBarTitleText": "用户资料",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tools/list",
+      "style": {
+        "navigationBarTitleText": "桌游工具",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tools/warroom",
+      "style": {
+        "navigationBarTitleText": "War Room战斗结算",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tools/turnscore",
+      "style": {
+        "navigationBarTitleText": "桌游先后手及计分",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tools/dice",
+      "style": {
+        "navigationBarTitleText": "骰子工具",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tools/dice-workshop",
+      "style": {
+        "navigationBarTitleText": "骰子工坊",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tools/turnscore-board",
+      "style": {
+        "navigationBarTitleText": "总分看板",
+        "navigationBarBackgroundColor": "#07c160",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/record/record",
       "style": {
         "navigationBarTitleText": "战绩",
@@ -131,9 +187,9 @@
       }
     },
     {
-      "path": "pages/admin/yakuman",
+      "path": "pages/admin/yakuman-edit",
       "style": {
-        "navigationBarTitleText": "役满管理",
+        "navigationBarTitleText": "编辑役满",
         "navigationBarBackgroundColor": "#07c160",
         "navigationBarTextStyle": "white"
       }
@@ -158,22 +214,6 @@
       "path": "pages/admin/guide",
       "style": {
         "navigationBarTitleText": "管理员功能说明",
-        "navigationBarBackgroundColor": "#07c160",
-        "navigationBarTextStyle": "white"
-      }
-    },
-    {
-      "path": "pages/admin/records",
-      "style": {
-        "navigationBarTitleText": "战绩管理",
-        "navigationBarBackgroundColor": "#07c160",
-        "navigationBarTextStyle": "white"
-      }
-    },
-    {
-      "path": "pages/admin/games",
-      "style": {
-        "navigationBarTitleText": "组局管理",
         "navigationBarBackgroundColor": "#07c160",
         "navigationBarTextStyle": "white"
       }
@@ -213,15 +253,7 @@
     {
       "path": "pages/admin/user-manage",
       "style": {
-        "navigationBarTitleText": "用户昵称头像管理",
-        "navigationBarBackgroundColor": "#07c160",
-        "navigationBarTextStyle": "white"
-      }
-    },
-    {
-      "path": "pages/admin/user-edit",
-      "style": {
-        "navigationBarTitleText": "用户信息编辑",
+        "navigationBarTitleText": "用户管理",
         "navigationBarBackgroundColor": "#07c160",
         "navigationBarTextStyle": "white"
       }

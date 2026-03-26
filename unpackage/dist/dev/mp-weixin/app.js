@@ -14,23 +14,27 @@ if (!Math) {
   "./pages/user/tags.js";
   "./pages/user/games.js";
   "./pages/user/settings.js";
+  "./pages/user/profile.js";
+  "./pages/tools/list.js";
+  "./pages/tools/warroom.js";
+  "./pages/tools/turnscore.js";
+  "./pages/tools/dice.js";
+  "./pages/tools/dice-workshop.js";
+  "./pages/tools/turnscore-board.js";
   "./pages/record/record.js";
   "./pages/record/detail.js";
   "./pages/admin/admin.js";
   "./pages/record/yakuman.js";
   "./pages/record/yakuman-upload.js";
-  "./pages/admin/yakuman.js";
+  "./pages/admin/yakuman-edit.js";
   "./pages/record/honor.js";
   "./pages/admin/honor.js";
   "./pages/admin/guide.js";
-  "./pages/admin/records.js";
-  "./pages/admin/games.js";
   "./pages/wiki/detail.js";
   "./pages/wiki/submit.js";
   "./pages/admin/wiki.js";
   "./pages/admin/wiki-edit.js";
   "./pages/admin/user-manage.js";
-  "./pages/admin/user-edit.js";
   "./pages/admin/announcement.js";
 }
 const _sfc_main = {

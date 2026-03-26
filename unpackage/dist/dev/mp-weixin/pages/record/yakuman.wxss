@@ -21,5 +21,13 @@
 }
 .line.data-v-d683e9c2 { font-size: 22rpx; color: #374151;
 }
+.ops.data-v-d683e9c2 { padding: 0 12rpx 12rpx; display: flex; gap: 10rpx;
+}
+.op.data-v-d683e9c2 { flex: 1; height: 48rpx; border-radius: 8rpx; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22rpx;
+}
+.op.edit.data-v-d683e9c2 { background: #2563eb;
+}
+.op.del.data-v-d683e9c2 { background: #ef4444;
+}
 .empty.data-v-d683e9c2 { margin: 20rpx; color: #9ca3af;
 }

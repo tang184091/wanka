@@ -91,7 +91,7 @@ const _sfc_main = {
         interArcade2.value = { ...interArcade2.value, status: setSeatStatusByName(interArcade2.value.name, statusMap) };
         arcadeRoom.value = { ...arcadeRoom.value, status: setSeatStatusByName(arcadeRoom.value.name, statusMap) };
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/admin/admin.vue:303", "刷新管理员座位数据失败:", error);
+        common_vendor.index.__f__("error", "at pages/admin/admin.vue:273", "刷新管理员座位数据失败:", error);
         common_vendor.index.showToast({ title: "刷新失败", icon: "none" });
       } finally {
         refreshing.value = false;
@@ -141,7 +141,7 @@ const _sfc_main = {
           common_vendor.index.showToast({ title: ((_b = res == null ? void 0 : res.result) == null ? void 0 : _b.message) || "保存失败", icon: "none" });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/admin/admin.vue:355", "保存管理员座位状态失败:", error);
+        common_vendor.index.__f__("error", "at pages/admin/admin.vue:325", "保存管理员座位状态失败:", error);
         common_vendor.index.showToast({ title: "保存失败", icon: "none" });
       } finally {
         saving.value = false;
@@ -173,7 +173,7 @@ const _sfc_main = {
               common_vendor.index.showToast({ title: ((_b = result == null ? void 0 : result.result) == null ? void 0 : _b.message) || "清空失败", icon: "none" });
             }
           } catch (error) {
-            common_vendor.index.__f__("error", "at pages/admin/admin.vue:385", "清空手工状态失败:", error);
+            common_vendor.index.__f__("error", "at pages/admin/admin.vue:355", "清空手工状态失败:", error);
             common_vendor.index.showToast({ title: "清空失败", icon: "none" });
           } finally {
             saving.value = false;
@@ -195,18 +195,6 @@ const _sfc_main = {
     const goAnnouncementManage = () => {
       if (guardAdmin())
         common_vendor.index.navigateTo({ url: "/pages/admin/announcement" });
-    };
-    const goYakumanManage = () => {
-      if (guardAdmin())
-        common_vendor.index.navigateTo({ url: "/pages/admin/yakuman" });
-    };
-    const goRecordManage = () => {
-      if (guardAdmin())
-        common_vendor.index.navigateTo({ url: "/pages/admin/records" });
-    };
-    const goGameManage = () => {
-      if (guardAdmin())
-        common_vendor.index.navigateTo({ url: "/pages/admin/games" });
     };
     const goHonorManage = () => {
       if (guardAdmin())
@@ -311,13 +299,10 @@ const _sfc_main = {
         aC: saving.value ? 1 : "",
         aD: common_vendor.o(resetManualOverrides, "de"),
         aE: common_vendor.o(goAnnouncementManage, "46"),
-        aF: common_vendor.o(goYakumanManage, "77"),
-        aG: common_vendor.o(goRecordManage, "da"),
-        aH: common_vendor.o(goGameManage, "e0"),
-        aI: common_vendor.o(goHonorManage, "cb"),
-        aJ: common_vendor.o(goWikiManage, "71"),
-        aK: common_vendor.o(goUserManage, "62"),
-        aL: common_vendor.o(goAdminGuide, "a7")
+        aF: common_vendor.o(goHonorManage, "98"),
+        aG: common_vendor.o(goWikiManage, "0e"),
+        aH: common_vendor.o(goUserManage, "a7"),
+        aI: common_vendor.o(goAdminGuide, "c7")
       });
     };
   }

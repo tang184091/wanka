@@ -7,6 +7,7 @@ const _sfc_main = {
     const recordId = common_vendor.ref("");
     const localScoreRecorded = common_vendor.ref(false);
     const originalScoreRecorded = common_vendor.ref(false);
+    const isAdmin = common_vendor.ref(false);
     let saving = false;
     const formatTime = (t) => {
       if (!t)
@@ -96,13 +97,19 @@ ${scores}`;
           common_vendor.index.setStorageSync("record_need_refresh", Date.now());
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/record/detail.vue:124", "保存录分状态失败", error);
+        common_vendor.index.__f__("error", "at pages/record/detail.vue:126", "保存录分状态失败", error);
       } finally {
         saving = false;
       }
     };
     common_vendor.onLoad(async (options) => {
-      var _a, _b, _c;
+      var _a, _b, _c, _d, _e;
+      try {
+        const me = await common_vendor.wx$1.cloud.callFunction({ name: "user-service", data: { action: "getMe", data: {} } });
+        isAdmin.value = !!((_b = (_a = me == null ? void 0 : me.result) == null ? void 0 : _a.data) == null ? void 0 : _b.isAdmin);
+      } catch (error) {
+        isAdmin.value = false;
+      }
       const id = options == null ? void 0 : options.id;
       if (!id)
         return;
@@ -111,12 +118,12 @@ ${scores}`;
         name: "game-service",
         data: { action: "getMahjongRecordDetail", data: { recordId: id } }
       });
-      if (((_a = res.result) == null ? void 0 : _a.code) === 0) {
+      if (((_c = res.result) == null ? void 0 : _c.code) === 0) {
         record.value = res.result.data;
-        localScoreRecorded.value = ((_b = res.result.data) == null ? void 0 : _b.scoreRecorded) === true;
+        localScoreRecorded.value = ((_d = res.result.data) == null ? void 0 : _d.scoreRecorded) === true;
         originalScoreRecorded.value = localScoreRecorded.value;
       } else {
-        common_vendor.index.showToast({ title: ((_c = res.result) == null ? void 0 : _c.message) || "加载失败", icon: "none" });
+        common_vendor.index.showToast({ title: ((_e = res.result) == null ? void 0 : _e.message) || "加载失败", icon: "none" });
       }
     });
     common_vendor.onHide(() => {
@@ -125,10 +132,41 @@ ${scores}`;
     common_vendor.onUnload(() => {
       saveScoreRecordedIfDirty();
     });
+    const deleteRecord = () => {
+      if (!isAdmin.value)
+        return;
+      if (!recordId.value)
+        return;
+      common_vendor.index.showModal({
+        title: "确认删除战绩",
+        content: "删除后不可恢复，确认继续？",
+        success: async (res) => {
+          var _a, _b;
+          if (!res.confirm)
+            return;
+          const result = await common_vendor.wx$1.cloud.callFunction({
+            name: "game-service",
+            data: {
+              action: "adminDeleteMahjongRecord",
+              data: { recordId: recordId.value }
+            }
+          });
+          if (((_a = result == null ? void 0 : result.result) == null ? void 0 : _a.code) === 0) {
+            common_vendor.index.showToast({ title: "已删除", icon: "success" });
+            common_vendor.index.setStorageSync("record_need_refresh", Date.now());
+            setTimeout(() => {
+              common_vendor.index.navigateBack();
+            }, 400);
+          } else {
+            common_vendor.index.showToast({ title: ((_b = result == null ? void 0 : result.result) == null ? void 0 : _b.message) || "删除失败", icon: "none" });
+          }
+        }
+      });
+    };
     return (_ctx, _cache) => {
       return common_vendor.e({
         a: record.value
-      }, record.value ? {
+      }, record.value ? common_vendor.e({
         b: common_vendor.t(formatTime(record.value.createdAt)),
         c: common_vendor.t(localScoreRecorded.value ? "已录分" : "未录分"),
         d: common_vendor.n(localScoreRecorded.value ? "state-recorded" : "state-unrecorded"),
@@ -142,8 +180,11 @@ ${scores}`;
         }),
         f: common_vendor.t(exportText.value),
         g: common_vendor.o(copyExport, "17"),
-        h: common_vendor.o(toggleScoreRecorded, "f2")
-      } : {});
+        h: common_vendor.o(toggleScoreRecorded, "f2"),
+        i: isAdmin.value
+      }, isAdmin.value ? {
+        j: common_vendor.o(deleteRecord, "e6")
+      } : {}) : {});
     };
   }
 };

@@ -102,7 +102,7 @@
       <!-- 创建者信息 -->
       <view v-if="gameDetail.creatorInfo" class="creator-card card">
         <view class="section-title">创建者</view>
-        <view class="creator-info">
+        <view class="creator-info" @tap="openUserProfile(gameDetail.creatorId)">
           <image 
             :src="creatorAvatarSrc" 
             class="creator-avatar" 
@@ -117,12 +117,19 @@
             </view>
             <!-- 修改点1：模板中调用 getTagDisplay 函数 -->
             <view v-if="gameDetail.creatorInfo.tags && gameDetail.creatorInfo.tags.length > 0" class="creator-tags">
-              <view v-for="(tag, index) in gameDetail.creatorInfo.tags.slice(0, 3)" :key="index" class="creator-tag">
+              <view v-for="(tag, index) in gameDetail.creatorInfo.tags" :key="index" class="creator-tag">
                 {{ getTagDisplay(tag) }}
               </view>
-              <view v-if="gameDetail.creatorInfo.tags.length > 3" class="creator-tag more">
-                +{{ gameDetail.creatorInfo.tags.length - 3 }}
-              </view>
+            </view>
+          </view>
+        </view>
+        
+        <view v-if="gameDetail.creatorInfo.games && gameDetail.creatorInfo.games.length > 0" class="creator-games">
+          <view class="creator-games-title">个人装备</view>
+          <view class="creator-games-list">
+            <view v-for="(item, idx) in gameDetail.creatorInfo.games" :key="idx" class="creator-game-item">
+              <text class="creator-game-type">{{ getEquipmentTypeText(item.type) }}</text>
+              <text class="creator-game-name">{{ item.name }}</text>
             </view>
           </view>
         </view>
@@ -150,6 +157,7 @@
                 :src="creatorAvatarSrc" 
                 class="player-avatar" 
                 @error="handleAvatarError('creator')"
+                @tap.stop="openUserProfile(gameDetail.creatorId)"
               />
               <view class="creator-badge">创建者</view>
             </view>
@@ -171,9 +179,10 @@
               :src="getParticipantAvatarSrc(player, index)" 
               class="player-avatar" 
               @error="handleAvatarError(getParticipantAvatarKey(player, index))"
+              @tap.stop="openUserProfile(player.id || player._id)"
             />
             <view class="player-info">
-              <text class="player-name">{{ player.nickname || '玩家' + (index + 1) }}</text>
+              <text class="player-name" @tap.stop="openUserProfile(player.id || player._id)">{{ player.nickname || '玩家' + (index + 1) }}</text>
               <view class="player-status">
                 <text class="status-text">已加入</text>
               </view>
@@ -447,6 +456,12 @@ const loadGameDetail = async () => {
       // 计算是否已满员
       const currentPlayers = participants.length + 1
       const isFull = currentPlayers >= (game.maxPlayers || 4)
+      const creatorGames = Array.isArray(game?.creatorInfo?.games)
+        ? game.creatorInfo.games.map((item) => ({
+          ...item,
+          name: String(item?.name || '').trim() || '未命名'
+        }))
+        : []
       
       gameDetail.value = {
         ...game,
@@ -455,6 +470,7 @@ const loadGameDetail = async () => {
           ...(game.creatorInfo || {}),
           nickname: game?.creatorInfo?.nickname || '未知用户',
           tags: game?.creatorInfo?.tags || [],
+          games: creatorGames,
           avatar: normalizeAvatarUrl(game?.creatorInfo?.avatar || constants.DEFAULT_AVATAR, cloudTempUrlMap)
         },
         participants: participants.map((player) => ({
@@ -525,6 +541,28 @@ const getTypeText = (type) => {
     'other': '其他'
   }
   return textMap[type] || '立直麻将'
+}
+
+const getEquipmentTypeText = (type) => {
+  const textMap = {
+    mahjong: '立直麻将',
+    boardgame: '桌游',
+    videogame: '电玩',
+    deck: '卡组',
+    other: '其他'
+  }
+  return textMap[type] || '其他'
+}
+
+const openUserProfile = (targetUserId) => {
+  const userId = String(targetUserId || '').trim()
+  if (!userId) {
+    uni.showToast({ title: '用户信息不完整', icon: 'none' })
+    return
+  }
+  uni.navigateTo({
+    url: `/pages/user/profile?userId=${userId}`
+  })
 }
 
 // 获取状态文字
@@ -1332,6 +1370,44 @@ onShareTimeline(() => {
 .creator-tag.more {
   background-color: #f8f9fa;
   color: #868e96;
+}
+
+.creator-games {
+  margin-bottom: 20rpx;
+}
+
+.creator-games-title {
+  font-size: 24rpx;
+  color: #6b7280;
+  margin-bottom: 12rpx;
+}
+
+.creator-games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.creator-game-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 10rpx 14rpx;
+  border-radius: 10rpx;
+  background: #f8fafc;
+}
+
+.creator-game-type {
+  font-size: 22rpx;
+  color: #2563eb;
+  background: #e0edff;
+  border-radius: 8rpx;
+  padding: 4rpx 10rpx;
+}
+
+.creator-game-name {
+  font-size: 24rpx;
+  color: #334155;
 }
 
 .creator-intro {

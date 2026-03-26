@@ -36,6 +36,23 @@
           <picker mode="date" :value="dateValue" @change="onDateChange">
             <view class="picker">达成日期：{{ dateValue }}</view>
           </picker>
+          <view class="owner-block">
+            <view class="owner-title">荣誉归属人（可选）</view>
+            <view class="owner-search-row">
+              <input class="input owner-input" v-model="ownerKeyword" placeholder="输入昵称搜索用户并绑定荣誉" />
+              <view class="owner-search-btn" @tap="searchOwners">搜索</view>
+            </view>
+            <view v-if="selectedOwner.id" class="owner-selected">
+              <text class="owner-selected-text">已绑定：{{ selectedOwner.nickname }}（{{ selectedOwner.id }}）</text>
+              <view class="owner-clear-btn" @tap="clearSelectedOwner">清除</view>
+            </view>
+            <view v-if="ownerResults.length" class="owner-results">
+              <view class="owner-item" v-for="u in ownerResults" :key="u.id" @tap="selectOwner(u)">
+                <text class="owner-name">{{ u.nickname || '未命名用户' }}</text>
+                <text class="owner-id">{{ u.id }}</text>
+              </view>
+            </view>
+          </view>
           <textarea class="textarea" v-model="form.note" placeholder="备注（可选）" />
 
           <view class="actions">
@@ -54,6 +71,7 @@
                 <text class="time">{{ formatTime(item.achievedAt) }}</text>
               </view>
               <text class="line text">{{ item.type === 'tournament' ? `比赛冠军：${item.championNickname || '-'}` : `段位：${item.playerNickname || '-'} · ${item.rankName || '-'}` }}</text>
+              <text class="line text subtle">归属人：{{ item.ownerNickname || '未绑定' }}</text>
             </view>
             <view class="ops">
               <view class="op edit" @tap="editItem(item)">修改</view>
@@ -73,6 +91,9 @@ import { onShow } from '@dcloudio/uni-app'
 const isAdmin = ref(false)
 const list = ref([])
 const editingId = ref('')
+const ownerKeyword = ref('')
+const ownerResults = ref([])
+const selectedOwner = ref({ id: '', nickname: '' })
 
 const typeOptions = ['比赛荣誉', '段位荣誉']
 const typeIndex = ref(0)
@@ -139,6 +160,9 @@ const resetForm = () => {
     rankName: '',
     note: ''
   }
+  ownerKeyword.value = ''
+  ownerResults.value = []
+  selectedOwner.value = { id: '', nickname: '' }
 }
 
 const loadData = async () => {
@@ -186,6 +210,12 @@ const editItem = (item) => {
   form.value.playerNickname = item.playerNickname || ''
   form.value.rankName = item.rankName || ''
   form.value.note = item.note || ''
+  selectedOwner.value = {
+    id: String(item.ownerUserId || '').trim(),
+    nickname: String(item.ownerNickname || '').trim()
+  }
+  ownerKeyword.value = selectedOwner.value.nickname || ''
+  ownerResults.value = []
 }
 
 const cancelEdit = () => {
@@ -196,7 +226,9 @@ const submit = async () => {
   const payload = {
     ...form.value,
     achievedAt: dateValue.value,
-    rarity: rarityOptions[rarityIndex.value].value
+    rarity: rarityOptions[rarityIndex.value].value,
+    ownerUserId: selectedOwner.value.id || '',
+    ownerNickname: selectedOwner.value.nickname || ''
   }
   const action = editingId.value ? 'updateHonorRecord' : 'createHonorRecord'
   if (editingId.value) payload.recordId = editingId.value
@@ -209,6 +241,38 @@ const submit = async () => {
   } else {
     uni.showToast({ title: res.result?.message || (editingId.value ? '修改失败' : '上传失败'), icon: 'none' })
   }
+}
+
+const searchOwners = async () => {
+  const keyword = String(ownerKeyword.value || '').trim()
+  if (!keyword) {
+    uni.showToast({ title: '请输入昵称关键词', icon: 'none' })
+    return
+  }
+  const res = await wx.cloud.callFunction({
+    name: 'user-service',
+    data: { action: 'searchUsers', data: { keyword } }
+  })
+  if (res?.result?.code === 0) {
+    ownerResults.value = (res.result.data.list || []).slice(0, 10)
+  } else {
+    uni.showToast({ title: res?.result?.message || '搜索失败', icon: 'none' })
+  }
+}
+
+const selectOwner = (u) => {
+  selectedOwner.value = {
+    id: String(u?.id || '').trim(),
+    nickname: String(u?.nickname || '').trim()
+  }
+  ownerKeyword.value = selectedOwner.value.nickname
+  ownerResults.value = []
+}
+
+const clearSelectedOwner = () => {
+  selectedOwner.value = { id: '', nickname: '' }
+  ownerKeyword.value = ''
+  ownerResults.value = []
 }
 
 const removeItem = (item) => {
@@ -247,8 +311,9 @@ onShow(loadData)
 .empty { color:#9ca3af; }
 .form-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12rpx; }
 .label { color:#374151; font-size:24rpx; }
-.picker,.input,.textarea { margin-top:10rpx; width:100%; background:#f8fafc; border-radius:10rpx; padding:12rpx; box-sizing:border-box; font-size:24rpx; }
-.textarea { min-height:120rpx; }
+.picker,.input,.textarea { margin-top:10rpx; width:100%; background:#f8fafc; border-radius:10rpx; padding:16rpx; box-sizing:border-box; font-size:24rpx; line-height:1.5; }
+.input,.picker { min-height:76rpx; display:flex; align-items:center; }
+.textarea { min-height:180rpx; }
 .actions { margin-top:14rpx; display:flex; gap:12rpx; }
 .btn { flex:1; height:68rpx; border-radius:10rpx; display:flex; align-items:center; justify-content:center; font-size:24rpx; }
 .btn.primary { background:#07c160; color:#fff; }
@@ -267,4 +332,19 @@ onShow(loadData)
 .op { min-width:88rpx; height:52rpx; border-radius:8rpx; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22rpx; }
 .edit { background:#2563eb; }
 .del { background:#ef4444; }
+.subtle { color:#6b7280; font-size:22rpx; }
+
+.owner-block { margin-top:10rpx; }
+.owner-title { font-size:24rpx; color:#374151; margin-bottom:6rpx; }
+.owner-search-row { display:flex; gap:10rpx; align-items:center; }
+.owner-input { flex:1; margin-top:0; }
+.owner-search-btn { width:110rpx; height:76rpx; border-radius:10rpx; background:#07c160; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22rpx; }
+.owner-selected { margin-top:10rpx; display:flex; align-items:center; justify-content:space-between; gap:10rpx; background:#ecfeff; border:1rpx solid #67e8f9; border-radius:10rpx; padding:10rpx 12rpx; }
+.owner-selected-text { flex:1; min-width:0; font-size:22rpx; color:#0e7490; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.owner-clear-btn { min-width:86rpx; height:48rpx; border-radius:8rpx; background:#ef4444; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22rpx; }
+.owner-results { margin-top:10rpx; border:1rpx solid #e5e7eb; border-radius:10rpx; overflow:hidden; }
+.owner-item { padding:10rpx 12rpx; border-bottom:1rpx solid #f1f5f9; }
+.owner-item:last-child { border-bottom:none; }
+.owner-name { display:block; font-size:23rpx; color:#111827; }
+.owner-id { display:block; margin-top:4rpx; font-size:20rpx; color:#9ca3af; }
 </style>

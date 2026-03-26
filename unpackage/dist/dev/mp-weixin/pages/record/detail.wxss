@@ -35,3 +35,5 @@
 }
 .toggle-btn.data-v-58524edd { background: #2563eb;
 }
+.delete-btn.data-v-58524edd { background: #ef4444;
+}

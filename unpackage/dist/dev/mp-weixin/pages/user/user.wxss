@@ -150,11 +150,68 @@
   background-color: #fff7e6;
   color: #fa8c16;
 }
+.game-tag-deck.data-v-0f7520f0 {
+  background-color: #f3e8ff;
+  color: #7c3aed;
+}
+.game-tag-other.data-v-0f7520f0 {
+  background-color: #f1f5f9;
+  color: #475569;
+}
 .game-name.data-v-0f7520f0 {
   font-size: 28rpx;
   color: #333;
   flex: 1;
   word-break: break-all;
+}
+.honor-list.data-v-0f7520f0 {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.honor-item.data-v-0f7520f0 {
+  background-color: #f8fafc;
+  border-radius: 10rpx;
+  padding: 14rpx;
+}
+.honor-head.data-v-0f7520f0 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.honor-rarity.data-v-0f7520f0 {
+  min-width: 84rpx;
+  text-align: center;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+.honor-legend.data-v-0f7520f0 {
+  background: linear-gradient(135deg, #f59e0b, #fcd34d);
+  color: #7c2d12;
+}
+.honor-epic.data-v-0f7520f0 {
+  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+  color: #fff;
+}
+.honor-rare.data-v-0f7520f0 {
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  color: #fff;
+}
+.honor-common.data-v-0f7520f0 {
+  background: #fff;
+  color: #111827;
+  border: 1rpx solid #111827;
+}
+.honor-time.data-v-0f7520f0 {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+.honor-title.data-v-0f7520f0 {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #1f2937;
 }
 
 /* 统计数据样式 */
@@ -201,14 +258,30 @@
   justify-content: space-between;
   align-items: center;
   padding: 30rpx;
+  min-height: 96rpx;
+  box-sizing: border-box;
   background-color: white;
 }
 .menu-item.data-v-0f7520f0:active {
   background-color: #f8f8f8;
 }
+.share-menu-item.data-v-0f7520f0 {
+  width: 100%;
+  margin: 0;
+  padding: 30rpx;
+  border: none;
+  border-radius: 0;
+  background-color: #fff;
+  text-align: left;
+}
+.share-menu-item.data-v-0f7520f0::after {
+  border: none;
+}
 .menu-left.data-v-0f7520f0 {
   display: flex;
   align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 .menu-text.data-v-0f7520f0 {
   font-size: 32rpx;
@@ -217,6 +290,9 @@
 .menu-right.data-v-0f7520f0 {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  min-width: 120rpx;
+  flex-shrink: 0;
 }
 .menu-count.data-v-0f7520f0 {
   font-size: 28rpx;

@@ -11,7 +11,7 @@
       <view class="card" v-if="detail.images && detail.images.length">
         <view class="section-title">图片</view>
         <image
-          v-for="(url, index) in detail.images"
+          v-for="(url, index) in displayImages"
           :key="index"
           :src="url"
           class="content-image"
@@ -31,6 +31,7 @@
 <script setup>
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { resolveCloudFileUrls } from '@/utils/cloud-image.js'
 
 const detail = ref({
   id: '',
@@ -41,6 +42,7 @@ const detail = ref({
   creatorNickname: '',
   createdAt: ''
 })
+const displayImages = ref([])
 
 const formatDateTime = (value) => {
   if (!value) return '-'
@@ -59,6 +61,7 @@ const loadDetail = async (id) => {
     })
     if (res?.result?.code === 0) {
       detail.value = res.result.data || detail.value
+      displayImages.value = await resolveCloudFileUrls(detail.value.images || [])
     } else {
       uni.showToast({ title: res?.result?.message || '加载失败', icon: 'none' })
     }
@@ -69,7 +72,7 @@ const loadDetail = async (id) => {
 }
 
 const preview = (index) => {
-  const images = detail.value.images || []
+  const images = displayImages.value || []
   if (!images.length) return
   uni.previewImage({ current: images[index], urls: images })
 }

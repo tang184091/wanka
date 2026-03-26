@@ -70,7 +70,7 @@ const _sfc_main = {
         });
         return tempUrlMap;
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:358", "获取云文件临时链接失败:", err);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:367", "获取云文件临时链接失败:", err);
         return {};
       }
     };
@@ -81,11 +81,11 @@ const _sfc_main = {
       });
       if (options.id) {
         gameId.value = options.id;
-        common_vendor.index.__f__("log", "at pages/detail/detail.vue:371", "开始加载组局详情，ID:", gameId.value);
+        common_vendor.index.__f__("log", "at pages/detail/detail.vue:380", "开始加载组局详情，ID:", gameId.value);
         await getCurrentUser();
         await loadGameDetail();
       } else {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:379", "未传递游戏ID");
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:388", "未传递游戏ID");
         error.value = "参数错误：缺少游戏ID";
         loading.value = false;
       }
@@ -106,17 +106,17 @@ const _sfc_main = {
           }
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:404", "获取用户信息失败:", err);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:413", "获取用户信息失败:", err);
       }
     };
     const loadGameDetail = async () => {
-      var _a, _b, _c, _d, _e;
+      var _a, _b, _c, _d, _e, _f;
       loading.value = true;
       error.value = "";
       creatorAvatarError.value = false;
       participantAvatarErrors.value = {};
       try {
-        common_vendor.index.__f__("log", "at pages/detail/detail.vue:416", "调用game-service获取详情，参数:", { gameId: gameId.value });
+        common_vendor.index.__f__("log", "at pages/detail/detail.vue:425", "调用game-service获取详情，参数:", { gameId: gameId.value });
         const res = await common_vendor.wx$1.cloud.callFunction({
           name: "game-service",
           data: {
@@ -124,7 +124,7 @@ const _sfc_main = {
             data: { gameId: gameId.value }
           }
         });
-        common_vendor.index.__f__("log", "at pages/detail/detail.vue:426", "获取组局详情结果:", res);
+        common_vendor.index.__f__("log", "at pages/detail/detail.vue:435", "获取组局详情结果:", res);
         if (res.result && res.result.code === 0) {
           const game = res.result.data || {};
           const participants = Array.isArray(game.participants) ? game.participants : [];
@@ -141,14 +141,19 @@ const _sfc_main = {
           const isCreator = !!currentId && String(game.creatorId || "") === currentId;
           const currentPlayers = participants.length + 1;
           const isFull = currentPlayers >= (game.maxPlayers || 4);
+          const creatorGames = Array.isArray((_b = game == null ? void 0 : game.creatorInfo) == null ? void 0 : _b.games) ? game.creatorInfo.games.map((item) => ({
+            ...item,
+            name: String((item == null ? void 0 : item.name) || "").trim() || "未命名"
+          })) : [];
           gameDetail.value = {
             ...game,
             id: game._id || game.id,
             creatorInfo: {
               ...game.creatorInfo || {},
-              nickname: ((_b = game == null ? void 0 : game.creatorInfo) == null ? void 0 : _b.nickname) || "未知用户",
-              tags: ((_c = game == null ? void 0 : game.creatorInfo) == null ? void 0 : _c.tags) || [],
-              avatar: normalizeAvatarUrl(((_d = game == null ? void 0 : game.creatorInfo) == null ? void 0 : _d.avatar) || utils_constants.constants.DEFAULT_AVATAR, cloudTempUrlMap)
+              nickname: ((_c = game == null ? void 0 : game.creatorInfo) == null ? void 0 : _c.nickname) || "未知用户",
+              tags: ((_d = game == null ? void 0 : game.creatorInfo) == null ? void 0 : _d.tags) || [],
+              games: creatorGames,
+              avatar: normalizeAvatarUrl(((_e = game == null ? void 0 : game.creatorInfo) == null ? void 0 : _e.avatar) || utils_constants.constants.DEFAULT_AVATAR, cloudTempUrlMap)
             },
             participants: participants.map((player) => ({
               ...player,
@@ -160,12 +165,12 @@ const _sfc_main = {
             isJoined,
             isCreator
           };
-          common_vendor.index.__f__("log", "at pages/detail/detail.vue:471", "处理后的游戏数据:", gameDetail.value);
+          common_vendor.index.__f__("log", "at pages/detail/detail.vue:487", "处理后的游戏数据:", gameDetail.value);
         } else {
-          throw new Error(((_e = res.result) == null ? void 0 : _e.message) || "获取游戏详情失败");
+          throw new Error(((_f = res.result) == null ? void 0 : _f.message) || "获取游戏详情失败");
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:476", "加载组局详情失败:", err);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:492", "加载组局详情失败:", err);
         error.value = err.message || "加载失败，请稍后重试";
       } finally {
         loading.value = false;
@@ -206,6 +211,26 @@ const _sfc_main = {
         "other": "其他"
       };
       return textMap[type] || "立直麻将";
+    };
+    const getEquipmentTypeText = (type) => {
+      const textMap = {
+        mahjong: "立直麻将",
+        boardgame: "桌游",
+        videogame: "电玩",
+        deck: "卡组",
+        other: "其他"
+      };
+      return textMap[type] || "其他";
+    };
+    const openUserProfile = (targetUserId) => {
+      const userId = String(targetUserId || "").trim();
+      if (!userId) {
+        common_vendor.index.showToast({ title: "用户信息不完整", icon: "none" });
+        return;
+      }
+      common_vendor.index.navigateTo({
+        url: `/pages/user/profile?userId=${userId}`
+      });
     };
     const getStatusClass = (game) => {
       if ((game == null ? void 0 : game.status) === "ongoing")
@@ -251,7 +276,7 @@ const _sfc_main = {
         const minutes = date.getMinutes().toString().padStart(2, "0");
         return `${dateStr} ${hours}:${minutes}`;
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:585", "格式化时间错误:", e);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:623", "格式化时间错误:", e);
         return "时间格式错误";
       }
     };
@@ -264,7 +289,7 @@ const _sfc_main = {
           return "";
         return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:600", "格式化创建时间错误:", e);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:638", "格式化创建时间错误:", e);
         return "";
       }
     };
@@ -292,12 +317,12 @@ const _sfc_main = {
           return `${date.getMonth() + 1}月${date.getDate()}日`;
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/detail/detail.vue:631", "格式化相对时间错误:", e);
+        common_vendor.index.__f__("error", "at pages/detail/detail.vue:669", "格式化相对时间错误:", e);
         return "";
       }
     };
     const handleAvatarError = (key) => {
-      common_vendor.index.__f__("log", "at pages/detail/detail.vue:638", "头像加载失败:", key);
+      common_vendor.index.__f__("log", "at pages/detail/detail.vue:676", "头像加载失败:", key);
       if (key === "creator") {
         creatorAvatarError.value = true;
         return;
@@ -361,7 +386,7 @@ const _sfc_main = {
                   }
                 }
               });
-              common_vendor.index.__f__("log", "at pages/detail/detail.vue:709", "加入组局结果:", result);
+              common_vendor.index.__f__("log", "at pages/detail/detail.vue:747", "加入组局结果:", result);
               if (result.result && result.result.code === 0) {
                 await loadGameDetail();
                 common_vendor.index.showToast({
@@ -373,7 +398,7 @@ const _sfc_main = {
                 throw new Error(((_a = result.result) == null ? void 0 : _a.message) || "加入失败");
               }
             } catch (err) {
-              common_vendor.index.__f__("error", "at pages/detail/detail.vue:725", "加入组局失败:", err);
+              common_vendor.index.__f__("error", "at pages/detail/detail.vue:763", "加入组局失败:", err);
               common_vendor.index.showToast({
                 title: err.message || "加入失败",
                 icon: "none",
@@ -418,7 +443,7 @@ const _sfc_main = {
                   }
                 }
               });
-              common_vendor.index.__f__("log", "at pages/detail/detail.vue:774", "退出组局结果:", result);
+              common_vendor.index.__f__("log", "at pages/detail/detail.vue:812", "退出组局结果:", result);
               if (result.result && result.result.code === 0) {
                 await loadGameDetail();
                 common_vendor.index.showToast({
@@ -430,7 +455,7 @@ const _sfc_main = {
                 throw new Error(((_a = result.result) == null ? void 0 : _a.message) || "退出失败");
               }
             } catch (err) {
-              common_vendor.index.__f__("error", "at pages/detail/detail.vue:790", "退出组局失败:", err);
+              common_vendor.index.__f__("error", "at pages/detail/detail.vue:828", "退出组局失败:", err);
               common_vendor.index.showToast({
                 title: err.message || "退出失败",
                 icon: "none",
@@ -534,7 +559,7 @@ const _sfc_main = {
                   data: { gameId: gameId.value }
                 }
               });
-              common_vendor.index.__f__("log", "at pages/detail/detail.vue:904", "取消组局结果:", result);
+              common_vendor.index.__f__("log", "at pages/detail/detail.vue:942", "取消组局结果:", result);
               if (result.result && result.result.code === 0) {
                 await loadGameDetail();
                 common_vendor.index.showToast({
@@ -549,7 +574,7 @@ const _sfc_main = {
                 throw new Error(((_a = result.result) == null ? void 0 : _a.message) || "取消失败");
               }
             } catch (err) {
-              common_vendor.index.__f__("error", "at pages/detail/detail.vue:925", "取消组局失败:", err);
+              common_vendor.index.__f__("error", "at pages/detail/detail.vue:963", "取消组局失败:", err);
               common_vendor.index.showToast({
                 title: err.message || "取消失败",
                 icon: "none",
@@ -640,63 +665,74 @@ const _sfc_main = {
         B: gameDetail.value.creatorInfo
       }, gameDetail.value.creatorInfo ? common_vendor.e({
         C: creatorAvatarSrc.value,
-        D: common_vendor.o(($event) => handleAvatarError("creator"), "ee"),
+        D: common_vendor.o(($event) => handleAvatarError("creator"), "fe"),
         E: common_vendor.t(gameDetail.value.creatorInfo.nickname || "未知用户"),
         F: gameDetail.value.creatorInfo.gender
       }, gameDetail.value.creatorInfo.gender ? {
         G: common_vendor.t(gameDetail.value.creatorInfo.gender === 1 ? "男" : "女")
       } : {}, {
         H: gameDetail.value.creatorInfo.tags && gameDetail.value.creatorInfo.tags.length > 0
-      }, gameDetail.value.creatorInfo.tags && gameDetail.value.creatorInfo.tags.length > 0 ? common_vendor.e({
-        I: common_vendor.f(gameDetail.value.creatorInfo.tags.slice(0, 3), (tag, index, i0) => {
+      }, gameDetail.value.creatorInfo.tags && gameDetail.value.creatorInfo.tags.length > 0 ? {
+        I: common_vendor.f(gameDetail.value.creatorInfo.tags, (tag, index, i0) => {
           return {
             a: common_vendor.t(getTagDisplay(tag)),
             b: index
           };
-        }),
-        J: gameDetail.value.creatorInfo.tags.length > 3
-      }, gameDetail.value.creatorInfo.tags.length > 3 ? {
-        K: common_vendor.t(gameDetail.value.creatorInfo.tags.length - 3)
-      } : {}) : {}, {
-        L: gameDetail.value.creatorInfo.intro
-      }, gameDetail.value.creatorInfo.intro ? {
-        M: common_vendor.t(gameDetail.value.creatorInfo.intro)
+        })
       } : {}, {
-        N: gameDetail.value.creatorContact
+        J: common_vendor.o(($event) => openUserProfile(gameDetail.value.creatorId), "27"),
+        K: gameDetail.value.creatorInfo.games && gameDetail.value.creatorInfo.games.length > 0
+      }, gameDetail.value.creatorInfo.games && gameDetail.value.creatorInfo.games.length > 0 ? {
+        L: common_vendor.f(gameDetail.value.creatorInfo.games, (item, idx, i0) => {
+          return {
+            a: common_vendor.t(getEquipmentTypeText(item.type)),
+            b: common_vendor.t(item.name),
+            c: idx
+          };
+        })
+      } : {}, {
+        M: gameDetail.value.creatorInfo.intro
+      }, gameDetail.value.creatorInfo.intro ? {
+        N: common_vendor.t(gameDetail.value.creatorInfo.intro)
+      } : {}, {
+        O: gameDetail.value.creatorContact
       }, gameDetail.value.creatorContact ? {
-        O: common_assets._imports_5,
-        P: common_vendor.t(gameDetail.value.creatorContact)
+        P: common_assets._imports_5,
+        Q: common_vendor.t(gameDetail.value.creatorContact)
       } : {}) : {}, {
-        Q: common_vendor.t((gameDetail.value.participants || []).length + 1),
-        R: creatorAvatarSrc.value,
-        S: common_vendor.o(($event) => handleAvatarError("creator"), "46"),
-        T: common_vendor.t(((_a = gameDetail.value.creatorInfo) == null ? void 0 : _a.nickname) || "未知用户"),
-        U: common_vendor.f(gameDetail.value.participants, (player, index, i0) => {
+        R: common_vendor.t((gameDetail.value.participants || []).length + 1),
+        S: creatorAvatarSrc.value,
+        T: common_vendor.o(($event) => handleAvatarError("creator"), "b6"),
+        U: common_vendor.o(($event) => openUserProfile(gameDetail.value.creatorId), "c6"),
+        V: common_vendor.t(((_a = gameDetail.value.creatorInfo) == null ? void 0 : _a.nickname) || "未知用户"),
+        W: common_vendor.f(gameDetail.value.participants, (player, index, i0) => {
           return common_vendor.e({
             a: getParticipantAvatarSrc(player, index),
             b: common_vendor.o(($event) => handleAvatarError(getParticipantAvatarKey(player, index)), index),
-            c: common_vendor.t(player.nickname || "玩家" + (index + 1)),
-            d: player.joinTime
+            c: common_vendor.o(($event) => openUserProfile(player.id || player._id), index),
+            d: common_vendor.t(player.nickname || "玩家" + (index + 1)),
+            e: common_vendor.o(($event) => openUserProfile(player.id || player._id), index),
+            f: player.joinTime
           }, player.joinTime ? {
-            e: common_vendor.t(formatRelativeTime(player.joinTime))
+            g: common_vendor.t(formatRelativeTime(player.joinTime))
           } : {}, currentUser.value && String(currentUser.value.id || currentUser.value._id || "") === String(gameDetail.value.creatorId || "") && gameDetail.value.status === "pending" ? {
-            f: common_vendor.o(($event) => handleKickPlayer(player), index)
+            h: common_vendor.o(($event) => handleKickPlayer(player), index)
           } : {}, {
-            g: index
+            i: index
           });
         }),
-        V: currentUser.value && String(currentUser.value.id || currentUser.value._id || "") === String(gameDetail.value.creatorId || "") && gameDetail.value.status === "pending",
-        W: !gameDetail.value.isFull
+        X: currentUser.value && String(currentUser.value.id || currentUser.value._id || "") === String(gameDetail.value.creatorId || "") && gameDetail.value.status === "pending",
+        Y: !gameDetail.value.isFull
       }, !gameDetail.value.isFull ? {
-        X: common_vendor.f((gameDetail.value.maxPlayers || 4) - (gameDetail.value.currentPlayers || 1), (n, k0, i0) => {
+        Z: common_vendor.f((gameDetail.value.maxPlayers || 4) - (gameDetail.value.currentPlayers || 1), (n, k0, i0) => {
           return {
             a: n
           };
         })
       } : {}, {
-        Y: gameDetail.value.activities && gameDetail.value.activities.length > 0
+        aa: gameDetail.value.activities && gameDetail.value.activities.length > 0
       }, gameDetail.value.activities && gameDetail.value.activities.length > 0 ? {
-        Z: common_vendor.f(gameDetail.value.activities, (activity, index, i0) => {
+        ab: common_vendor.f(gameDetail.value.activities, (activity, index, i0) => {
           return {
             a: common_vendor.t(activity.text || "未知操作"),
             b: common_vendor.t(formatRelativeTime(activity.createdAt)),
@@ -704,28 +740,28 @@ const _sfc_main = {
           };
         })
       } : {}, {
-        aa: refreshing.value,
-        ab: common_vendor.o(onRefresh, "af"),
-        ac: common_vendor.o(onLoadMore, "72")
+        ac: refreshing.value,
+        ad: common_vendor.o(onRefresh, "af"),
+        ae: common_vendor.o(onLoadMore, "72")
       }), {
         b: error.value,
-        ad: !loading.value && !error.value && gameDetail.value.status === "pending"
+        af: !loading.value && !error.value && gameDetail.value.status === "pending"
       }, !loading.value && !error.value && gameDetail.value.status === "pending" ? common_vendor.e({
-        ae: common_assets._imports_6,
-        af: !gameDetail.value.isJoined
+        ag: common_assets._imports_6,
+        ah: !gameDetail.value.isJoined
       }, !gameDetail.value.isJoined ? common_vendor.e({
-        ag: !gameDetail.value.isFull
+        ai: !gameDetail.value.isFull
       }, !gameDetail.value.isFull ? {
-        ah: common_vendor.o(handleJoin, "51")
+        aj: common_vendor.o(handleJoin, "d7")
       } : {}) : !gameDetail.value.isCreator ? {
-        aj: common_vendor.o(handleQuit, "82")
+        al: common_vendor.o(handleQuit, "92")
       } : {
-        ak: common_vendor.o(handleEdit, "d2"),
-        al: common_vendor.o(handleCancel, "b2")
+        am: common_vendor.o(handleEdit, "e0"),
+        an: common_vendor.o(handleCancel, "6f")
       }, {
-        ai: !gameDetail.value.isCreator
+        ak: !gameDetail.value.isCreator
       }) : {}, {
-        am: !loading.value && !error.value && gameDetail.value.status === "cancelled"
+        ao: !loading.value && !error.value && gameDetail.value.status === "cancelled"
       }, !loading.value && !error.value && gameDetail.value.status === "cancelled" ? {} : {});
     };
   }

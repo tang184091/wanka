@@ -162,6 +162,7 @@ import { ref, computed, onMounted } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import UserService from '@/utils/user.js'
 import * as icons from '@/utils/icons.js'
+import { resolveCloudFileUrls } from '@/utils/cloud-image.js'
 
 // 响应式数据
 const tabs = ref([
@@ -180,6 +181,30 @@ const hasMore = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const userId = ref('')
+
+const normalizeGamesAvatarUrls = async (games = []) => {
+  if (!Array.isArray(games) || !games.length) return games
+  const avatarList = []
+  games.forEach((game) => {
+    const players = Array.isArray(game?.players) ? game.players : []
+    players.forEach((player) => {
+      avatarList.push(player?.avatar || '')
+    })
+  })
+  const resolved = await resolveCloudFileUrls(avatarList)
+  let offset = 0
+  games.forEach((game) => {
+    const players = Array.isArray(game?.players) ? game.players : []
+    players.forEach((player) => {
+      const nextAvatar = resolved[offset]
+      if (nextAvatar) {
+        player.avatar = nextAvatar
+      }
+      offset += 1
+    })
+  })
+  return games
+}
 
 // 页面参数
 const pageParams = ref({})
@@ -484,13 +509,14 @@ const loadGameList = async () => {
     
     // 处理返回的数据
     if (response) {
+      const normalizedResponse = await normalizeGamesAvatarUrls(response)
       if (currentPage.value === 1) {
-        games.value = response
+        games.value = normalizedResponse
       } else {
-        games.value = [...games.value, ...response]
+        games.value = [...games.value, ...normalizedResponse]
       }
       
-      hasMore.value = response.length >= pageSize.value
+      hasMore.value = normalizedResponse.length >= pageSize.value
       
       console.log('处理后games.value:', games.value.length, '条')
     } else {

@@ -6,6 +6,9 @@ const _sfc_main = {
     const isAdmin = common_vendor.ref(false);
     const list = common_vendor.ref([]);
     const editingId = common_vendor.ref("");
+    const ownerKeyword = common_vendor.ref("");
+    const ownerResults = common_vendor.ref([]);
+    const selectedOwner = common_vendor.ref({ id: "", nickname: "" });
     const typeOptions = ["比赛荣誉", "段位荣誉"];
     const typeIndex = common_vendor.ref(0);
     const rarityOptions = [
@@ -70,6 +73,9 @@ const _sfc_main = {
         rankName: "",
         note: ""
       };
+      ownerKeyword.value = "";
+      ownerResults.value = [];
+      selectedOwner.value = { id: "", nickname: "" };
     };
     const loadData = async () => {
       var _a, _b, _c;
@@ -111,6 +117,12 @@ const _sfc_main = {
       form.value.playerNickname = item.playerNickname || "";
       form.value.rankName = item.rankName || "";
       form.value.note = item.note || "";
+      selectedOwner.value = {
+        id: String(item.ownerUserId || "").trim(),
+        nickname: String(item.ownerNickname || "").trim()
+      };
+      ownerKeyword.value = selectedOwner.value.nickname || "";
+      ownerResults.value = [];
     };
     const cancelEdit = () => {
       resetForm();
@@ -120,7 +132,9 @@ const _sfc_main = {
       const payload = {
         ...form.value,
         achievedAt: dateValue.value,
-        rarity: rarityOptions[rarityIndex.value].value
+        rarity: rarityOptions[rarityIndex.value].value,
+        ownerUserId: selectedOwner.value.id || "",
+        ownerNickname: selectedOwner.value.nickname || ""
       };
       const action = editingId.value ? "updateHonorRecord" : "createHonorRecord";
       if (editingId.value)
@@ -133,6 +147,36 @@ const _sfc_main = {
       } else {
         common_vendor.index.showToast({ title: ((_b = res.result) == null ? void 0 : _b.message) || (editingId.value ? "修改失败" : "上传失败"), icon: "none" });
       }
+    };
+    const searchOwners = async () => {
+      var _a, _b;
+      const keyword = String(ownerKeyword.value || "").trim();
+      if (!keyword) {
+        common_vendor.index.showToast({ title: "请输入昵称关键词", icon: "none" });
+        return;
+      }
+      const res = await common_vendor.wx$1.cloud.callFunction({
+        name: "user-service",
+        data: { action: "searchUsers", data: { keyword } }
+      });
+      if (((_a = res == null ? void 0 : res.result) == null ? void 0 : _a.code) === 0) {
+        ownerResults.value = (res.result.data.list || []).slice(0, 10);
+      } else {
+        common_vendor.index.showToast({ title: ((_b = res == null ? void 0 : res.result) == null ? void 0 : _b.message) || "搜索失败", icon: "none" });
+      }
+    };
+    const selectOwner = (u) => {
+      selectedOwner.value = {
+        id: String((u == null ? void 0 : u.id) || "").trim(),
+        nickname: String((u == null ? void 0 : u.nickname) || "").trim()
+      };
+      ownerKeyword.value = selectedOwner.value.nickname;
+      ownerResults.value = [];
+    };
+    const clearSelectedOwner = () => {
+      selectedOwner.value = { id: "", nickname: "" };
+      ownerKeyword.value = "";
+      ownerResults.value = [];
     };
     const removeItem = (item) => {
       common_vendor.index.showModal({
@@ -188,25 +232,46 @@ const _sfc_main = {
         v: common_vendor.t(dateValue.value),
         w: dateValue.value,
         x: common_vendor.o(onDateChange, "53"),
-        y: form.value.note,
-        z: common_vendor.o(($event) => form.value.note = $event.detail.value, "62"),
-        A: common_vendor.t(editingId.value ? "保存修改" : "上传荣誉"),
-        B: common_vendor.o(submit, "bf"),
-        C: editingId.value
-      }, editingId.value ? {
-        D: common_vendor.o(cancelEdit, "67")
+        y: ownerKeyword.value,
+        z: common_vendor.o(($event) => ownerKeyword.value = $event.detail.value, "96"),
+        A: common_vendor.o(searchOwners, "5d"),
+        B: selectedOwner.value.id
+      }, selectedOwner.value.id ? {
+        C: common_vendor.t(selectedOwner.value.nickname),
+        D: common_vendor.t(selectedOwner.value.id),
+        E: common_vendor.o(clearSelectedOwner, "15")
       } : {}, {
-        E: !list.value.length
+        F: ownerResults.value.length
+      }, ownerResults.value.length ? {
+        G: common_vendor.f(ownerResults.value, (u, k0, i0) => {
+          return {
+            a: common_vendor.t(u.nickname || "未命名用户"),
+            b: common_vendor.t(u.id),
+            c: u.id,
+            d: common_vendor.o(($event) => selectOwner(u), u.id)
+          };
+        })
+      } : {}, {
+        H: form.value.note,
+        I: common_vendor.o(($event) => form.value.note = $event.detail.value, "f2"),
+        J: common_vendor.t(editingId.value ? "保存修改" : "上传荣誉"),
+        K: common_vendor.o(submit, "9d"),
+        L: editingId.value
+      }, editingId.value ? {
+        M: common_vendor.o(cancelEdit, "11")
+      } : {}, {
+        N: !list.value.length
       }, !list.value.length ? {} : {}, {
-        F: common_vendor.f(list.value, (item, k0, i0) => {
+        O: common_vendor.f(list.value, (item, k0, i0) => {
           return {
             a: common_vendor.t(item.type === "tournament" ? "比赛" : "段位"),
             b: common_vendor.n(getBadgeClass(item)),
             c: common_vendor.t(formatTime(item.achievedAt)),
             d: common_vendor.t(item.type === "tournament" ? `比赛冠军：${item.championNickname || "-"}` : `段位：${item.playerNickname || "-"} · ${item.rankName || "-"}`),
-            e: common_vendor.o(($event) => editItem(item), item.id || item._id),
-            f: common_vendor.o(($event) => removeItem(item), item.id || item._id),
-            g: item.id || item._id
+            e: common_vendor.t(item.ownerNickname || "未绑定"),
+            f: common_vendor.o(($event) => editItem(item), item.id || item._id),
+            g: common_vendor.o(($event) => removeItem(item), item.id || item._id),
+            h: item.id || item._id
           };
         })
       }));

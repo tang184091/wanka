@@ -311,6 +311,14 @@
   border-radius: 30rpx;
   font-size: 28rpx;
 }
+.admin-delete-btn.data-v-1cf27b2a {
+  margin-top: 16rpx;
+  padding: 15rpx 40rpx;
+  background-color: #ef4444;
+  color: #fff;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+}
 
 /* 加载提示样式 */
 .loading-tip.data-v-1cf27b2a {

@@ -81,7 +81,7 @@ const _sfc_main = {
     const goToEdit = (userId) => {
       if (!userId)
         return;
-      common_vendor.index.navigateTo({ url: `/pages/admin/user-edit?userId=${userId}` });
+      common_vendor.index.navigateTo({ url: `/pages/user/profile?userId=${userId}&adminEdit=1` });
     };
     common_vendor.onShow(async () => {
       await checkAdmin();

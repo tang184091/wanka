@@ -3,6 +3,7 @@ const common_vendor = require("../../common/vendor.js");
 const utils_store = require("../../utils/store.js");
 const utils_user = require("../../utils/user.js");
 const common_assets = require("../../common/assets.js");
+const utils_cloudImage = require("../../utils/cloud-image.js");
 const _sfc_main = {
   __name: "index",
   setup(__props) {
@@ -23,6 +24,30 @@ const _sfc_main = {
     const pageSize = common_vendor.ref(10);
     const firstRowTabs = common_vendor.ref(tabs.value.slice(0, 3));
     const secondRowTabs = common_vendor.ref(tabs.value.slice(3, 6));
+    const normalizeGamesAvatarUrls = async (games = []) => {
+      if (!Array.isArray(games) || !games.length)
+        return games;
+      const avatarList = [];
+      games.forEach((game) => {
+        const players = Array.isArray(game == null ? void 0 : game.players) ? game.players : [];
+        players.forEach((player) => {
+          avatarList.push((player == null ? void 0 : player.avatar) || "");
+        });
+      });
+      const resolved = await utils_cloudImage.resolveCloudFileUrls(avatarList);
+      let offset = 0;
+      games.forEach((game) => {
+        const players = Array.isArray(game == null ? void 0 : game.players) ? game.players : [];
+        players.forEach((player) => {
+          const nextAvatar = resolved[offset];
+          if (nextAvatar) {
+            player.avatar = nextAvatar;
+          }
+          offset += 1;
+        });
+      });
+      return games;
+    };
     const switchTab = (tabId) => {
       activeTab.value = tabId;
       currentPage.value = 1;
@@ -66,6 +91,10 @@ const _sfc_main = {
         return true;
       return !!game.isJoined;
     };
+    const isAdminUser = () => {
+      const user = getCurrentUser();
+      return !!(user == null ? void 0 : user.isAdmin);
+    };
     const getGameStatusText = (status) => {
       const textMap = {
         pending: "预约中",
@@ -105,7 +134,7 @@ const _sfc_main = {
         return;
       loading.value = true;
       try {
-        common_vendor.index.__f__("log", "at pages/index/index.vue:276", "开始加载组局列表...");
+        common_vendor.index.__f__("log", "at pages/index/index.vue:312", "开始加载组局列表...");
         const params = {
           page: currentPage.value,
           pageSize: pageSize.value
@@ -115,32 +144,33 @@ const _sfc_main = {
         } else if (activeTab.value !== "all") {
           params.type = activeTab.value;
         }
-        common_vendor.index.__f__("log", "at pages/index/index.vue:289", "调用参数:", params);
+        common_vendor.index.__f__("log", "at pages/index/index.vue:325", "调用参数:", params);
         const games = await utils_store.gameActions.getGameList(params);
-        common_vendor.index.__f__("log", "at pages/index/index.vue:293", "获取到的组局列表:", games);
+        common_vendor.index.__f__("log", "at pages/index/index.vue:329", "获取到的组局列表:", games);
         if (games && Array.isArray(games)) {
+          const displayGames = await normalizeGamesAvatarUrls(games);
           const currentUser = utils_user.UserService.getCurrentUser();
           if (currentUser) {
             const userId = currentUser.id;
-            games.forEach((game) => {
+            displayGames.forEach((game) => {
               if (game.participants && Array.isArray(game.participants)) {
                 game.isJoined = game.participants.includes(userId);
               }
             });
           }
           if (currentPage.value === 1) {
-            gameList.value = games;
+            gameList.value = displayGames;
           } else {
-            gameList.value = [...gameList.value, ...games];
+            gameList.value = [...gameList.value, ...displayGames];
           }
-          hasMore.value = games.length >= pageSize.value;
+          hasMore.value = displayGames.length >= pageSize.value;
         } else {
-          common_vendor.index.__f__("warn", "at pages/index/index.vue:318", "返回数据格式异常:", games);
+          common_vendor.index.__f__("warn", "at pages/index/index.vue:355", "返回数据格式异常:", games);
           gameList.value = [];
           hasMore.value = false;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:324", "加载组局列表失败，完整错误:", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:361", "加载组局列表失败，完整错误:", error);
         if (currentPage.value === 1) {
           gameList.value = [];
         }
@@ -241,7 +271,7 @@ const _sfc_main = {
                 throw new Error((result == null ? void 0 : result.message) || "加入失败");
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/index/index.vue:448", "加入组局失败:", error);
+              common_vendor.index.__f__("error", "at pages/index/index.vue:485", "加入组局失败:", error);
               common_vendor.index.showToast({
                 title: error.message || "加入失败",
                 icon: "none",
@@ -255,7 +285,7 @@ const _sfc_main = {
       });
     };
     common_vendor.onMounted(() => {
-      common_vendor.index.__f__("log", "at pages/index/index.vue:464", "首页加载，开始获取组局列表");
+      common_vendor.index.__f__("log", "at pages/index/index.vue:501", "首页加载，开始获取组局列表");
       loadGameList();
     });
     const markCompleted = async (game) => {
@@ -290,6 +320,44 @@ const _sfc_main = {
             }
           } catch (error) {
             common_vendor.index.showToast({ title: error.message || "操作失败", icon: "none" });
+          } finally {
+            common_vendor.index.hideLoading();
+          }
+        }
+      });
+    };
+    const adminDeleteGame = async (game) => {
+      const gameId = (game == null ? void 0 : game.id) || (game == null ? void 0 : game._id);
+      if (!gameId)
+        return;
+      if (!isAdminUser()) {
+        common_vendor.index.showToast({ title: "仅管理员可操作", icon: "none" });
+        return;
+      }
+      common_vendor.index.showModal({
+        title: "确认删除组局",
+        content: "删除后不可恢复，确认继续？",
+        success: async (res) => {
+          var _a, _b;
+          if (!res.confirm)
+            return;
+          common_vendor.index.showLoading({ title: "删除中...", mask: true });
+          try {
+            const result = await common_vendor.wx$1.cloud.callFunction({
+              name: "game-service",
+              data: { action: "adminDeleteGame", data: { gameId } }
+            });
+            if (((_a = result == null ? void 0 : result.result) == null ? void 0 : _a.code) === 0) {
+              common_vendor.index.showToast({ title: "已删除", icon: "success" });
+              currentPage.value = 1;
+              gameList.value = [];
+              hasMore.value = true;
+              await loadGameList();
+            } else {
+              throw new Error(((_b = result == null ? void 0 : result.result) == null ? void 0 : _b.message) || "删除失败");
+            }
+          } catch (error) {
+            common_vendor.index.showToast({ title: error.message || "删除失败", icon: "none" });
           } finally {
             common_vendor.index.hideLoading();
           }
@@ -360,25 +428,28 @@ const _sfc_main = {
             v: game.status === "ongoing" && canCompleteGame(game)
           }, game.status === "ongoing" && canCompleteGame(game) ? {
             w: common_vendor.o(($event) => markCompleted(game), game.id || game._id)
+          } : {}, isAdminUser() ? {
+            x: common_vendor.o(($event) => adminDeleteGame(game), game.id || game._id)
           } : {}, {
-            x: game.id || game._id,
-            y: common_vendor.o(($event) => goToDetail(game.id || game._id), game.id || game._id)
+            y: game.id || game._id,
+            z: common_vendor.o(($event) => goToDetail(game.id || game._id), game.id || game._id)
           });
         }),
         j: common_assets._imports_1,
         k: common_assets._imports_2,
         l: common_assets._imports_3,
-        m: loading.value
+        m: isAdminUser(),
+        n: loading.value
       }, loading.value ? {} : {}, {
-        n: hasMore.value && !loading.value
+        o: hasMore.value && !loading.value
       }, hasMore.value && !loading.value ? {
-        o: common_vendor.o(onLoadMore, "bf")
+        p: common_vendor.o(onLoadMore, "39")
       } : {}, {
-        p: !hasMore.value && gameList.value.length > 0
+        q: !hasMore.value && gameList.value.length > 0
       }, !hasMore.value && gameList.value.length > 0 ? {} : {}, {
-        q: refreshing.value,
-        r: common_vendor.o(onRefresh, "f4"),
-        s: common_vendor.o(onLoadMore, "ad")
+        r: refreshing.value,
+        s: common_vendor.o(onRefresh, "f4"),
+        t: common_vendor.o(onLoadMore, "ad")
       });
     };
   }

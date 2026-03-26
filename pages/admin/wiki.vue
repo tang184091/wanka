@@ -9,11 +9,8 @@
       <view v-if="!isAdmin" class="empty">仅管理员可访问</view>
       <view v-else>
         <view class="card">
-          <view class="title-sm">词条列表</view>
-          <view class="filter-row">
-            <picker mode="selector" :range="statusFilterOptions" :value="statusFilterIndex" @change="onFilterChange">
-              <view class="picker">{{ statusFilterOptions[statusFilterIndex] }}</view>
-            </picker>
+          <view class="row-head">
+            <view class="title-sm">词条列表</view>
             <view class="refresh-btn" @tap="refreshList">刷新</view>
           </view>
 
@@ -53,10 +50,6 @@ const page = ref(1)
 const pageSize = ref(10)
 const hasMore = ref(true)
 
-const statusFilterOptions = ['全部', '待审核', '已发布', '已驳回']
-const statusFilterValueMap = ['', 'pending', 'published', 'rejected']
-const statusFilterIndex = ref(0)
-
 const statusText = (value) => {
   if (value === 'published') return '已发布'
   if (value === 'rejected') return '已驳回'
@@ -85,7 +78,6 @@ const loadList = async (append = false) => {
   loading.value = true
   try {
     const nextPage = append ? page.value + 1 : 1
-    const statusFilter = statusFilterValueMap[statusFilterIndex.value]
     const res = await wx.cloud.callFunction({
       name: 'game-service',
       data: {
@@ -93,8 +85,7 @@ const loadList = async (append = false) => {
         data: {
           page: nextPage,
           pageSize: pageSize.value,
-          includeAll: true,
-          status: statusFilter
+          includeAll: true
         }
       }
     })
@@ -123,11 +114,6 @@ const refreshList = async () => {
 const loadMore = async () => {
   if (!hasMore.value) return
   await loadList(true)
-}
-
-const onFilterChange = async (e) => {
-  statusFilterIndex.value = Number(e.detail.value || 0)
-  await refreshList()
 }
 
 const goToEdit = (entryId) => {
@@ -169,8 +155,7 @@ onShow(async () => {
 .title { font-size:30rpx; font-weight:700; }
 .sub { margin-top:6rpx; color:#6b7280; font-size:22rpx; }
 .title-sm { font-size:26rpx; font-weight:700; margin-bottom:8rpx; }
-.filter-row { display:flex; align-items:center; gap:12rpx; margin-bottom:8rpx; }
-.picker { flex:1; background:#f8fafc; border-radius:10rpx; padding:12rpx; box-sizing:border-box; font-size:24rpx; }
+.row-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8rpx; }
 .refresh-btn { width:120rpx; height:64rpx; border-radius:8rpx; background:#07c160; color:#fff; display:flex; align-items:center; justify-content:center; font-size:22rpx; }
 .empty { color:#9ca3af; font-size:24rpx; margin-top:12rpx; }
 .row { display:flex; justify-content:space-between; align-items:center; gap:12rpx; padding:12rpx 0; border-bottom:1rpx solid #f1f5f9; }
